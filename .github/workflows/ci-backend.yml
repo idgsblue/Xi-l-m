@@ -2,18 +2,20 @@ name: Backend CI
 
 on:
   pull_request:
-    branches: [ develop ]
-    paths: [ 'backend/**' ]
+    branches: [main, develop]
   push:
-    branches: [ main ]
-    paths: [ 'backend/**' ]
+    branches: [main, develop]
 
 jobs:
   test:
+    # Solo ejecutar si hay cambios en backend
+    if: contains(github.event.pull_request.head.ref, 'backend') || contains(github.head_ref, 'backend') || github.event_name == 'push'
+    
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+        
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

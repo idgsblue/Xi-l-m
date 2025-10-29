@@ -2,18 +2,20 @@ name: Frontend CI
 
 on:
   pull_request:
-    branches: [ develop ]
-    paths: [ 'frontend/**' ]
+    branches: [main, develop]
   push:
-    branches: [ main ]
-    paths: [ 'frontend/**' ]
+    branches: [main, develop]
 
 jobs:
   build:
+    # Solo ejecutar si hay cambios en frontend
+    if: contains(github.event.pull_request.head.ref, 'frontend') || contains(github.head_ref, 'frontend') || github.event_name == 'push'
+    
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
+        
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
