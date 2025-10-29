@@ -1,11 +1,23 @@
-node_modules/ 
-.env 
-.env.local 
-build/ 
-dist/ 
-.DS_Store 
-*.log 
+# Node
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# Env
+.env
+*.env
+backend/.env
+frontend/.env
+
+# Builds
+frontend/build/
+backend/dist/
+
+# Capacitor / Android / iOS
 android/
 ios/
-*.orig
+
+# Editor/OS
 .DS_Store
+.vscode/
