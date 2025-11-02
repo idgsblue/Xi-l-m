@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npm run seed:*)",
+      "Bash(node src/scripts/check-data.js:*)",
+      "Bash(node src/scripts/complete-seed.js:*)",
+      "Bash(npm run db:recreate:*)",
+      "Bash(npm run db:truncate:*)",
+      "Bash(npm run seed:complete:*)",
+      "Bash(npm run seed:check:*)",
+      "Bash(npm start)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

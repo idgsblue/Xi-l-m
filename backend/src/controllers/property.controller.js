@@ -1,4 +1,4 @@
-const { Property, User, Booking } = require('../models');
+const { Property, User, Booking, PropertyImage, AccommodationType, Service, PropertyAvailability } = require('../models');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs').promises;
@@ -48,123 +48,157 @@ class PropertyController {
   async create(req, res, next) {
     try {
       const {
-        name,
+        title,
         description,
-        shortDescription,
-        address,
-        zone,
-        pricePerNight,
-        maxGuests,
-        bedrooms,
-        bathrooms,
-        amenities
+        location,
+        accommodation_type_id,
+        price_per_night,
+        capacity,
+        services
       } = req.body;
 
       // Verificar que el usuario sea host
       if (req.user.role !== 'host' && req.user.role !== 'admin') {
-        return res.status(403).json({ 
-          error: 'Debes ser anfitrión para publicar propiedades' 
+        return res.status(403).json({
+          error: 'Debes ser anfitrión para publicar propiedades'
         });
       }
 
-      // Procesar imágenes
-      const images = req.files ? req.files.map(file => `/uploads/properties/${file.filename}`) : [];
-
       // Crear propiedad
       const property = await Property.create({
-        name,
+        host_id: req.userId,
+        title,
         description,
-        shortDescription: shortDescription || description.substring(0, 300),
-        address,
-        zone,
-        pricePerNight,
-        maxGuests: maxGuests || 2,
-        bedrooms: bedrooms || 1,
-        bathrooms: bathrooms || 1,
-        amenities: amenities ? amenities.split(',').map(a => a.trim()) : [],
-        images,
-        hostId: req.userId,
-        status: 'pending' // Requiere aprobación del admin
+        location,
+        accommodation_type_id: accommodation_type_id || null,
+        price_per_night,
+        capacity: capacity || 2,
+        status: 'inactive', // Inicia como inactiva, requiere aprobación
+        is_advertised: false
+      });
+
+      // Procesar imágenes si las hay
+      if (req.files && req.files.length > 0) {
+        const imagePromises = req.files.map((file, index) => {
+          return PropertyImage.create({
+            property_id: property.id,
+            image_url: `/uploads/properties/${file.filename}`,
+            is_main: index === 0 // Primera imagen como principal
+          });
+        });
+        await Promise.all(imagePromises);
+      }
+
+      // Asociar servicios si los hay
+      if (services && Array.isArray(services)) {
+        await property.setServices(services);
+      }
+
+      // Cargar propiedad con relaciones
+      const propertyWithRelations = await Property.findByPk(property.id, {
+        include: [
+          { model: PropertyImage, as: 'images' },
+          { model: Service, as: 'services' },
+          { model: AccommodationType, as: 'accommodationType' }
+        ]
       });
 
       res.status(201).json({
-        message: 'Propiedad creada y enviada para aprobación',
-        property
+        message: 'Propiedad creada exitosamente',
+        property: propertyWithRelations
       });
     } catch (error) {
       next(error);
     }
   }
 
-  // Obtener todas las propiedades aprobadas
+  // Obtener todas las propiedades publicadas
   async getAll(req, res, next) {
     try {
       const {
-        zone,
+        location,
         minPrice,
         maxPrice,
         guests,
         checkIn,
         checkOut,
+        accommodation_type_id,
         page = 1,
         limit = 10
       } = req.query;
 
       // Construir filtros
-      const where = { status: 'approved', isAvailable: true };
-      
-      if (zone) where.zone = { [Op.iLike]: `%${zone}%` };
+      const where = { status: 'published' };
+
+      if (location) where.location = { [Op.iLike]: `%${location}%` };
       if (minPrice || maxPrice) {
-        where.pricePerNight = {};
-        if (minPrice) where.pricePerNight[Op.gte] = minPrice;
-        if (maxPrice) where.pricePerNight[Op.lte] = maxPrice;
+        where.price_per_night = {};
+        if (minPrice) where.price_per_night[Op.gte] = minPrice;
+        if (maxPrice) where.price_per_night[Op.lte] = maxPrice;
       }
-      if (guests) where.maxGuests = { [Op.gte]: guests };
+      if (guests) where.capacity = { [Op.gte]: guests };
+      if (accommodation_type_id) where.accommodation_type_id = accommodation_type_id;
 
       // Paginación
       const offset = (page - 1) * limit;
 
       const { count, rows } = await Property.findAndCountAll({
         where,
-        include: [{
-          model: User,
-          as: 'host',
-          attributes: ['id', 'name', 'email']
-        }],
+        include: [
+          {
+            model: User,
+            as: 'host',
+            attributes: ['id', 'full_name', 'email']
+          },
+          {
+            model: PropertyImage,
+            as: 'images'
+          },
+          {
+            model: Service,
+            as: 'services',
+            attributes: ['id', 'name', 'icon']
+          },
+          {
+            model: AccommodationType,
+            as: 'accommodationType',
+            attributes: ['id', 'name']
+          }
+        ],
         limit: parseInt(limit),
         offset,
-        order: [['createdAt', 'DESC']]
+        order: [['created_at', 'DESC']]
       });
 
       // Si hay fechas, filtrar por disponibilidad
       let availableProperties = rows;
-      
+
       if (checkIn && checkOut) {
         const propertyIds = rows.map(p => p.id);
-        
+
         // Buscar reservas que coincidan con las fechas
         const bookings = await Booking.findAll({
           where: {
-            propertyId: { [Op.in]: propertyIds },
-            status: { [Op.in]: ['confirmed', 'pending'] },
+            property_id: { [Op.in]: propertyIds },
+            booking_status: { [Op.in]: ['confirmed', 'pending', 'in_progress'] },
             [Op.or]: [
               {
-                checkIn: { [Op.between]: [checkIn, checkOut] }
+                check_in_date: { [Op.between]: [checkIn, checkOut] }
               },
               {
-                checkOut: { [Op.between]: [checkIn, checkOut] }
+                check_out_date: { [Op.between]: [checkIn, checkOut] }
               },
               {
                 [Op.and]: [
-                  { checkIn: { [Op.lte]: checkIn } },
-                  { checkOut: { [Op.gte]: checkOut } }
+                  { check_in_date: { [Op.lte]: checkIn } },
+                  { check_out_date: { [Op.gte]: checkOut } }
                 ]
               }
             ]
           }
         });
 
-        const bookedPropertyIds = bookings.map(b => b.propertyId);
+        const bookedPropertyIds = bookings.map(b => b.property_id);
         availableProperties = rows.filter(p => !bookedPropertyIds.includes(p.id));
       }
 
@@ -188,19 +222,39 @@ class PropertyController {
       const { id } = req.params;
 
       const property = await Property.findByPk(id, {
-        include: [{
-          model: User,
-          as: 'host',
-          attributes: ['id', 'name', 'email', 'phone']
-        }]
+        include: [
+          {
+            model: User,
+            as: 'host',
+            attributes: ['id', 'full_name', 'email', 'phone']
+          },
+          {
+            model: PropertyImage,
+            as: 'images'
+          },
+          {
+            model: Service,
+            as: 'services',
+            attributes: ['id', 'name', 'icon', 'description']
+          },
+          {
+            model: AccommodationType,
+            as: 'accommodationType'
+          }
+        ]
       });
 
       if (!property) {
         return res.status(404).json({ error: 'Propiedad no encontrada' });
       }
 
-      // Solo mostrar propiedades aprobadas a usuarios no admin
-      if (property.status !== 'approved' && req.user?.role !== 'admin' && property.hostId !== req.userId) {
+      // Solo mostrar propiedades publicadas a usuarios públicos
+      // Admins y hosts dueños pueden ver propiedades no publicadas
+      const isAdmin = req.user?.role === 'admin';
+      const isOwner = req.userId && property.host_id === req.userId;
+      const isPublished = property.status === 'published';
+
+      if (!isPublished && !isAdmin && !isOwner) {
         return res.status(403).json({ error: 'No tienes acceso a esta propiedad' });
       }
 
@@ -214,8 +268,24 @@ class PropertyController {
   async getMyProperties(req, res, next) {
     try {
       const properties = await Property.findAll({
-        where: { hostId: req.userId },
-        order: [['createdAt', 'DESC']]
+        where: { host_id: req.userId },
+        include: [
+          {
+            model: PropertyImage,
+            as: 'images'
+          },
+          {
+            model: Service,
+            as: 'services',
+            attributes: ['id', 'name', 'icon']
+          },
+          {
+            model: AccommodationType,
+            as: 'accommodationType',
+            attributes: ['id', 'name']
+          }
+        ],
+        order: [['created_at', 'DESC']]
       });
 
       res.json({ properties });
@@ -235,42 +305,72 @@ class PropertyController {
       }
 
       // Verificar permisos
-      if (property.hostId !== req.userId && req.user.role !== 'admin') {
+      if (property.host_id !== req.userId && req.user.role !== 'admin') {
         return res.status(403).json({ error: 'No tienes permisos para editar esta propiedad' });
       }
 
-      // Campos que se pueden actualizar
-      const allowedFields = [
-        'name', 'description', 'shortDescription', 'address', 'zone',
-        'pricePerNight', 'maxGuests', 'bedrooms', 'bathrooms', 'amenities',
-        'isAvailable'
-      ];
+      const {
+        title,
+        description,
+        location,
+        accommodation_type_id,
+        price_per_night,
+        capacity,
+        services
+      } = req.body;
 
-      // Si se cambian ciertos campos, volver a pending
-      const requiresReapproval = ['name', 'description', 'address', 'pricePerNight'];
-      const needsReapproval = requiresReapproval.some(field => req.body[field] && req.body[field] !== property[field]);
+      // Si se cambian ciertos campos importantes, cambiar a inactive para reaprobación
+      const requiresReapproval = ['title', 'description', 'location', 'price_per_night'];
+      const needsReapproval = requiresReapproval.some(field =>
+        req.body[field] !== undefined && req.body[field] !== property[field]
+      );
 
-      allowedFields.forEach(field => {
-        if (req.body[field] !== undefined) {
-          property[field] = req.body[field];
-        }
-      });
+      // Actualizar campos permitidos
+      if (title !== undefined) property.title = title;
+      if (description !== undefined) property.description = description;
+      if (location !== undefined) property.location = location;
+      if (accommodation_type_id !== undefined) property.accommodation_type_id = accommodation_type_id;
+      if (price_per_night !== undefined) property.price_per_night = price_per_night;
+      if (capacity !== undefined) property.capacity = capacity;
 
-      // Procesar nuevas imágenes si las hay
-      if (req.files && req.files.length > 0) {
-        const newImages = req.files.map(file => `/uploads/properties/${file.filename}`);
-        property.images = [...(property.images || []), ...newImages].slice(0, 5);
-      }
-
-      if (needsReapproval && property.status === 'approved') {
-        property.status = 'pending';
+      // Si requiere reaprobación y está publicada, cambiar a inactiva
+      if (needsReapproval && property.status === 'published') {
+        property.status = 'inactive';
       }
 
       await property.save();
 
+      // Procesar nuevas imágenes si las hay
+      if (req.files && req.files.length > 0) {
+        const imagePromises = req.files.map((file, index) => {
+          return PropertyImage.create({
+            property_id: property.id,
+            image_url: `/uploads/properties/${file.filename}`,
+            is_main: false
+          });
+        });
+        await Promise.all(imagePromises);
+      }
+
+      // Actualizar servicios si se proporcionan
+      if (services && Array.isArray(services)) {
+        await property.setServices(services);
+      }
+
+      // Cargar propiedad actualizada con relaciones
+      const updatedProperty = await Property.findByPk(property.id, {
+        include: [
+          { model: PropertyImage, as: 'images' },
+          { model: Service, as: 'services' },
+          { model: AccommodationType, as: 'accommodationType' }
+        ]
+      });
+
       res.json({
-        message: needsReapproval ? 'Propiedad actualizada y enviada para reaprobación' : 'Propiedad actualizada exitosamente',
-        property
+        message: needsReapproval ?
+          'Propiedad actualizada. Cambios significativos requieren reaprobación' :
+          'Propiedad actualizada exitosamente',
+        property: updatedProperty
       });
     } catch (error) {
       next(error);
@@ -281,37 +381,39 @@ class PropertyController {
   async delete(req, res, next) {
     try {
       const { id } = req.params;
-      const property = await Property.findByPk(id);
+      const property = await Property.findByPk(id, {
+        include: [{ model: PropertyImage, as: 'images' }]
+      });
 
       if (!property) {
         return res.status(404).json({ error: 'Propiedad no encontrada' });
       }
 
       // Verificar permisos
-      if (property.hostId !== req.userId && req.user.role !== 'admin') {
+      if (property.host_id !== req.userId && req.user.role !== 'admin') {
         return res.status(403).json({ error: 'No tienes permisos para eliminar esta propiedad' });
       }
 
       // Verificar si tiene reservas activas
       const activeBookings = await Booking.count({
         where: {
-          propertyId: id,
-          status: { [Op.in]: ['pending', 'confirmed'] },
-          checkOut: { [Op.gte]: new Date() }
+          property_id: id,
+          booking_status: { [Op.in]: ['pending', 'confirmed', 'in_progress'] },
+          check_out_date: { [Op.gte]: new Date() }
         }
       });
 
       if (activeBookings > 0) {
-        return res.status(400).json({ 
-          error: 'No se puede eliminar una propiedad con reservas activas' 
+        return res.status(400).json({
+          error: 'No se puede eliminar una propiedad con reservas activas'
         });
       }
 
       // Eliminar imágenes del servidor
       if (property.images && property.images.length > 0) {
-        for (const imagePath of property.images) {
+        for (const image of property.images) {
           try {
-            const fullPath = path.join(__dirname, '../..', imagePath);
+            const fullPath = path.join(__dirname, '../..', image.image_url);
             await fs.unlink(fullPath);
           } catch (err) {
             console.error('Error eliminando imagen:', err);
@@ -327,11 +429,19 @@ class PropertyController {
     }
   }
 
-  // Actualizar disponibilidad
-  async updateAvailability(req, res, next) {
+  // Actualizar estado de propiedad (publicar/despublicar)
+  async updateStatus(req, res, next) {
     try {
       const { id } = req.params;
-      const { isAvailable } = req.body;
+      const { status } = req.body;
+
+      // Validar status
+      const validStatuses = ['inactive', 'published', 'blocked'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          error: 'Estado inválido. Debe ser: inactive, published o blocked'
+        });
+      }
 
       const property = await Property.findByPk(id);
 
@@ -339,15 +449,27 @@ class PropertyController {
         return res.status(404).json({ error: 'Propiedad no encontrada' });
       }
 
-      if (property.hostId !== req.userId && req.user.role !== 'admin') {
+      // Solo el host o admin pueden cambiar el estado
+      if (property.host_id !== req.userId && req.user.role !== 'admin') {
         return res.status(403).json({ error: 'No tienes permisos' });
       }
 
-      property.isAvailable = isAvailable;
+      // Solo admins pueden bloquear propiedades
+      if (status === 'blocked' && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Solo administradores pueden bloquear propiedades' });
+      }
+
+      property.status = status;
       await property.save();
 
+      const statusMessages = {
+        'published': 'publicada',
+        'inactive': 'desactivada',
+        'blocked': 'bloqueada'
+      };
+
       res.json({
-        message: `Propiedad ${isAvailable ? 'activada' : 'desactivada'} exitosamente`,
+        message: `Propiedad ${statusMessages[status]} exitosamente`,
         property
       });
     } catch (error) {

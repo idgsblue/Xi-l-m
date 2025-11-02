@@ -6,7 +6,7 @@ const crypto = require('crypto');
 class AuthController {
   async register(req, res, next) {
     try {
-      const { name, email, password, phone, role = 'guest' } = req.body;
+      const { name, full_name, email, password, phone, role = 'guest' } = req.body;
 
       // Verificar si el usuario ya existe
       const existingUser = await User.findOne({ where: { email } });
@@ -16,19 +16,17 @@ class AuthController {
 
       // Crear usuario
       const user = await User.create({
-        name,
+        full_name: full_name || name, // Usar full_name o name para compatibilidad
         email,
         password,
         phone,
-        role: role === 'host' ? 'host' : 'guest' // Solo permitir guest o host
+        role: role === 'host' ? 'host' : 'guest', // Solo permitir guest o host
+        status: true,
+        email_verified: false
       });
 
       // Generar tokens
       const tokens = jwtService.generateTokens(user.id, user.role);
-      
-      // Guardar refresh token
-      user.refreshToken = tokens.refreshToken;
-      await user.save();
 
       res.status(201).json({
         message: 'Usuario registrado exitosamente',
@@ -47,28 +45,28 @@ class AuthController {
 
       // Buscar usuario
       const user = await User.findOne({ where: { email } });
-      
+
       if (!user) {
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
 
       // Verificar contraseña
       const isValidPassword = await user.validatePassword(password);
-      
+
       if (!isValidPassword) {
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
 
       // Verificar si está activo
-      if (!user.isActive) {
+      if (!user.status) {
         return res.status(403).json({ error: 'Cuenta desactivada' });
       }
 
       // Generar tokens
       const tokens = jwtService.generateTokens(user.id, user.role);
-      
-      // Actualizar refresh token
-      user.refreshToken = tokens.refreshToken;
+
+      // Actualizar last_login
+      user.last_login = new Date();
       await user.save();
 
       res.json({
@@ -84,13 +82,8 @@ class AuthController {
 
   async logout(req, res, next) {
     try {
-      const user = await User.findByPk(req.userId);
-      
-      if (user) {
-        user.refreshToken = null;
-        await user.save();
-      }
-
+      // En el nuevo schema no guardamos refresh tokens en la BD
+      // Solo enviamos respuesta exitosa
       res.json({ message: 'Sesión cerrada exitosamente' });
     } catch (error) {
       next(error);
@@ -100,7 +93,7 @@ class AuthController {
   async getProfile(req, res, next) {
     try {
       const user = await User.findByPk(req.userId, {
-        attributes: { exclude: ['password', 'refreshToken'] }
+        attributes: { exclude: ['password'] }
       });
 
       if (!user) {
@@ -115,7 +108,7 @@ class AuthController {
 
   async updateProfile(req, res, next) {
     try {
-      const { name, phone } = req.body;
+      const { name, full_name, phone } = req.body;
       const user = await User.findByPk(req.userId);
 
       if (!user) {
@@ -123,7 +116,8 @@ class AuthController {
       }
 
       // Actualizar solo campos permitidos
-      if (name) user.name = name;
+      if (full_name) user.full_name = full_name;
+      if (name && !full_name) user.full_name = name; // Compatibilidad con nombre anterior
       if (phone) user.phone = phone;
 
       await user.save();
@@ -165,25 +159,30 @@ class AuthController {
 
       if (!user) {
         // Por seguridad, no revelar si el email existe
-        return res.json({ 
-          message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña' 
+        return res.json({
+          message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña'
         });
       }
 
-      // Generar token de recuperación
-      const resetToken = crypto.randomBytes(32).toString('hex');
-      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hora
+      // Generar código de recuperación (6 dígitos)
+      const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 3600000); // 1 hora
 
-      // Guardar token (en producción, usar una tabla separada)
-      user.resetPasswordToken = resetToken;
-      user.resetPasswordExpiry = resetTokenExpiry;
-      await user.save();
+      // Guardar código en user_verification_codes
+      const { UserVerificationCode } = require('../models');
+      await UserVerificationCode.upsert({
+        user_id: user.id,
+        code: resetCode,
+        code_type: 'password_reset',
+        expires_at: expiresAt,
+        is_used: false
+      });
 
       // Enviar email
-      await emailService.sendPasswordReset(user, resetToken);
+      await emailService.sendPasswordReset(user, resetCode);
 
-      res.json({ 
-        message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña' 
+      res.json({
+        message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña'
       });
     } catch (error) {
       next(error);

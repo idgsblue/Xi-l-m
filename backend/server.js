@@ -9,11 +9,11 @@ async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
-    
-    // Sincronizar modelos (en producción usar migraciones)
-    await sequelize.sync({ alter: true });
-    console.log('✅ Modelos sincronizados');
-    
+
+    // NO sincronizar - las tablas ya existen en la BD creadas por el schema SQL
+    // En producción, usar migraciones para cambios en el schema
+    console.log('✅ Usando tablas existentes de la base de datos');
+
     app.listen(PORT, () => {
       console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
       console.log(`📍 URL: http://localhost:${PORT}`);

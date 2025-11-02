@@ -21,9 +21,8 @@ async function seed() {
     await sequelize.authenticate();
     console.log('✅ Conexión a la base de datos establecida');
 
-    // Sincronizar modelos (NO usar force en producción)
-    await sequelize.sync({ force: false, alter: true });
-    console.log('✅ Modelos sincronizados');
+    // NO sincronizar - las tablas ya existen en la BD creadas por el schema SQL
+    console.log('✅ Usando tablas existentes de la base de datos');
 
     // ========== CREAR USUARIOS ==========
     console.log('\n👥 Creando usuarios...');
@@ -127,23 +126,23 @@ async function seed() {
 
     console.log('✓ 4 tipos de alojamiento creados');
 
-    // ========== CREAR SERVICIOS ==========
-    console.log('\n⚙️ Creando servicios...');
+    // ========== OBTENER SERVICIOS EXISTENTES ==========
+    console.log('\n⚙️ Obteniendo servicios existentes...');
 
-    const wifi = await Service.create({ name: 'WiFi', icon: 'wifi', description: 'Internet inalámbrico de alta velocidad' });
-    const piscina = await Service.create({ name: 'Piscina', icon: 'pool', description: 'Piscina privada o compartida' });
-    const estacionamiento = await Service.create({ name: 'Estacionamiento', icon: 'car', description: 'Espacio de estacionamiento gratuito' });
-    const cocina = await Service.create({ name: 'Cocina', icon: 'kitchen', description: 'Cocina equipada completa' });
-    const aireAcondicionado = await Service.create({ name: 'Aire Acondicionado', icon: 'ac_unit', description: 'Climatización en todas las habitaciones' });
-    const tv = await Service.create({ name: 'TV', icon: 'tv', description: 'Televisión por cable o streaming' });
-    const lavadora = await Service.create({ name: 'Lavadora', icon: 'washing_machine', description: 'Lavadora disponible' });
-    const calefaccion = await Service.create({ name: 'Calefacción', icon: 'heat', description: 'Sistema de calefacción' });
-    const areaT Trabajo = await Service.create({ name: 'Área de trabajo', icon: 'desk', description: 'Espacio dedicado para trabajar' });
-    const mascotas = await Service.create({ name: 'Admite mascotas', icon: 'pets', description: 'Se permiten mascotas' });
-    const jardin = await Service.create({ name: 'Jardín', icon: 'garden', description: 'Jardín o patio privado' });
-    const parrilla = await Service.create({ name: 'Parrilla', icon: 'bbq', description: 'Asador o parrilla' });
+    const wifi = await Service.findOne({ where: { name: 'WiFi' } });
+    const piscina = await Service.findOne({ where: { name: 'Piscina' } });
+    const estacionamiento = await Service.findOne({ where: { name: 'Estacionamiento' } });
+    const cocina = await Service.findOne({ where: { name: 'Cocina' } });
+    const aireAcondicionado = await Service.findOne({ where: { name: 'Aire Acondicionado' } });
+    const tv = await Service.findOne({ where: { name: 'TV' } });
+    const lavadora = await Service.findOne({ where: { name: 'Lavadora' } });
+    const calefaccion = await Service.findOne({ where: { name: 'Calefacción' } });
+    const areaTrabajo = await Service.findOne({ where: { name: 'Área de trabajo' } });
+    const mascotas = await Service.findOne({ where: { name: 'Admite mascotas' } });
+    const jardin = await Service.findOne({ where: { name: 'Jardín' } });
+    const parrilla = await Service.findOne({ where: { name: 'Parrilla' } });
 
-    console.log('✓ 12 servicios creados');
+    console.log('✓ Servicios obtenidos de la base de datos');
 
     // ========== CREAR PROPIEDADES ==========
     console.log('\n🏠 Creando propiedades...');
@@ -359,7 +358,7 @@ async function seed() {
     console.log('─────────────────────────────────────');
     console.log(`👥 Usuarios: 6 (1 admin, 2 hosts, 3 guests)`);
     console.log(`🏢 Tipos de Alojamiento: 4`);
-    console.log(`⚙️ Servicios: 12`);
+    console.log(`⚙️ Servicios: 12 (ya existentes en BD)`);
     console.log(`🏠 Propiedades: 6 (5 publicadas, 1 inactiva)`);
     console.log(`📸 Imágenes: 10`);
     console.log(`📅 Reservaciones: 6`);

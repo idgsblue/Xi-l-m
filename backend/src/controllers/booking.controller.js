@@ -64,19 +64,19 @@ class BookingController {
       // Verificar disponibilidad
       const existingBooking = await Booking.findOne({
         where: {
-          propertyId,
-          status: { [Op.in]: ['pending', 'confirmed'] },
+          property_id: propertyId,
+          booking_status: { [Op.in]: ['pending', 'confirmed'] },
           [Op.or]: [
             {
-              checkIn: { [Op.between]: [checkIn, checkOut] }
+              check_in_date: { [Op.between]: [checkIn, checkOut] }
             },
             {
-              checkOut: { [Op.between]: [checkIn, checkOut] }
+              check_out_date: { [Op.between]: [checkIn, checkOut] }
             },
             {
               [Op.and]: [
-                { checkIn: { [Op.lte]: checkIn } },
-                { checkOut: { [Op.gte]: checkOut } }
+                { check_in_date: { [Op.lte]: checkIn } },
+                { check_out_date: { [Op.gte]: checkOut } }
               ]
             }
           ]
@@ -91,19 +91,19 @@ class BookingController {
 
       // Calcular precio total
       const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-      const totalPrice = nights * property.pricePerNight;
+      const totalPrice = nights * property.price_per_night;
 
       // Crear reserva
       const booking = await Booking.create({
-        checkIn,
-        checkOut,
-        numberOfGuests,
-        specialRequests,
-        totalPrice,
-        status: 'pending',
-        guestId: req.userId,
-        propertyId: property.id,
-        hostId: property.hostId
+        check_in_date: checkIn,
+        check_out_date: checkOut,
+        total_guests: numberOfGuests,
+        special_requests: specialRequests,
+        total_price: totalPrice,
+        booking_status: 'pending',
+        guest_id: req.userId,
+        property_id: property.id,
+        host_id: property.host_id
       }, { transaction: t });
 
       // Crear PaymentIntent en Stripe
@@ -116,10 +116,10 @@ class BookingController {
       // Crear registro de pago
       const payment = await Payment.create({
         amount: totalPrice,
-        stripePaymentIntentId: paymentIntent.id,
-        status: 'pending',
-        bookingId: booking.id,
-        userId: req.userId
+        stripe_payment_intent_id: paymentIntent.id,
+        payment_status: 'pending',
+        booking_id: booking.id,
+        user_id: req.userId
       }, { transaction: t });
 
       await t.commit();
@@ -159,12 +159,12 @@ class BookingController {
         return res.status(404).json({ error: 'Reserva no encontrada' });
       }
 
-      if (booking.guestId !== req.userId) {
+      if (booking.guest_id !== req.userId) {
         await t.rollback();
         return res.status(403).json({ error: 'No tienes permisos para confirmar esta reserva' });
       }
 
-      if (booking.status === 'confirmed') {
+      if (booking.booking_status === 'confirmed') {
         await t.rollback();
         return res.status(400).json({ error: 'La reserva ya está confirmada' });
       }
@@ -178,14 +178,14 @@ class BookingController {
       }
 
       // Actualizar estado de la reserva
-      booking.status = 'confirmed';
-      booking.paymentStatus = 'paid';
-      booking.stripePaymentId = paymentIntentId;
+      booking.booking_status = 'confirmed';
+      booking.payment_status = 'paid';
+      booking.stripe_payment_intent_id = paymentIntentId;
       await booking.save({ transaction: t });
 
       // Actualizar estado del pago
       if (booking.payment) {
-        booking.payment.status = 'succeeded';
+        booking.payment.payment_status = 'succeeded';
         await booking.payment.save({ transaction: t });
       }
 
@@ -210,15 +210,15 @@ class BookingController {
     try {
       const { status, upcoming } = req.query;
 
-      const where = { guestId: req.userId };
-      
+      const where = { guest_id: req.userId };
+
       if (status) {
-        where.status = status;
+        where.booking_status = status;
       }
 
       if (upcoming === 'true') {
-        where.checkIn = { [Op.gte]: new Date() };
-        where.status = { [Op.in]: ['confirmed', 'pending'] };
+        where.check_in_date = { [Op.gte]: new Date() };
+        where.booking_status = { [Op.in]: ['confirmed', 'pending'] };
       }
 
       const bookings = await Booking.findAll({
@@ -238,7 +238,7 @@ class BookingController {
             as: 'payment'
           }
         ],
-        order: [['checkIn', 'DESC']]
+        order: [['check_in_date', 'DESC']]
       });
 
       res.json({ bookings });
@@ -252,14 +252,14 @@ class BookingController {
     try {
       const { propertyId, status } = req.query;
 
-      const where = { hostId: req.userId };
-      
+      const where = { host_id: req.userId };
+
       if (propertyId) {
-        where.propertyId = propertyId;
+        where.property_id = propertyId;
       }
 
       if (status) {
-        where.status = status;
+        where.booking_status = status;
       }
 
       const bookings = await Booking.findAll({
@@ -279,7 +279,7 @@ class BookingController {
             as: 'payment'
           }
         ],
-        order: [['checkIn', 'DESC']]
+        order: [['check_in_date', 'DESC']]
       });
 
       res.json({ bookings });
@@ -322,8 +322,8 @@ class BookingController {
 
       // Verificar permisos
       if (
-        booking.guestId !== req.userId && 
-        booking.hostId !== req.userId && 
+        booking.guest_id !== req.userId &&
+        booking.host_id !== req.userId &&
         req.user.role !== 'admin'
       ) {
         return res.status(403).json({ error: 'No tienes acceso a esta reserva' });
@@ -359,49 +359,49 @@ class BookingController {
       }
 
       // Verificar permisos
-      if (booking.guestId !== req.userId && req.user.role !== 'admin') {
+      if (booking.guest_id !== req.userId && req.user.role !== 'admin') {
         await t.rollback();
         return res.status(403).json({ error: 'No tienes permisos para cancelar esta reserva' });
       }
 
-      if (booking.status === 'cancelled') {
+      if (booking.booking_status === 'cancelled') {
         await t.rollback();
         return res.status(400).json({ error: 'La reserva ya está cancelada' });
       }
 
-      if (booking.status === 'completed') {
+      if (booking.booking_status === 'completed') {
         await t.rollback();
         return res.status(400).json({ error: 'No se puede cancelar una reserva completada' });
       }
 
       // Calcular reembolso según política de cancelación
-      const checkInDate = new Date(booking.checkIn);
+      const checkInDate = new Date(booking.check_in_date);
       const today = new Date();
       const daysUntilCheckIn = Math.ceil((checkInDate - today) / (1000 * 60 * 60 * 24));
-      
+
       let refundAmount = 0;
       let refundPercentage = 0;
 
       if (daysUntilCheckIn > 7) {
         refundPercentage = 100;
-        refundAmount = booking.totalPrice;
+        refundAmount = booking.total_price;
       } else if (daysUntilCheckIn > 3) {
         refundPercentage = 50;
-        refundAmount = booking.totalPrice * 0.5;
+        refundAmount = booking.total_price * 0.5;
       } else {
         refundPercentage = 0;
         refundAmount = 0;
       }
 
       // Procesar reembolso si corresponde
-      if (booking.paymentStatus === 'paid' && refundAmount > 0 && booking.stripePaymentId) {
+      if (booking.payment_status === 'paid' && refundAmount > 0 && booking.stripe_payment_intent_id) {
         try {
-          const refund = await stripeService.createRefund(booking.stripePaymentId, refundAmount);
-          
+          const refund = await stripeService.createRefund(booking.stripe_payment_intent_id, refundAmount);
+
           if (booking.payment) {
-            booking.payment.status = 'refunded';
-            booking.payment.refundAmount = refundAmount;
-            booking.payment.refundReason = reason || 'Cancelación de reserva';
+            booking.payment.payment_status = 'refunded';
+            booking.payment.refund_amount = refundAmount;
+            booking.payment.refund_reason = reason || 'Cancelación de reserva';
             await booking.payment.save({ transaction: t });
           }
         } catch (error) {
@@ -411,9 +411,9 @@ class BookingController {
       }
 
       // Actualizar estado de la reserva
-      booking.status = 'cancelled';
+      booking.booking_status = 'cancelled';
       if (refundAmount > 0) {
-        booking.paymentStatus = 'refunded';
+        booking.payment_status = 'refunded';
       }
       await booking.save({ transaction: t });
 
@@ -452,19 +452,19 @@ class BookingController {
 
       const existingBooking = await Booking.findOne({
         where: {
-          propertyId,
-          status: { [Op.in]: ['pending', 'confirmed'] },
+          property_id: propertyId,
+          booking_status: { [Op.in]: ['pending', 'confirmed'] },
           [Op.or]: [
             {
-              checkIn: { [Op.between]: [checkIn, checkOut] }
+              check_in_date: { [Op.between]: [checkIn, checkOut] }
             },
             {
-              checkOut: { [Op.between]: [checkIn, checkOut] }
+              check_out_date: { [Op.between]: [checkIn, checkOut] }
             },
             {
               [Op.and]: [
-                { checkIn: { [Op.lte]: checkIn } },
-                { checkOut: { [Op.gte]: checkOut } }
+                { check_in_date: { [Op.lte]: checkIn } },
+                { check_out_date: { [Op.gte]: checkOut } }
               ]
             }
           ]
@@ -477,12 +477,12 @@ class BookingController {
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);
       const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-      const totalPrice = nights * property.pricePerNight;
+      const totalPrice = nights * property.price_per_night;
 
       res.json({
         available: isAvailable,
         nights,
-        pricePerNight: property.pricePerNight,
+        pricePerNight: property.price_per_night,
         totalPrice
       });
     } catch (error) {

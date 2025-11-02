@@ -12,11 +12,11 @@ const authenticate = async (req, res, next) => {
     const decoded = jwtService.verifyAccessToken(token);
     
     const user = await User.findByPk(decoded.userId, {
-      attributes: { exclude: ['password', 'refreshToken'] }
+      attributes: { exclude: ['password'] }
     });
 
-    if (!user || !user.isActive) {
-      return res.status(401).json({ error: 'Usuario no válido' });
+    if (!user || !user.status) {
+      return res.status(401).json({ error: 'Usuario no válido o cuenta desactivada' });
     }
 
     req.user = user;
@@ -35,23 +35,22 @@ const authenticate = async (req, res, next) => {
 const refreshToken = async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    
+
     if (!refreshToken) {
       return res.status(400).json({ error: 'Refresh token requerido' });
     }
 
     const decoded = jwtService.verifyRefreshToken(refreshToken);
-    
+
     const user = await User.findByPk(decoded.userId);
-    
-    if (!user || user.refreshToken !== refreshToken) {
-      return res.status(401).json({ error: 'Refresh token inválido' });
+
+    if (!user || !user.status) {
+      return res.status(401).json({ error: 'Usuario no válido o cuenta desactivada' });
     }
 
+    // En el nuevo schema no guardamos refresh tokens en la BD
+    // Solo generamos nuevos tokens
     const tokens = jwtService.generateTokens(user.id, user.role);
-    
-    user.refreshToken = tokens.refreshToken;
-    await user.save();
 
     res.json({
       accessToken: tokens.accessToken,
