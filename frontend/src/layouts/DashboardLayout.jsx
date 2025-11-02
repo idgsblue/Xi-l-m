@@ -124,17 +124,17 @@ const DashboardLayout = () => {
 
             <div className="flex-shrink-0 flex border-t border-primary-200 p-4">
               <div className="flex items-center w-full">
-                <UserCircleIcon className="h-10 w-10 text-neutral-500" />
+                <UserCircleIcon className="h-10 w-10 icon-neutral" />
                 <div className="ml-3 flex-1">
                   <p className="text-sm font-medium text-accent-800">{user?.name}</p>
                   <p className="text-xs font-medium text-neutral-600">{user?.role}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="ml-auto text-neutral-500 hover:text-accent-700 transition-colors"
+                  className="ml-auto group transition-colors"
                   title="Cerrar sesión"
                 >
-                  <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+                  <ArrowLeftOnRectangleIcon className="h-5 w-5 icon-neutral group-hover:text-accent-700" />
                 </button>
               </div>
             </div>
@@ -146,10 +146,10 @@ const DashboardLayout = () => {
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <div className="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-white border-b border-primary-100">
           <button
-            className="h-12 w-12 inline-flex items-center justify-center rounded-md text-neutral-500 hover:text-accent-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary-500 transition-colors"
+            className="h-12 w-12 inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary-500"
             onClick={() => setSidebarOpen(true)}
           >
-            <Bars3Icon className="h-6 w-6" />
+            <Bars3Icon className="h-6 w-6 icon-interactive" />
           </button>
         </div>
 

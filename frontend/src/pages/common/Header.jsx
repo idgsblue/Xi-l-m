@@ -104,9 +104,9 @@ const Header = () => {
               className="inline-flex items-center justify-center rounded-md p-2 text-neutral-500 hover:bg-primary-50 hover:text-accent-700 transition-colors"
             >
               {mobileMenuOpen ? (
-                <XMarkIcon className="block h-6 w-6" />
+                <XMarkIcon className="block h-6 w-6 icon-neutral" />
               ) : (
-                <Bars3Icon className="block h-6 w-6" />
+                <Bars3Icon className="block h-6 w-6 icon-neutral" />
               )}
             </button>
           </div>
