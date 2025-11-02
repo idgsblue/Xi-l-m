@@ -107,26 +107,26 @@ const AddProperty = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Agregar Nueva Propiedad</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-accent-900">Agregar Nueva Propiedad</h1>
+        <p className="mt-2 text-neutral-600">
           Completa la información de tu propiedad. Será revisada antes de publicarse.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white shadow-sm rounded-lg p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 card">
         {/* Información Básica */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-accent-900 mb-4">
             Información Básica
           </h2>
           
           <div className="grid grid-cols-1 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Nombre de la Propiedad *
               </label>
               <div className="mt-1 relative">
-                <HomeIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <HomeIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
                 <input
                   {...register('name', {
                     required: 'El nombre es requerido',
@@ -136,7 +136,7 @@ const AddProperty = () => {
                     }
                   })}
                   type="text"
-                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="input pl-10"
                   placeholder="Casa con vista al río"
                 />
               </div>
@@ -146,7 +146,7 @@ const AddProperty = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Descripción *
               </label>
               <textarea
@@ -158,7 +158,7 @@ const AddProperty = () => {
                   }
                 })}
                 rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="input mt-1"
                 placeholder="Describe tu propiedad..."
               />
               {errors.description && (
@@ -167,7 +167,7 @@ const AddProperty = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Descripción Corta (para búsquedas)
               </label>
               <input
@@ -178,7 +178,7 @@ const AddProperty = () => {
                   }
                 })}
                 type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="input mt-1"
                 placeholder="Breve descripción para las búsquedas"
               />
               {errors.shortDescription && (
@@ -190,23 +190,23 @@ const AddProperty = () => {
 
         {/* Ubicación */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-accent-900 mb-4">
             Ubicación
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Dirección *
               </label>
               <div className="mt-1 relative">
-                <MapPinIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <MapPinIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
                 <input
                   {...register('address', {
                     required: 'La dirección es requerida'
                   })}
                   type="text"
-                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="input pl-10"
                   placeholder="Calle Principal #123"
                 />
               </div>
@@ -216,7 +216,7 @@ const AddProperty = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Zona *
               </label>
               <input
@@ -224,7 +224,7 @@ const AddProperty = () => {
                   required: 'La zona es requerida'
                 })}
                 type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="input mt-1"
                 placeholder="Centro, Río, Montaña..."
               />
               {errors.zone && (
@@ -236,17 +236,17 @@ const AddProperty = () => {
 
         {/* Detalles */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-accent-900 mb-4">
             Detalles de la Propiedad
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Precio por Noche (MXN) *
               </label>
               <div className="mt-1 relative">
-                <CurrencyDollarIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <CurrencyDollarIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
                 <input
                   {...register('pricePerNight', {
                     required: 'El precio es requerido',
@@ -256,7 +256,7 @@ const AddProperty = () => {
                     }
                   })}
                   type="number"
-                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="input pl-10"
                   placeholder="1500"
                 />
               </div>
@@ -266,11 +266,11 @@ const AddProperty = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Máximo de Huéspedes *
               </label>
               <div className="mt-1 relative">
-                <UsersIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <UsersIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
                 <input
                   {...register('maxGuests', {
                     required: 'Requerido',
@@ -284,7 +284,7 @@ const AddProperty = () => {
                     }
                   })}
                   type="number"
-                  className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="input pl-10"
                   placeholder="4"
                 />
               </div>
@@ -294,7 +294,7 @@ const AddProperty = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Habitaciones
               </label>
               <input
@@ -305,7 +305,7 @@ const AddProperty = () => {
                   }
                 })}
                 type="number"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="input mt-1"
                 placeholder="2"
               />
               {errors.bedrooms && (
@@ -314,7 +314,7 @@ const AddProperty = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Baños
               </label>
               <input
@@ -325,7 +325,7 @@ const AddProperty = () => {
                   }
                 })}
                 type="number"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="input mt-1"
                 placeholder="1"
               />
               {errors.bathrooms && (
@@ -337,10 +337,10 @@ const AddProperty = () => {
 
         {/* Amenidades */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-accent-900 mb-4">
             Amenidades
           </h2>
-          
+
           <div className="flex gap-2 mb-4">
             <input
               type="text"
@@ -348,12 +348,12 @@ const AddProperty = () => {
               onChange={(e) => setNewAmenity(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAmenity())}
               placeholder="Agregar amenidad (WiFi, Estacionamiento, etc)"
-              className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="input flex-1"
             />
             <button
               type="button"
               onClick={addAmenity}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="btn-neutral"
             >
               Agregar
             </button>
@@ -363,15 +363,15 @@ const AddProperty = () => {
             {amenities.map((amenity, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary-100 text-secondary-800"
               >
                 {amenity}
                 <button
                   type="button"
                   onClick={() => removeAmenity(index)}
-                  className="ml-2 text-blue-600 hover:text-blue-800"
+                  className="ml-2 text-secondary-600 hover:text-secondary-800"
                 >
-                  <XMarkIcon className="h-4 w-4" />
+                  <XMarkIcon className="h-4 w-4 icon-neutral" />
                 </button>
               </span>
             ))}
@@ -380,7 +380,7 @@ const AddProperty = () => {
 
         {/* Imágenes */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-accent-900 mb-4">
             Imágenes * (Máximo 5, 2MB cada una)
           </h2>
           
@@ -397,15 +397,15 @@ const AddProperty = () => {
                   onClick={() => removeImage(index)}
                   className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
                 >
-                  <XMarkIcon className="h-4 w-4" />
+                  <XMarkIcon className="h-4 w-4 icon-neutral" />
                 </button>
               </div>
             ))}
             
             {images.length < 5 && (
-              <label className="h-32 flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-gray-400">
-                <PhotoIcon className="h-8 w-8 text-gray-400" />
-                <span className="mt-2 text-sm text-gray-600">Agregar imagen</span>
+              <label className="h-32 flex flex-col items-center justify-center border-2 border-neutral-300 border-dashed rounded-lg cursor-pointer hover:border-neutral-400">
+                <PhotoIcon className="h-8 w-8 icon-muted" />
+                <span className="mt-2 text-sm text-neutral-600">Agregar imagen</span>
                 <input
                   type="file"
                   multiple
@@ -423,14 +423,14 @@ const AddProperty = () => {
           <button
             type="button"
             onClick={() => navigate('/host/properties')}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="btn-neutral"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creando...' : 'Crear Propiedad'}
           </button>

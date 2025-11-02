@@ -56,26 +56,26 @@ const MyBookings = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-green-100 text-green-800';
+        return 'badge-success';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'badge-warning';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       case 'completed':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-neutral-100 text-neutral-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-neutral-100 text-neutral-800';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircleIcon className="h-5 w-5" />;
+        return <CheckCircleIcon className="h-5 w-5 icon-success" />;
       case 'pending':
-        return <ClockIcon className="h-5 w-5" />;
+        return <ClockIcon className="h-5 w-5 icon-warning" />;
       case 'cancelled':
-        return <XCircleIcon className="h-5 w-5" />;
+        return <XCircleIcon className="h-5 w-5 icon-error" />;
       default:
         return null;
     }
@@ -108,7 +108,7 @@ const MyBookings = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-600"></div>
       </div>
     );
   }
@@ -116,19 +116,19 @@ const MyBookings = () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Mis Reservas</h1>
-        <p className="mt-2 text-gray-600">Gestiona todas tus reservas en un solo lugar</p>
+        <h1 className="text-3xl font-bold text-accent-900">Mis Reservas</h1>
+        <p className="mt-2 text-neutral-600">Gestiona todas tus reservas en un solo lugar</p>
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+      <div className="card mb-6">
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               filter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-secondary-600 text-white'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-primary-50'
             }`}
           >
             Todas ({bookings.length})
@@ -137,8 +137,8 @@ const MyBookings = () => {
             onClick={() => setFilter('upcoming')}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               filter === 'upcoming'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-secondary-600 text-white'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-primary-50'
             }`}
           >
             Próximas
@@ -147,8 +147,8 @@ const MyBookings = () => {
             onClick={() => setFilter('confirmed')}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               filter === 'confirmed'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-secondary-600 text-white'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-primary-50'
             }`}
           >
             Confirmadas
@@ -157,8 +157,8 @@ const MyBookings = () => {
             onClick={() => setFilter('pending')}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               filter === 'pending'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-secondary-600 text-white'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-primary-50'
             }`}
           >
             Pendientes
@@ -167,8 +167,8 @@ const MyBookings = () => {
             onClick={() => setFilter('cancelled')}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               filter === 'cancelled'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-secondary-600 text-white'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-primary-50'
             }`}
           >
             Canceladas
@@ -178,11 +178,11 @@ const MyBookings = () => {
 
       {/* Lista de reservas */}
       {filteredBookings.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-          <p className="text-gray-600">No tienes reservas {filter !== 'all' && getStatusText(filter).toLowerCase()}</p>
+        <div className="card text-center">
+          <p className="text-neutral-600">No tienes reservas {filter !== 'all' && getStatusText(filter).toLowerCase()}</p>
           <Link
             to="/search"
-            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            className="btn-secondary mt-4 inline-flex items-center"
           >
             Buscar propiedades
           </Link>
@@ -190,7 +190,7 @@ const MyBookings = () => {
       ) : (
         <div className="space-y-4">
           {filteredBookings.map((booking) => (
-            <div key={booking.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div key={booking.id} className="card overflow-hidden">
               <div className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -199,37 +199,37 @@ const MyBookings = () => {
                         {getStatusIcon(booking.status)}
                         <span className="ml-1">{getStatusText(booking.status)}</span>
                       </span>
-                      <span className="ml-3 text-sm text-gray-500">
+                      <span className="ml-3 text-sm text-neutral-500">
                         Reserva #{booking.id}
                       </span>
                     </div>
 
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-lg font-semibold text-accent-900 mb-2">
                       {booking.property.name}
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-neutral-600">
                       <div className="flex items-center">
-                        <MapPinIcon className="h-4 w-4 mr-2" />
+                        <MapPinIcon className="h-4 w-4 mr-2 icon-accent" />
                         {booking.property.address}
                       </div>
                       <div className="flex items-center">
-                        <UsersIcon className="h-4 w-4 mr-2" />
+                        <UsersIcon className="h-4 w-4 mr-2 icon-neutral" />
                         {booking.numberOfGuests} {booking.numberOfGuests === 1 ? 'huésped' : 'huéspedes'}
                       </div>
                       <div className="flex items-center">
-                        <CalendarIcon className="h-4 w-4 mr-2" />
-                        {format(new Date(booking.checkIn), "dd MMM yyyy", { locale: es })} - 
+                        <CalendarIcon className="h-4 w-4 mr-2 icon-neutral" />
+                        {format(new Date(booking.checkIn), "dd MMM yyyy", { locale: es })} -
                         {format(new Date(booking.checkOut), "dd MMM yyyy", { locale: es })}
                       </div>
-                      <div className="font-semibold text-gray-900">
+                      <div className="font-semibold text-accent-900">
                         Total: ${booking.totalPrice} MXN
                       </div>
                     </div>
 
                     {booking.specialRequests && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                        <p className="text-sm text-gray-600">
+                      <div className="mt-3 p-3 bg-neutral-50 rounded-md">
+                        <p className="text-sm text-neutral-600">
                           <span className="font-medium">Solicitudes especiales:</span> {booking.specialRequests}
                         </p>
                       </div>
@@ -239,11 +239,11 @@ const MyBookings = () => {
                   <div className="ml-4 flex flex-col space-y-2">
                     <Link
                       to={`/property/${booking.propertyId}`}
-                      className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                      className="text-sm text-secondary-600 hover:text-secondary-500 font-medium"
                     >
                       Ver propiedad
                     </Link>
-                    
+
                     {booking.status === 'confirmed' && new Date(booking.checkIn) > new Date() && (
                       <button
                         onClick={() => handleCancel(booking.id)}
@@ -258,7 +258,7 @@ const MyBookings = () => {
 
                 {/* Información del anfitrión */}
                 <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-neutral-600">
                     Anfitrión: <span className="font-medium">{booking.property.host.name}</span>
                     {booking.property.host.phone && (
                       <span> • Tel: {booking.property.host.phone}</span>

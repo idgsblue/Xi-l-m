@@ -7,93 +7,61 @@ const Property = sequelize.define('Property', {
     primaryKey: true,
     autoIncrement: true
   },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [3, 200]
-    }
+  host_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'host_id',
+    references: {
+      model: 'users',
+      key: 'id'
+    },
+    onDelete: 'SET NULL'
+  },
+  title: {
+    type: DataTypes.STRING(255),
+    allowNull: false
   },
   description: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [10, 1000]
-    }
-  },
-  shortDescription: {
-    type: DataTypes.STRING(300),
-    allowNull: false
-  },
-  address: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  zone: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  pricePerNight: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    validate: {
-      min: 0
-    }
-  },
-  maxGuests: {
-    type: DataTypes.INTEGER,
-    defaultValue: 2,
-    validate: {
-      min: 1,
-      max: 20
-    }
-  },
-  bedrooms: {
-    type: DataTypes.INTEGER,
-    defaultValue: 1
-  },
-  bathrooms: {
-    type: DataTypes.INTEGER,
-    defaultValue: 1
-  },
-  amenities: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
-    defaultValue: []
-  },
-  images: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
-    defaultValue: [],
-    validate: {
-      arrayMaxLength(value) {
-        if (value.length > 5) {
-          throw new Error('Máximo 5 imágenes permitidas');
-        }
-      }
-    }
-  },
-  status: {
-    type: DataTypes.ENUM('pending', 'approved', 'rejected'),
-    defaultValue: 'pending'
-  },
-  rejectionReason: {
     type: DataTypes.TEXT
   },
-  isAvailable: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true
-  },
-  hostId: {
+  accommodation_type_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
+    field: 'accommodation_type_id',
     references: {
-      model: 'Users',
+      model: 'accommodation_types',
       key: 'id'
+    },
+    onDelete: 'SET NULL'
+  },
+  price_per_night: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    field: 'price_per_night'
+  },
+  location: {
+    type: DataTypes.STRING(255)
+  },
+  capacity: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  status: {
+    type: DataTypes.STRING(20),
+    validate: {
+      isIn: [['inactive', 'published', 'blocked']]
     }
+  },
+  is_advertised: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    field: 'is_advertised'
   }
 }, {
-  timestamps: true
+  tableName: 'properties',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
 module.exports = Property;

@@ -73,10 +73,10 @@ const BookingForm = ({ property, bookingData }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <h3 className="text-lg font-semibold text-accent-900 mb-4">
           Información de pago
         </h3>
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-neutral-50 p-4 rounded-lg">
           <CardElement
             options={{
               style: {
@@ -97,7 +97,7 @@ const BookingForm = ({ property, bookingData }) => {
       </div>
 
       <div>
-        <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="specialRequests" className="block text-sm font-medium text-neutral-700">
           Solicitudes especiales (opcional)
         </label>
         <textarea
@@ -105,14 +105,14 @@ const BookingForm = ({ property, bookingData }) => {
           value={specialRequests}
           onChange={(e) => setSpecialRequests(e.target.value)}
           rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="input mt-1"
           placeholder="¿Alguna solicitud especial para tu estadía?"
         />
       </div>
 
-      <div className="bg-blue-50 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-900 mb-2">Política de cancelación</h4>
-        <ul className="text-sm text-gray-600 space-y-1">
+      <div className="bg-primary-50 rounded-lg p-4">
+        <h4 className="font-semibold text-accent-900 mb-2">Política de cancelación</h4>
+        <ul className="text-sm text-neutral-600 space-y-1">
           <li>• Cancelación gratuita hasta 7 días antes del check-in</li>
           <li>• 50% de reembolso hasta 3 días antes</li>
           <li>• Sin reembolso con menos de 3 días</li>
@@ -122,7 +122,7 @@ const BookingForm = ({ property, bookingData }) => {
       <button
         type="submit"
         disabled={!stripe || loading}
-        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn-secondary w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Procesando...' : `Confirmar y pagar $${bookingData.totalPrice} MXN`}
       </button>
@@ -166,7 +166,7 @@ const Booking = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-600"></div>
       </div>
     );
   }
@@ -178,26 +178,26 @@ const Booking = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Confirmar reserva</h1>
+      <h1 className="text-3xl font-bold text-accent-900 mb-8">Confirmar reserva</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <div className="card">
+            <h2 className="text-xl font-semibold text-accent-900 mb-4">
               Información del huésped
             </h2>
             <div className="space-y-3">
               <div>
-                <span className="text-sm text-gray-600">Nombre:</span>
+                <span className="text-sm text-neutral-600">Nombre:</span>
                 <p className="font-medium">{user.name}</p>
               </div>
               <div>
-                <span className="text-sm text-gray-600">Email:</span>
+                <span className="text-sm text-neutral-600">Email:</span>
                 <p className="font-medium">{user.email}</p>
               </div>
               {user.phone && (
                 <div>
-                  <span className="text-sm text-gray-600">Teléfono:</span>
+                  <span className="text-sm text-neutral-600">Teléfono:</span>
                   <p className="font-medium">{user.phone}</p>
                 </div>
               )}
@@ -212,38 +212,38 @@ const Booking = () => {
         </div>
 
         <div>
-          <div className="bg-white rounded-lg shadow p-6 sticky top-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="card sticky top-4">
+            <h3 className="text-lg font-semibold text-accent-900 mb-4">
               Resumen de reserva
             </h3>
-            
+
             <div className="mb-4">
-              <h4 className="font-medium text-gray-900">{property?.name}</h4>
-              <p className="text-sm text-gray-600">{property?.address}</p>
+              <h4 className="font-medium text-accent-900">{property?.name}</h4>
+              <p className="text-sm text-neutral-600">{property?.address}</p>
             </div>
 
             <div className="space-y-3 border-t border-b py-4 my-4">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Check-in:</span>
+                <span className="text-neutral-600">Check-in:</span>
                 <span className="font-medium">
                   {format(new Date(bookingData.checkIn), "dd 'de' MMMM, yyyy", { locale: es })}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Check-out:</span>
+                <span className="text-neutral-600">Check-out:</span>
                 <span className="font-medium">
                   {format(new Date(bookingData.checkOut), "dd 'de' MMMM, yyyy", { locale: es })}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Huéspedes:</span>
+                <span className="text-neutral-600">Huéspedes:</span>
                 <span className="font-medium">{bookingData.guests}</span>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">
+                <span className="text-neutral-600">
                   ${property?.pricePerNight} x {Math.ceil((new Date(bookingData.checkOut) - new Date(bookingData.checkIn)) / (1000 * 60 * 60 * 24))} noches
                 </span>
                 <span>${bookingData.totalPrice}</span>

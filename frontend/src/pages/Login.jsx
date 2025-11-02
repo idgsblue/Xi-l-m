@@ -33,16 +33,16 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-neutral-50 py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+        <h2 className="mt-6 text-center heading-1">
           Inicia sesión en tu cuenta
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-neutral-600">
           ¿No tienes cuenta?{' '}
           <Link
             to="/register"
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="font-medium text-secondary-600 hover:text-secondary-500"
           >
             Regístrate aquí
           </Link>
@@ -50,10 +50,10 @@ const Login = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
+        <div className="card">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
                 Correo electrónico
               </label>
               <div className="mt-1">
@@ -67,7 +67,7 @@ const Login = () => {
                   })}
                   type="email"
                   autoComplete="email"
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="input"
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -76,7 +76,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
                 Contraseña
               </label>
               <div className="mt-1 relative">
@@ -86,7 +86,7 @@ const Login = () => {
                   })}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="input pr-10"
                 />
                 <button
                   type="button"
@@ -94,9 +94,9 @@ const Login = () => {
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                    <EyeSlashIcon className="h-5 w-5 icon-muted" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                    <EyeIcon className="h-5 w-5 icon-muted" />
                   )}
                 </button>
                 {errors.password && (
@@ -109,7 +109,7 @@ const Login = () => {
               <div className="text-sm">
                 <Link
                   to="/forgot-password"
-                  className="font-medium text-blue-600 hover:text-blue-500"
+                  className="font-medium text-secondary-600 hover:text-secondary-500"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
@@ -120,7 +120,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
               </button>

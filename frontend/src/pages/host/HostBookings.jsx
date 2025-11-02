@@ -44,26 +44,26 @@ const HostBookings = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-green-100 text-green-800';
+        return 'badge-success';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'badge-warning';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'badge-error';
       case 'completed':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-neutral-100 text-neutral-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-neutral-100 text-neutral-800';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircleIcon className="h-5 w-5" />;
+        return <CheckCircleIcon className="h-5 w-5 icon-success" />;
       case 'pending':
-        return <ClockIcon className="h-5 w-5" />;
+        return <ClockIcon className="h-5 w-5 icon-warning" />;
       case 'cancelled':
-        return <XCircleIcon className="h-5 w-5" />;
+        return <XCircleIcon className="h-5 w-5 icon-error" />;
       default:
         return null;
     }
@@ -101,7 +101,7 @@ const HostBookings = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-600"></div>
       </div>
     );
   }
@@ -109,43 +109,43 @@ const HostBookings = () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Reservas Recibidas</h1>
-        <p className="mt-2 text-gray-600">Gestiona las reservas de tus propiedades</p>
+        <h1 className="text-3xl font-bold text-accent-900">Reservas Recibidas</h1>
+        <p className="mt-2 text-neutral-600">Gestiona las reservas de tus propiedades</p>
       </div>
 
       {/* Estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500">Total Reservas</div>
-          <div className="mt-2 text-3xl font-bold text-gray-900">{bookings.length}</div>
+        <div className="card">
+          <div className="text-sm font-medium text-neutral-500">Total Reservas</div>
+          <div className="mt-2 text-3xl font-bold text-accent-900">{bookings.length}</div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500">Próximas</div>
-          <div className="mt-2 text-3xl font-bold text-blue-600">{upcomingBookings.length}</div>
+        <div className="card">
+          <div className="text-sm font-medium text-neutral-500">Próximas</div>
+          <div className="mt-2 text-3xl font-bold text-secondary-600">{upcomingBookings.length}</div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500">Confirmadas</div>
-          <div className="mt-2 text-3xl font-bold text-green-600">
+        <div className="card">
+          <div className="text-sm font-medium text-neutral-500">Confirmadas</div>
+          <div className="mt-2 text-3xl font-bold text-success-600">
             {bookings.filter(b => b.status === 'confirmed').length}
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm font-medium text-gray-500">Ingresos Totales</div>
-          <div className="mt-2 text-3xl font-bold text-gray-900">${totalRevenue.toFixed(2)}</div>
+        <div className="card">
+          <div className="text-sm font-medium text-neutral-500">Ingresos Totales</div>
+          <div className="mt-2 text-3xl font-bold text-accent-900">${totalRevenue.toFixed(2)}</div>
         </div>
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+      <div className="card mb-6">
         <div className="flex flex-wrap gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
               Propiedad
             </label>
             <select
               value={selectedProperty}
               onChange={(e) => setSelectedProperty(e.target.value)}
-              className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="input"
             >
               <option value="all">Todas las propiedades</option>
               {properties.map(property => (
@@ -157,7 +157,7 @@ const HostBookings = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
               Estado
             </label>
             <div className="flex gap-2">
@@ -165,8 +165,8 @@ const HostBookings = () => {
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-md text-sm font-medium ${
                   filter === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'btn-primary'
+                    : 'btn-neutral'
                 }`}
               >
                 Todas
@@ -175,8 +175,8 @@ const HostBookings = () => {
                 onClick={() => setFilter('confirmed')}
                 className={`px-4 py-2 rounded-md text-sm font-medium ${
                   filter === 'confirmed'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'btn-primary'
+                    : 'btn-neutral'
                 }`}
               >
                 Confirmadas
@@ -185,8 +185,8 @@ const HostBookings = () => {
                 onClick={() => setFilter('pending')}
                 className={`px-4 py-2 rounded-md text-sm font-medium ${
                   filter === 'pending'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'btn-primary'
+                    : 'btn-neutral'
                 }`}
               >
                 Pendientes
@@ -195,8 +195,8 @@ const HostBookings = () => {
                 onClick={() => setFilter('cancelled')}
                 className={`px-4 py-2 rounded-md text-sm font-medium ${
                   filter === 'cancelled'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'btn-primary'
+                    : 'btn-neutral'
                 }`}
               >
                 Canceladas
@@ -208,49 +208,49 @@ const HostBookings = () => {
 
       {/* Lista de reservas */}
       {filteredBookings.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-          <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="mt-2 text-gray-600">No hay reservas que mostrar</p>
+        <div className="card text-center">
+          <CalendarIcon className="mx-auto h-12 w-12 icon-muted" />
+          <p className="mt-2 text-neutral-600">No hay reservas que mostrar</p>
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-primary-200">
+            <thead className="bg-neutral-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Reserva
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Propiedad
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Huésped
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Fechas
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Total
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-primary-200">
               {filteredBookings.map((booking) => (
                 <tr key={booking.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-accent-900">
                     #{booking.id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <HomeIcon className="h-5 w-5 text-gray-400 mr-2" />
+                      <HomeIcon className="h-5 w-5 icon-muted mr-2" />
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-accent-900">
                           {booking.property.name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-neutral-500">
                           {booking.property.zone}
                         </div>
                       </div>
@@ -258,30 +258,30 @@ const HostBookings = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="flex items-center text-sm font-medium text-gray-900">
-                        <UserIcon className="h-4 w-4 text-gray-400 mr-1" />
+                      <div className="flex items-center text-sm font-medium text-accent-900">
+                        <UserIcon className="h-4 w-4 icon-muted mr-1" />
                         {booking.guest.name}
                       </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <EnvelopeIcon className="h-4 w-4 text-gray-400 mr-1" />
+                      <div className="flex items-center text-sm text-neutral-500">
+                        <EnvelopeIcon className="h-4 w-4 icon-muted mr-1" />
                         {booking.guest.email}
                       </div>
                       {booking.guest.phone && (
-                        <div className="flex items-center text-sm text-gray-500">
-                          <PhoneIcon className="h-4 w-4 text-gray-400 mr-1" />
+                        <div className="flex items-center text-sm text-neutral-500">
+                          <PhoneIcon className="h-4 w-4 icon-muted mr-1" />
                           {booking.guest.phone}
                         </div>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-accent-900">
                       <div className="flex items-center">
-                        <CalendarIcon className="h-4 w-4 text-gray-400 mr-1" />
-                        {format(new Date(booking.checkIn), "dd MMM", { locale: es })} - 
+                        <CalendarIcon className="h-4 w-4 icon-muted mr-1" />
+                        {format(new Date(booking.checkIn), "dd MMM", { locale: es })} -
                         {format(new Date(booking.checkOut), "dd MMM yyyy", { locale: es })}
                       </div>
-                      <div className="text-gray-500">
+                      <div className="text-neutral-500">
                         {booking.numberOfGuests} {booking.numberOfGuests === 1 ? 'huésped' : 'huéspedes'}
                       </div>
                     </div>
@@ -292,7 +292,7 @@ const HostBookings = () => {
                       <span className="ml-1">{getStatusText(booking.status)}</span>
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-accent-900">
                     ${booking.totalPrice}
                   </td>
                 </tr>

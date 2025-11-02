@@ -87,7 +87,7 @@ const PropertyDetail = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-600"></div>
       </div>
     );
   }
@@ -95,7 +95,7 @@ const PropertyDetail = () => {
   if (!property) {
     return (
       <div className="text-center py-12">
-        <p className="text-lg text-gray-600">Propiedad no encontrada</p>
+        <p className="text-lg text-neutral-600">Propiedad no encontrada</p>
       </div>
     );
   }
@@ -105,9 +105,9 @@ const PropertyDetail = () => {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Título y ubicación */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">{property.name}</h1>
-          <div className="mt-2 flex items-center text-gray-600">
-            <MapPinIcon className="h-5 w-5 mr-1" />
+          <h1 className="heading-1">{property.name}</h1>
+          <div className="mt-2 flex items-center text-neutral-600">
+            <MapPinIcon className="h-5 w-5 mr-1 icon-accent" />
             <span>{property.address}, {property.zone}</span>
           </div>
         </div>
@@ -122,8 +122,8 @@ const PropertyDetail = () => {
                 className="w-full h-96 object-cover rounded-lg"
               />
             ) : (
-              <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
-                <HomeIcon className="h-20 w-20 text-gray-400" />
+              <div className="w-full h-96 bg-primary-200 rounded-lg flex items-center justify-center">
+                <HomeIcon className="h-20 w-20 icon-muted" />
               </div>
             )}
             {property.images && property.images.length > 1 && (
@@ -142,17 +142,17 @@ const PropertyDetail = () => {
           </div>
 
           {/* Panel de reserva */}
-          <div className="bg-gray-50 rounded-lg p-6">
+          <div className="bg-primary-50 rounded-lg p-6">
             <div className="mb-4">
-              <span className="text-3xl font-bold text-gray-900">
+              <span className="text-3xl font-bold text-accent-900">
                 ${property.pricePerNight}
               </span>
-              <span className="text-gray-600"> MXN / noche</span>
+              <span className="text-neutral-600"> MXN / noche</span>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
                   Check-in
                 </label>
                 <DatePicker
@@ -163,12 +163,12 @@ const PropertyDetail = () => {
                   endDate={checkOut}
                   minDate={new Date()}
                   placeholderText="Selecciona fecha"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
                   Check-out
                 </label>
                 <DatePicker
@@ -179,18 +179,18 @@ const PropertyDetail = () => {
                   endDate={checkOut}
                   minDate={checkIn || new Date()}
                   placeholderText="Selecciona fecha"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
                   Huéspedes
                 </label>
                 <select
                   value={guests}
                   onChange={(e) => setGuests(e.target.value)}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="input w-full"
                 >
                   {[...Array(property.maxGuests)].map((_, i) => (
                     <option key={i + 1} value={i + 1}>
@@ -218,10 +218,10 @@ const PropertyDetail = () => {
               <button
                 onClick={handleBooking}
                 disabled={!availability?.available}
-                className={`w-full rounded-md px-4 py-3 text-base font-semibold text-white shadow-sm ${
+                className={`w-full px-4 py-3 text-base font-semibold ${
                   availability?.available
-                    ? 'bg-blue-600 hover:bg-blue-500'
-                    : 'bg-gray-400 cursor-not-allowed'
+                    ? 'btn-primary'
+                    : 'bg-neutral-400 text-white cursor-not-allowed rounded-md shadow-sm'
                 }`}
               >
                 {availability?.available ? 'Reservar' : 'No disponible'}
@@ -240,27 +240,27 @@ const PropertyDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="border-b pb-6 mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="heading-2 mb-4">
                 Acerca de este lugar
               </h2>
-              <p className="text-gray-600">{property.description}</p>
+              <p className="text-neutral-600">{property.description}</p>
             </div>
 
             <div className="border-b pb-6 mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="heading-2 mb-4">
                 Características
               </h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center">
-                  <UsersIcon className="h-5 w-5 mr-3 text-gray-400" />
+                  <UsersIcon className="h-5 w-5 mr-3 icon-neutral" />
                   <span>Hasta {property.maxGuests} huéspedes</span>
                 </div>
                 <div className="flex items-center">
-                  <HomeIcon className="h-5 w-5 mr-3 text-gray-400" />
+                  <HomeIcon className="h-5 w-5 mr-3 icon-neutral" />
                   <span>{property.bedrooms} habitaciones</span>
                 </div>
                 <div className="flex items-center">
-                  <SparklesIcon className="h-5 w-5 mr-3 text-gray-400" />
+                  <SparklesIcon className="h-5 w-5 mr-3 icon-neutral" />
                   <span>{property.bathrooms} baños</span>
                 </div>
               </div>
@@ -268,13 +268,13 @@ const PropertyDetail = () => {
 
             {property.amenities && property.amenities.length > 0 && (
               <div className="border-b pb-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                <h2 className="heading-2 mb-4">
                   Amenidades
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
                   {property.amenities.map((amenity, idx) => (
                     <div key={idx} className="flex items-center">
-                      <span className="text-gray-600">• {amenity}</span>
+                      <span className="text-neutral-600">• {amenity}</span>
                     </div>
                   ))}
                 </div>
@@ -283,28 +283,28 @@ const PropertyDetail = () => {
           </div>
 
           <div>
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="card mb-6">
+              <h3 className="heading-2 mb-4">
                 Anfitrión
               </h3>
               <div className="flex items-center">
-                <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
-                  <span className="text-xl font-semibold text-gray-600">
+                <div className="h-12 w-12 rounded-full bg-primary-300 flex items-center justify-center">
+                  <span className="text-xl font-semibold text-neutral-600">
                     {property.host?.name?.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="ml-4">
-                  <p className="font-medium text-gray-900">{property.host?.name}</p>
-                  <p className="text-sm text-gray-600">Anfitrión verificado</p>
+                  <p className="font-medium text-accent-900">{property.host?.name}</p>
+                  <p className="text-sm text-neutral-600">Anfitrión verificado</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 bg-blue-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="bg-secondary-50 rounded-lg p-6">
+              <h3 className="heading-2 mb-2">
                 Política de cancelación
               </h3>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <ul className="text-sm text-neutral-600 space-y-1">
                 <li>• Cancelación gratuita hasta 7 días antes</li>
                 <li>• 50% de reembolso hasta 3 días antes</li>
                 <li>• Sin reembolso con menos de 3 días</li>

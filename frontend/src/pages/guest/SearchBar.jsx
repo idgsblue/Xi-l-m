@@ -30,21 +30,21 @@ const SearchBar = ({ initialValues = {} }) => {
         {/* Ubicación */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MapPinIcon className="h-5 w-5 text-gray-400" />
+            <MapPinIcon className="h-5 w-5 text-neutral-400" />
           </div>
           <input
             type="text"
             value={searchData.zone}
             onChange={(e) => setSearchData({ ...searchData, zone: e.target.value })}
             placeholder="¿A dónde vas?"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="input"
           />
         </div>
 
         {/* Check-in */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <CalendarIcon className="h-5 w-5 text-gray-400" />
+            <CalendarIcon className="h-5 w-5 text-neutral-400" />
           </div>
           <DatePicker
             selected={searchData.checkIn}
@@ -54,14 +54,14 @@ const SearchBar = ({ initialValues = {} }) => {
             endDate={searchData.checkOut}
             minDate={new Date()}
             placeholderText="Check-in"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="input"
           />
         </div>
 
         {/* Check-out */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <CalendarIcon className="h-5 w-5 text-gray-400" />
+            <CalendarIcon className="h-5 w-5 text-neutral-400" />
           </div>
           <DatePicker
             selected={searchData.checkOut}
@@ -71,7 +71,7 @@ const SearchBar = ({ initialValues = {} }) => {
             endDate={searchData.checkOut}
             minDate={searchData.checkIn || new Date()}
             placeholderText="Check-out"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="input"
           />
         </div>
 
@@ -79,12 +79,12 @@ const SearchBar = ({ initialValues = {} }) => {
         <div className="flex space-x-2">
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <UsersIcon className="h-5 w-5 text-gray-400" />
+              <UsersIcon className="h-5 w-5 text-neutral-400" />
             </div>
             <select
               value={searchData.guests}
               onChange={(e) => setSearchData({ ...searchData, guests: e.target.value })}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="input"
             >
               {[...Array(10)].map((_, i) => (
                 <option key={i + 1} value={i + 1}>
@@ -96,9 +96,9 @@ const SearchBar = ({ initialValues = {} }) => {
           
           <button
             type="submit"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="btn-secondary"
           >
-            <MagnifyingGlassIcon className="h-5 w-5" />
+            <MagnifyingGlassIcon className="h-5 w-5 icon-secondary" />
             <span className="hidden sm:ml-2 sm:inline">Buscar</span>
           </button>
         </div>

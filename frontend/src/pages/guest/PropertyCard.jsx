@@ -8,9 +8,9 @@ const PropertyCard = ({ property }) => {
     : '/placeholder-property.jpg';
 
   return (
-    <Link 
+    <Link
       to={`/property/${property.id}`}
-      className="group block bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-200"
+      className="card group block overflow-hidden hover:shadow-lg transition-shadow duration-200"
     >
       <div className="relative">
         <img
@@ -22,37 +22,37 @@ const PropertyCard = ({ property }) => {
           }}
         />
         {property.status === 'pending' && (
-          <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-semibold">
+          <div className="absolute top-2 right-2 badge-warning">
             Pendiente
           </div>
         )}
       </div>
       
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+        <h3 className="text-lg font-semibold text-accent-900 group-hover:text-secondary-600 transition-colors">
           {property.name}
         </h3>
-        
-        <div className="mt-1 flex items-center text-sm text-gray-600">
-          <MapPinIcon className="h-4 w-4 mr-1" />
+
+        <div className="mt-1 flex items-center text-sm text-neutral-600">
+          <MapPinIcon className="h-4 w-4 mr-1 icon-accent" />
           <span className="truncate">{property.zone}</span>
         </div>
-        
-        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+
+        <p className="mt-2 text-sm text-neutral-600 line-clamp-2">
           {property.shortDescription || property.description}
         </p>
-        
+
         <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center text-sm text-gray-600">
-            <UsersIcon className="h-4 w-4 mr-1" />
+          <div className="flex items-center text-sm text-neutral-600">
+            <UsersIcon className="h-4 w-4 mr-1 icon-neutral" />
             <span>{property.maxGuests} huéspedes</span>
           </div>
-          
+
           <div className="text-right">
-            <span className="text-lg font-bold text-gray-900">
+            <span className="text-lg font-bold text-accent-900">
               ${property.pricePerNight}
             </span>
-            <span className="text-sm text-gray-600"> /noche</span>
+            <span className="text-sm text-neutral-600"> /noche</span>
           </div>
         </div>
       </div>
