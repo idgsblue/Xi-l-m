@@ -25,7 +25,10 @@ const propertyValidation = [
     .isInt().withMessage('El tipo de alojamiento debe ser un número válido'),
   body('services')
     .optional()
-    .isArray().withMessage('Los servicios deben ser un arreglo')
+    .isArray().withMessage('Los servicios deben ser un arreglo'),
+  body('images')
+    .optional()
+    .isArray().withMessage('Las imágenes deben ser un arreglo de URLs')
 ];
 
 const searchValidation = [
@@ -40,39 +43,49 @@ const searchValidation = [
   query('limit').optional().isInt({ min: 1, max: 50 })
 ];
 
-// Rutas públicas (no requieren autenticación)
-router.get('/', searchValidation, handleValidationErrors, propertyController.getAll);
-router.get('/:id', propertyController.getById);
-
-// Rutas protegidas
-router.use(authenticate);
-
-// Rutas para anfitriones
+// ====================================
+// RUTAS PROTEGIDAS PRIMERO (más específicas)
+// ====================================
 router.post('/', 
+  authenticate,  // ← Asegúrate de que authenticate esté aquí
   isHost, 
-  propertyController.uploadImages,
   propertyValidation, 
   handleValidationErrors, 
   propertyController.create
 );
 
-router.get('/host/my-properties', isHost, propertyController.getMyProperties);
+router.get('/host/my-properties', 
+  authenticate, 
+  isHost, 
+  propertyController.getMyProperties
+);
 
 router.put('/:id', 
+  authenticate,
   isHost,
-  propertyController.uploadImages,
   propertyValidation, 
   handleValidationErrors, 
   propertyController.update
 );
 
-router.delete('/:id', isHost, propertyController.delete);
+router.delete('/:id', 
+  authenticate, 
+  isHost, 
+  propertyController.delete
+);
 
 router.patch('/:id/status',
+  authenticate,
   isHost,
   body('status').isIn(['inactive', 'published', 'blocked']).withMessage('Estado inválido'),
   handleValidationErrors,
   propertyController.updateStatus
 );
+
+// ====================================
+// RUTAS PÚBLICAS AL FINAL (menos específicas)
+// ====================================
+router.get('/', searchValidation, handleValidationErrors, propertyController.getAll);
+router.get('/:id', propertyController.getById);
 
 module.exports = router;

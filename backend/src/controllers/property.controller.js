@@ -46,71 +46,72 @@ class PropertyController {
 
   // Crear propiedad
   async create(req, res, next) {
-    try {
-      const {
-        title,
-        description,
-        location,
-        accommodation_type_id,
-        price_per_night,
-        capacity,
-        services
-      } = req.body;
+  try {
+    const {
+      title,
+      description,
+      location,
+      accommodation_type_id,
+      price_per_night,
+      capacity,
+      services,
+      images // ← Ahora es un array de URLs de Firebase
+    } = req.body;
 
-      // Verificar que el usuario sea host
-      if (req.user.role !== 'host' && req.user.role !== 'admin') {
-        return res.status(403).json({
-          error: 'Debes ser anfitrión para publicar propiedades'
-        });
-      }
-
-      // Crear propiedad
-      const property = await Property.create({
-        host_id: req.userId,
-        title,
-        description,
-        location,
-        accommodation_type_id: accommodation_type_id || null,
-        price_per_night,
-        capacity: capacity || 2,
-        status: 'inactive', // Inicia como inactiva, requiere aprobación
-        is_advertised: false
+    // Verificar que el usuario sea host
+    if (req.user.role !== 'host' && req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Debes ser anfitrión para publicar propiedades'
       });
-
-      // Procesar imágenes si las hay
-      if (req.files && req.files.length > 0) {
-        const imagePromises = req.files.map((file, index) => {
-          return PropertyImage.create({
-            property_id: property.id,
-            image_url: `/uploads/properties/${file.filename}`,
-            is_main: index === 0 // Primera imagen como principal
-          });
-        });
-        await Promise.all(imagePromises);
-      }
-
-      // Asociar servicios si los hay
-      if (services && Array.isArray(services)) {
-        await property.setServices(services);
-      }
-
-      // Cargar propiedad con relaciones
-      const propertyWithRelations = await Property.findByPk(property.id, {
-        include: [
-          { model: PropertyImage, as: 'images' },
-          { model: Service, as: 'services' },
-          { model: AccommodationType, as: 'accommodationType' }
-        ]
-      });
-
-      res.status(201).json({
-        message: 'Propiedad creada exitosamente',
-        property: propertyWithRelations
-      });
-    } catch (error) {
-      next(error);
     }
+
+    // Crear propiedad
+    const property = await Property.create({
+      host_id: req.userId,
+      title,
+      description,
+      location,
+      accommodation_type_id: accommodation_type_id || null,
+      price_per_night,
+      capacity: capacity || 2,
+      status: 'inactive', // Inicia como inactiva, requiere aprobación
+      is_advertised: false
+    });
+
+    // Guardar imágenes de Firebase Storage
+    if (images && Array.isArray(images) && images.length > 0) {
+      const imagePromises = images.map((imageUrl, index) => {
+        return PropertyImage.create({
+          property_id: property.id,
+          image_url: imageUrl, // URL completa de Firebase Storage
+          is_main: index === 0 // Primera imagen como principal
+        });
+      });
+      await Promise.all(imagePromises);
+    }
+
+    // Asociar servicios si los hay
+    if (services && Array.isArray(services)) {
+      await property.setServices(services);
+    }
+
+    // Cargar propiedad con relaciones
+    const propertyWithRelations = await Property.findByPk(property.id, {
+      include: [
+        { model: PropertyImage, as: 'images' },
+        { model: Service, as: 'services' },
+        { model: AccommodationType, as: 'accommodationType' }
+      ]
+    });
+
+    res.status(201).json({
+      message: 'Propiedad creada exitosamente',
+      property: propertyWithRelations
+    });
+  } catch (error) {
+    next(error);
   }
+}
 
   // Obtener todas las propiedades publicadas
   async getAll(req, res, next) {

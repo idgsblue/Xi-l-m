@@ -117,7 +117,8 @@ const PropertyDetail = () => {
           <div className="relative">
             {property.images && property.images.length > 0 ? (
               <img
-                src={`${process.env.REACT_APP_API_URL?.replace('/api', '')}${property.images[imageIndex]}`}
+                src={property.images[imageIndex]?.image_url || property.images[imageIndex]}
+
                 alt={property.name}
                 className="w-full h-96 object-cover rounded-lg"
               />

@@ -25,7 +25,16 @@ const MyProperties = () => {
   const loadProperties = async () => {
     try {
       const response = await api.get('/properties/host/my-properties');
-      setProperties(response.data.properties);
+      // Mapear los campos del backend al formato del frontend
+      const mappedProperties = response.data.properties.map(prop => ({
+        ...prop,
+        name: prop.title, // Mapear title a name
+        pricePerNight: prop.price_per_night, // Mapear price_per_night a pricePerNight
+        zone: prop.location, // Mapear location a zone
+        isAvailable: prop.status === 'published', // Determinar disponibilidad por status
+        maxGuests: prop.capacity // Mapear capacity a maxGuests
+      }));
+      setProperties(mappedProperties);
     } catch (error) {
       toast.error('Error cargando propiedades');
     } finally {
@@ -52,10 +61,14 @@ const MyProperties = () => {
 
   const toggleAvailability = async (propertyId, currentStatus) => {
     try {
-      await api.patch(`/properties/${propertyId}/availability`, {
-        isAvailable: !currentStatus
+      // Cambiar entre 'published' e 'inactive'
+      const newStatus = currentStatus ? 'inactive' : 'published';
+      
+      await api.patch(`/properties/${propertyId}/status`, {
+        status: newStatus
       });
-      toast.success(`Propiedad ${!currentStatus ? 'activada' : 'desactivada'}`);
+      
+      toast.success(`Propiedad ${newStatus === 'published' ? 'activada' : 'desactivada'}`);
       loadProperties();
     } catch (error) {
       toast.error('Error actualizando disponibilidad');
@@ -64,25 +77,25 @@ const MyProperties = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'approved':
+      case 'published':
         return (
           <span className="badge-success inline-flex items-center">
             <CheckCircleIcon className="h-4 w-4 mr-1 icon-success" />
-            Aprobada
+            Publicada
           </span>
         );
-      case 'pending':
+      case 'inactive':
         return (
           <span className="badge-warning inline-flex items-center">
             <ClockIcon className="h-4 w-4 mr-1 icon-warning" />
-            Pendiente
+            Inactiva
           </span>
         );
-      case 'rejected':
+      case 'blocked':
         return (
           <span className="badge-error inline-flex items-center">
             <XCircleIcon className="h-4 w-4 mr-1 icon-error" />
-            Rechazada
+            Bloqueada
           </span>
         );
       default:
@@ -160,7 +173,7 @@ const MyProperties = () => {
                         {property.images && property.images.length > 0 ? (
                           <img
                             className="h-10 w-10 rounded-lg object-cover"
-                            src={`${process.env.REACT_APP_API_URL?.replace('/api', '')}${property.images[0]}`}
+                            src={property.images[0]?.image_url || property.images[0]}
                             alt={property.name}
                           />
                         ) : (
@@ -181,7 +194,7 @@ const MyProperties = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(property.status)}
-                    {property.status === 'rejected' && property.rejectionReason && (
+                    {property.status === 'blocked' && property.rejectionReason && (
                       <p className="mt-1 text-xs text-red-600">
                         {property.rejectionReason}
                       </p>
@@ -196,7 +209,7 @@ const MyProperties = () => {
                       className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500 ${
                         property.isAvailable ? 'bg-secondary-600' : 'bg-neutral-200'
                       }`}
-                      disabled={property.status !== 'approved'}
+                      disabled={property.status === 'blocked'}
                     >
                       <span
                         className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${

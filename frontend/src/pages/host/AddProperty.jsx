@@ -9,15 +9,18 @@ import {
   HomeIcon,
   MapPinIcon,
   CurrencyDollarIcon,
-  UsersIcon
+  UsersIcon,
+  CloudArrowUpIcon
 } from '@heroicons/react/24/outline';
 
 const AddProperty = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState([]);
-  const [amenities, setAmenities] = useState([]);
-  const [newAmenity, setNewAmenity] = useState('');
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [images, setImages] = useState([]); // Array de { file, preview, uploaded: false }
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]); // URLs en Firebase
+  const [services, setServices] = useState([]);
+  const [newService, setNewService] = useState('');
   
   const {
     register,
@@ -25,7 +28,8 @@ const AddProperty = () => {
     formState: { errors }
   } = useForm();
 
-  const handleImageChange = (e) => {
+  // Manejar selección de imágenes (solo preview local)
+  const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
     
     if (images.length + files.length > 5) {
@@ -33,36 +37,103 @@ const AddProperty = () => {
       return;
     }
 
+    const newImages = [];
+
     files.forEach(file => {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error(`${file.name} excede el tamaño máximo de 2MB`);
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} excede el tamaño máximo de 5MB`);
         return;
       }
       
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImages(prev => [...prev, {
+        newImages.push({
           file,
-          preview: reader.result
-        }]);
+          preview: reader.result,
+          uploaded: false
+        });
+
+        if (newImages.length === files.length) {
+          setImages(prev => [...prev, ...newImages]);
+        }
       };
       reader.readAsDataURL(file);
     });
   };
 
-  const removeImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
+  // Subir imágenes a Firebase Storage
+  const uploadImagesToFirebase = async () => {
+    setUploadingImages(true);
+    const uploadedUrls = [];
 
-  const addAmenity = () => {
-    if (newAmenity.trim() && !amenities.includes(newAmenity.trim())) {
-      setAmenities(prev => [...prev, newAmenity.trim()]);
-      setNewAmenity('');
+    try {
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        
+        // Si ya está subida, usar la URL existente
+        if (image.uploaded && image.firebaseUrl) {
+          uploadedUrls.push(image.firebaseUrl);
+          continue;
+        }
+
+        // Subir imagen a Firebase
+        const formData = new FormData();
+        formData.append('image', image.file);
+
+        toast.info(`Subiendo imagen ${i + 1} de ${images.length}...`);
+
+        const response = await api.post('/upload/single', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        const imageUrl = response.data.url;
+        uploadedUrls.push(imageUrl);
+
+        // Marcar imagen como subida
+        setImages(prev => prev.map((img, idx) => 
+          idx === i ? { ...img, uploaded: true, firebaseUrl: imageUrl } : img
+        ));
+      }
+
+      setUploadedImageUrls(uploadedUrls);
+      toast.success('¡Todas las imágenes subidas correctamente!');
+      return uploadedUrls;
+
+    } catch (error) {
+      console.error('Error subiendo imágenes:', error);
+      toast.error(error.response?.data?.error || 'Error subiendo imágenes');
+      throw error;
+    } finally {
+      setUploadingImages(false);
     }
   };
 
-  const removeAmenity = (index) => {
-    setAmenities(prev => prev.filter((_, i) => i !== index));
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setUploadedImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+const addService = () => {
+  const serviceId = parseInt(newService.trim());
+  
+  if (isNaN(serviceId)) {
+    toast.error('El ID del servicio debe ser un número');
+    return;
+  }
+  
+  if (services.includes(serviceId)) {
+    toast.error('Este servicio ya fue agregado');
+    return;
+  }
+  
+  setServices(prev => [...prev, serviceId]); // Ahora guarda números, no strings
+  setNewService('');
+};
+
+  const removeService = (index) => {
+    setServices(prev => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data) => {
@@ -74,30 +145,30 @@ const AddProperty = () => {
     setLoading(true);
     
     try {
-      const formData = new FormData();
-      
-      // Agregar datos del formulario
-      Object.keys(data).forEach(key => {
-        formData.append(key, data[key]);
-      });
-      
-      // Agregar amenidades
-      formData.append('amenities', amenities.join(','));
-      
-      // Agregar imágenes
-      images.forEach(img => {
-        formData.append('images', img.file);
-      });
+      // 1. Primero subir las imágenes a Firebase
+      toast.info('Subiendo imágenes...');
+      const imageUrls = await uploadImagesToFirebase();
 
-      const response = await api.post('/properties', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      // 2. Crear la propiedad con las URLs de Firebase
+      const propertyData = {
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        price_per_night: parseFloat(data.price_per_night),
+        capacity: parseInt(data.capacity),
+        accommodation_type_id: data.accommodation_type_id ? parseInt(data.accommodation_type_id) : null,
+        services: services, // Array de IDs de servicios
+        images: imageUrls // URLs de Firebase Storage
+      };
 
-      toast.success('Propiedad creada y enviada para aprobación');
+      toast.info('Creando propiedad...');
+      const response = await api.post('/properties', propertyData);
+
+      toast.success('¡Propiedad creada exitosamente!');
       navigate('/host/properties');
+
     } catch (error) {
+      console.error('Error creando propiedad:', error);
       toast.error(error.response?.data?.error || 'Error creando propiedad');
     } finally {
       setLoading(false);
@@ -123,13 +194,13 @@ const AddProperty = () => {
           <div className="grid grid-cols-1 gap-6">
             <div>
               <label className="block text-sm font-medium text-neutral-700">
-                Nombre de la Propiedad *
+                Título de la Propiedad *
               </label>
               <div className="mt-1 relative">
                 <HomeIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
                 <input
-                  {...register('name', {
-                    required: 'El nombre es requerido',
+                  {...register('title', {
+                    required: 'El título es requerido',
                     minLength: {
                       value: 3,
                       message: 'Mínimo 3 caracteres'
@@ -140,8 +211,8 @@ const AddProperty = () => {
                   placeholder="Casa con vista al río"
                 />
               </div>
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
               )}
             </div>
 
@@ -165,26 +236,6 @@ const AddProperty = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
               )}
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-neutral-700">
-                Descripción Corta (para búsquedas)
-              </label>
-              <input
-                {...register('shortDescription', {
-                  maxLength: {
-                    value: 300,
-                    message: 'Máximo 300 caracteres'
-                  }
-                })}
-                type="text"
-                className="input mt-1"
-                placeholder="Breve descripción para las búsquedas"
-              />
-              {errors.shortDescription && (
-                <p className="mt-1 text-sm text-red-600">{errors.shortDescription.message}</p>
-              )}
-            </div>
           </div>
         </div>
 
@@ -194,41 +245,24 @@ const AddProperty = () => {
             Ubicación
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <div>
               <label className="block text-sm font-medium text-neutral-700">
-                Dirección *
+                Ubicación *
               </label>
               <div className="mt-1 relative">
                 <MapPinIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
                 <input
-                  {...register('address', {
-                    required: 'La dirección es requerida'
+                  {...register('location', {
+                    required: 'La ubicación es requerida'
                   })}
                   type="text"
                   className="input pl-10"
-                  placeholder="Calle Principal #123"
+                  placeholder="Rosarito, Baja California"
                 />
               </div>
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-neutral-700">
-                Zona *
-              </label>
-              <input
-                {...register('zone', {
-                  required: 'La zona es requerida'
-                })}
-                type="text"
-                className="input mt-1"
-                placeholder="Centro, Río, Montaña..."
-              />
-              {errors.zone && (
-                <p className="mt-1 text-sm text-red-600">{errors.zone.message}</p>
+              {errors.location && (
+                <p className="mt-1 text-sm text-red-600">{errors.location.message}</p>
               )}
             </div>
           </div>
@@ -248,7 +282,7 @@ const AddProperty = () => {
               <div className="mt-1 relative">
                 <CurrencyDollarIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
                 <input
-                  {...register('pricePerNight', {
+                  {...register('price_per_night', {
                     required: 'El precio es requerido',
                     min: {
                       value: 0,
@@ -256,31 +290,32 @@ const AddProperty = () => {
                     }
                   })}
                   type="number"
+                  step="0.01"
                   className="input pl-10"
-                  placeholder="1500"
+                  placeholder="2500.00"
                 />
               </div>
-              {errors.pricePerNight && (
-                <p className="mt-1 text-sm text-red-600">{errors.pricePerNight.message}</p>
+              {errors.price_per_night && (
+                <p className="mt-1 text-sm text-red-600">{errors.price_per_night.message}</p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-neutral-700">
-                Máximo de Huéspedes *
+                Capacidad (personas) *
               </label>
               <div className="mt-1 relative">
                 <UsersIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
                 <input
-                  {...register('maxGuests', {
+                  {...register('capacity', {
                     required: 'Requerido',
                     min: {
                       value: 1,
-                      message: 'Mínimo 1 huésped'
+                      message: 'Mínimo 1 persona'
                     },
                     max: {
                       value: 20,
-                      message: 'Máximo 20 huéspedes'
+                      message: 'Máximo 20 personas'
                     }
                   })}
                   type="number"
@@ -288,71 +323,47 @@ const AddProperty = () => {
                   placeholder="4"
                 />
               </div>
-              {errors.maxGuests && (
-                <p className="mt-1 text-sm text-red-600">{errors.maxGuests.message}</p>
+              {errors.capacity && (
+                <p className="mt-1 text-sm text-red-600">{errors.capacity.message}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-700">
-                Habitaciones
-              </label>
-              <input
-                {...register('bedrooms', {
-                  min: {
-                    value: 0,
-                    message: 'Debe ser positivo'
-                  }
-                })}
-                type="number"
-                className="input mt-1"
-                placeholder="2"
-              />
-              {errors.bedrooms && (
-                <p className="mt-1 text-sm text-red-600">{errors.bedrooms.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-neutral-700">
-                Baños
-              </label>
-              <input
-                {...register('bathrooms', {
-                  min: {
-                    value: 0,
-                    message: 'Debe ser positivo'
-                  }
-                })}
-                type="number"
-                className="input mt-1"
-                placeholder="1"
-              />
-              {errors.bathrooms && (
-                <p className="mt-1 text-sm text-red-600">{errors.bathrooms.message}</p>
-              )}
-            </div>
+  <label className="block text-sm font-medium text-neutral-700">
+    Tipo de Alojamiento
+  </label>
+  <select
+    {...register('accommodation_type_id')}
+    className="input mt-1"
+  >
+    <option value="">Seleccionar...</option>
+    <option value="9">Casa Completa</option>
+    <option value="10">Departamento</option>
+    <option value="11">Cabaña</option>
+    <option value="12">Villa de Lujo</option>
+  </select>
+</div>
           </div>
         </div>
 
-        {/* Amenidades */}
+        {/* Servicios */}
         <div>
           <h2 className="text-lg font-semibold text-accent-900 mb-4">
-            Amenidades
+            Servicios
           </h2>
 
           <div className="flex gap-2 mb-4">
             <input
               type="text"
-              value={newAmenity}
-              onChange={(e) => setNewAmenity(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAmenity())}
-              placeholder="Agregar amenidad (WiFi, Estacionamiento, etc)"
+              value={newService}
+              onChange={(e) => setNewService(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
+              placeholder="ID del servicio (ejemplo: 1, 2, 3...)"
               className="input flex-1"
             />
             <button
               type="button"
-              onClick={addAmenity}
+              onClick={addService}
               className="btn-neutral"
             >
               Agregar
@@ -360,18 +371,18 @@ const AddProperty = () => {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            {amenities.map((amenity, index) => (
+            {services.map((service, index) => (
               <span
                 key={index}
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary-100 text-secondary-800"
               >
-                {amenity}
+                Servicio ID: {service}
                 <button
                   type="button"
-                  onClick={() => removeAmenity(index)}
+                  onClick={() => removeService(index)}
                   className="ml-2 text-secondary-600 hover:text-secondary-800"
                 >
-                  <XMarkIcon className="h-4 w-4 icon-neutral" />
+                  <XMarkIcon className="h-4 w-4" />
                 </button>
               </span>
             ))}
@@ -381,7 +392,7 @@ const AddProperty = () => {
         {/* Imágenes */}
         <div>
           <h2 className="text-lg font-semibold text-accent-900 mb-4">
-            Imágenes * (Máximo 5, 2MB cada una)
+            Imágenes * (Máximo 5, 5MB cada una)
           </h2>
           
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -392,12 +403,18 @@ const AddProperty = () => {
                   alt={`Preview ${index + 1}`}
                   className="h-32 w-full object-cover rounded-lg"
                 />
+                {image.uploaded && (
+                  <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                    <CloudArrowUpIcon className="h-4 w-4 inline mr-1" />
+                    Subida
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
                   className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
                 >
-                  <XMarkIcon className="h-4 w-4 icon-neutral" />
+                  <XMarkIcon className="h-4 w-4" />
                 </button>
               </div>
             ))}
@@ -410,12 +427,19 @@ const AddProperty = () => {
                   type="file"
                   multiple
                   accept="image/*"
-                  onChange={handleImageChange}
+                  onChange={handleImageSelect}
                   className="hidden"
+                  disabled={uploadingImages || loading}
                 />
               </label>
             )}
           </div>
+
+          {images.length > 0 && !images.every(img => img.uploaded) && (
+            <p className="mt-2 text-sm text-amber-600">
+              ℹ️ Las imágenes se subirán automáticamente al crear la propiedad
+            </p>
+          )}
         </div>
 
         {/* Botones */}
@@ -424,15 +448,16 @@ const AddProperty = () => {
             type="button"
             onClick={() => navigate('/host/properties')}
             className="btn-neutral"
+            disabled={loading || uploadingImages}
           >
             Cancelar
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || uploadingImages || images.length === 0}
             className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Creando...' : 'Crear Propiedad'}
+            {uploadingImages ? 'Subiendo imágenes...' : loading ? 'Creando...' : 'Crear Propiedad'}
           </button>
         </div>
       </form>

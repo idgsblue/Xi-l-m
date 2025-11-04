@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { MapPinIcon, UsersIcon, StarIcon } from '@heroicons/react/24/outline';
 
 const PropertyCard = ({ property }) => {
-  const imageUrl = property.images && property.images.length > 0
-    ? `${process.env.REACT_APP_API_URL?.replace('/api', '')}${property.images[0]}`
+const imageUrl = property.images && property.images.length > 0
+    ? (property.images[0]?.image_url || property.images[0])
     : '/placeholder-property.jpg';
 
   return (
