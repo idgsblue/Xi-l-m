@@ -48,14 +48,19 @@ const Property = sequelize.define('Property', {
   },
   status: {
     type: DataTypes.STRING(20),
+    defaultValue: 'pending_approval',
     validate: {
-      isIn: [['inactive', 'published', 'blocked']]
+      isIn: [['inactive', 'pending_approval', 'approved', 'rejected', 'published', 'blocked']]
     }
   },
   is_advertised: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
     field: 'is_advertised'
+  },
+  rejection_reason: {
+    type: DataTypes.TEXT,
+    field: 'rejection_reason'
   }
 }, {
   tableName: 'properties',

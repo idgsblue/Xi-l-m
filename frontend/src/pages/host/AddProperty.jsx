@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import api from '../../services/api';
@@ -10,7 +10,9 @@ import {
   MapPinIcon,
   CurrencyDollarIcon,
   UsersIcon,
-  CloudArrowUpIcon
+  CloudArrowUpIcon,
+  InformationCircleIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 const AddProperty = () => {
@@ -21,12 +23,82 @@ const AddProperty = () => {
   const [uploadedImageUrls, setUploadedImageUrls] = useState([]); // URLs en Firebase
   const [services, setServices] = useState([]);
   const [newService, setNewService] = useState('');
+  const [accommodationTypes, setAccommodationTypes] = useState([]);
+  const [selectedAccommodationType, setSelectedAccommodationType] = useState(null);
+  const [priceValidation, setPriceValidation] = useState({ isValid: true, message: '' });
   
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm();
+
+  const watchAccommodationType = watch('accommodation_type_id');
+  const watchPrice = watch('price_per_night');
+
+  useEffect(() => {
+    loadAccommodationTypes();
+  }, []);
+
+  // Validar precio cuando cambia el tipo de alojamiento o el precio
+  useEffect(() => {
+    if (watchAccommodationType && watchPrice) {
+      validatePrice(watchAccommodationType, watchPrice);
+    } else {
+      setPriceValidation({ isValid: true, message: '' });
+    }
+  }, [watchAccommodationType, watchPrice]);
+
+  const loadAccommodationTypes = async () => {
+    try {
+      const response = await api.get('/accommodation-types');
+      setAccommodationTypes(response.data.accommodationTypes || []);
+    } catch (error) {
+      console.error('Error cargando tipos de alojamiento:', error);
+      toast.error('Error cargando tipos de alojamiento');
+    }
+  };
+
+  const validatePrice = (typeId, price) => {
+    if (!typeId || !price) {
+      setPriceValidation({ isValid: true, message: '' });
+      return;
+    }
+
+    const type = accommodationTypes.find(t => t.id === parseInt(typeId));
+    if (!type) {
+      setPriceValidation({ isValid: true, message: '' });
+      return;
+    }
+
+    setSelectedAccommodationType(type);
+
+    const numPrice = parseFloat(price);
+    const minPrice = type.min_price ? parseFloat(type.min_price) : null;
+    const maxPrice = type.max_price ? parseFloat(type.max_price) : null;
+
+    if (minPrice && numPrice < minPrice) {
+      setPriceValidation({
+        isValid: false,
+        message: `El precio está por debajo del mínimo permitido ($${minPrice} MXN)`
+      });
+      return;
+    }
+
+    if (maxPrice && numPrice > maxPrice) {
+      setPriceValidation({
+        isValid: false,
+        message: `El precio está por encima del máximo permitido ($${maxPrice} MXN)`
+      });
+      return;
+    }
+
+    setPriceValidation({
+      isValid: true,
+      message: `✓ Precio válido para ${type.name}`
+    });
+  };
 
   // Manejar selección de imágenes (solo preview local)
   const handleImageSelect = (e) => {
@@ -116,19 +188,19 @@ const AddProperty = () => {
   };
 
 const addService = () => {
-  const serviceId = parseInt(newService.trim());
-  
-  if (isNaN(serviceId)) {
-    toast.error('El ID del servicio debe ser un número');
+  const serviceName = newService.trim();
+
+  if (serviceName === '') {
+    toast.error('El nombre del servicio no puede estar vacío');
     return;
   }
-  
-  if (services.includes(serviceId)) {
+
+  if (services.includes(serviceName)) {
     toast.error('Este servicio ya fue agregado');
     return;
   }
-  
-  setServices(prev => [...prev, serviceId]); // Ahora guarda números, no strings
+
+  setServices(prev => [...prev, serviceName]);
   setNewService('');
 };
 
@@ -137,8 +209,15 @@ const addService = () => {
   };
 
   const onSubmit = async (data) => {
+    // Validar imágenes
     if (images.length === 0) {
       toast.error('Agrega al menos una imagen');
+      return;
+    }
+
+    // Validar precio antes de enviar
+    if (!priceValidation.isValid) {
+      toast.error('Por favor corrige el precio antes de continuar');
       return;
     }
 
@@ -164,12 +243,24 @@ const addService = () => {
       toast.info('Creando propiedad...');
       const response = await api.post('/properties', propertyData);
 
-      toast.success('¡Propiedad creada exitosamente!');
+      toast.success(
+        '¡Propiedad creada exitosamente! Será revisada por un administrador antes de poder anunciarla.',
+        { autoClose: 5000 }
+      );
       navigate('/host/properties');
 
     } catch (error) {
       console.error('Error creando propiedad:', error);
-      toast.error(error.response?.data?.error || 'Error creando propiedad');
+      
+      // Mostrar mensaje específico de validación de precio si existe
+      if (error.response?.data?.minPrice || error.response?.data?.maxPrice) {
+        toast.error(
+          error.response.data.error,
+          { autoClose: 5000 }
+        );
+      } else {
+        toast.error(error.response?.data?.error || 'Error creando propiedad');
+      }
     } finally {
       setLoading(false);
     }
@@ -182,6 +273,28 @@ const addService = () => {
         <p className="mt-2 text-neutral-600">
           Completa la información de tu propiedad. Será revisada antes de publicarse.
         </p>
+      </div>
+
+      {/* Alerta informativa sobre el proceso */}
+      <div className="mb-6 card bg-blue-50 border-blue-200">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <InformationCircleIcon className="h-5 w-5 text-blue-400" />
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-blue-800">
+              Proceso de Aprobación de Propiedades
+            </h3>
+            <div className="mt-2 text-sm text-blue-700">
+              <ul className="list-disc list-inside space-y-1">
+                <li>Tu propiedad quedará en estado <strong>"Pendiente de Aprobación"</strong></li>
+                <li>Un administrador la revisará en un plazo de 24-48 horas</li>
+                <li>Si es aprobada, podrás <strong>anunciarla</strong> cuando lo desees</li>
+                <li>Si es rechazada, recibirás un email con el motivo y podrás corregirla</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 card">
@@ -197,7 +310,7 @@ const addService = () => {
                 Título de la Propiedad *
               </label>
               <div className="mt-1 relative">
-                <HomeIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
+                <HomeIcon className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" />
                 <input
                   {...register('title', {
                     required: 'El título es requerido',
@@ -230,7 +343,7 @@ const addService = () => {
                 })}
                 rows={4}
                 className="input mt-1"
-                placeholder="Describe tu propiedad..."
+                placeholder="Describe tu propiedad... Menciona las características principales, ubicación, y lo que hace especial a tu espacio."
               />
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
@@ -251,14 +364,14 @@ const addService = () => {
                 Ubicación *
               </label>
               <div className="mt-1 relative">
-                <MapPinIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
+                <MapPinIcon className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" />
                 <input
                   {...register('location', {
                     required: 'La ubicación es requerida'
                   })}
                   type="text"
                   className="input pl-10"
-                  placeholder="Rosarito, Baja California"
+                  placeholder="Arroyo Seco, Querétaro"
                 />
               </div>
               {errors.location && (
@@ -275,12 +388,58 @@ const addService = () => {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Tipo de Alojamiento */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-neutral-700">
+                Tipo de Alojamiento *
+              </label>
+              <select
+                {...register('accommodation_type_id', {
+                  required: 'Selecciona un tipo de alojamiento'
+                })}
+                className="input mt-1"
+              >
+                <option value="">Seleccionar tipo...</option>
+                {accommodationTypes.map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                    {type.min_price && type.max_price && 
+                      ` (Rango: $${type.min_price} - $${type.max_price} MXN/noche)`
+                    }
+                  </option>
+                ))}
+              </select>
+              {errors.accommodation_type_id && (
+                <p className="mt-1 text-sm text-red-600">{errors.accommodation_type_id.message}</p>
+              )}
+              
+              {/* Información del tipo seleccionado */}
+              {selectedAccommodationType && (
+                <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                  <p className="text-sm text-gray-700">
+                    <strong>{selectedAccommodationType.name}</strong>
+                  </p>
+                  {selectedAccommodationType.description && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      {selectedAccommodationType.description}
+                    </p>
+                  )}
+                  {selectedAccommodationType.platform_commission_percentage && (
+                    <p className="text-xs text-amber-700 mt-2 font-medium">
+                      ⚠️ Comisión de plataforma: {selectedAccommodationType.platform_commission_percentage}%
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Precio por Noche */}
             <div>
               <label className="block text-sm font-medium text-neutral-700">
                 Precio por Noche (MXN) *
               </label>
               <div className="mt-1 relative">
-                <CurrencyDollarIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
+                <CurrencyDollarIcon className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" />
                 <input
                   {...register('price_per_night', {
                     required: 'El precio es requerido',
@@ -291,21 +450,42 @@ const addService = () => {
                   })}
                   type="number"
                   step="0.01"
-                  className="input pl-10"
+                  className={`input pl-10 ${
+                    priceValidation.isValid ? '' : 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                  }`}
                   placeholder="2500.00"
                 />
               </div>
               {errors.price_per_night && (
                 <p className="mt-1 text-sm text-red-600">{errors.price_per_night.message}</p>
               )}
+              
+              {/* Validación de rango de precio */}
+              {priceValidation.message && (
+                <div className={`mt-2 flex items-start ${priceValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>
+                  {priceValidation.isValid ? (
+                    <InformationCircleIcon className="h-5 w-5 mr-1 flex-shrink-0" />
+                  ) : (
+                    <ExclamationTriangleIcon className="h-5 w-5 mr-1 flex-shrink-0" />
+                  )}
+                  <p className="text-sm">{priceValidation.message}</p>
+                </div>
+              )}
+              
+              {selectedAccommodationType && selectedAccommodationType.min_price && selectedAccommodationType.max_price && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Rango permitido: ${selectedAccommodationType.min_price} - ${selectedAccommodationType.max_price} MXN
+                </p>
+              )}
             </div>
 
+            {/* Capacidad */}
             <div>
               <label className="block text-sm font-medium text-neutral-700">
                 Capacidad (personas) *
               </label>
               <div className="mt-1 relative">
-                <UsersIcon className="absolute left-3 top-2.5 h-5 w-5 icon-muted" />
+                <UsersIcon className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" />
                 <input
                   {...register('capacity', {
                     required: 'Requerido',
@@ -327,22 +507,6 @@ const addService = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.capacity.message}</p>
               )}
             </div>
-
-            <div>
-  <label className="block text-sm font-medium text-neutral-700">
-    Tipo de Alojamiento
-  </label>
-  <select
-    {...register('accommodation_type_id')}
-    className="input mt-1"
-  >
-    <option value="">Seleccionar...</option>
-    <option value="9">Casa Completa</option>
-    <option value="10">Departamento</option>
-    <option value="11">Cabaña</option>
-    <option value="12">Villa de Lujo</option>
-  </select>
-</div>
           </div>
         </div>
 
@@ -421,7 +585,7 @@ const addService = () => {
             
             {images.length < 5 && (
               <label className="h-32 flex flex-col items-center justify-center border-2 border-neutral-300 border-dashed rounded-lg cursor-pointer hover:border-neutral-400">
-                <PhotoIcon className="h-8 w-8 icon-muted" />
+                <PhotoIcon className="h-8 w-8 text-neutral-400" />
                 <span className="mt-2 text-sm text-neutral-600">Agregar imagen</span>
                 <input
                   type="file"
@@ -454,7 +618,7 @@ const addService = () => {
           </button>
           <button
             type="submit"
-            disabled={loading || uploadingImages || images.length === 0}
+            disabled={loading || uploadingImages || images.length === 0 || !priceValidation.isValid}
             className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploadingImages ? 'Subiendo imágenes...' : loading ? 'Creando...' : 'Crear Propiedad'}

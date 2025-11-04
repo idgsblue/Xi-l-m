@@ -44,22 +44,40 @@ const searchValidation = [
 ];
 
 // ====================================
-// RUTAS PROTEGIDAS PRIMERO (más específicas)
+// RUTAS PROTEGIDAS (HOST) - MÁS ESPECÍFICAS PRIMERO
 // ====================================
+
+// Crear propiedad (HOST)
 router.post('/', 
-  authenticate,  // ← Asegúrate de que authenticate esté aquí
+  authenticate,
   isHost, 
   propertyValidation, 
   handleValidationErrors, 
   propertyController.create
 );
 
+// Obtener mis propiedades (HOST)
 router.get('/host/my-properties', 
   authenticate, 
   isHost, 
   propertyController.getMyProperties
 );
 
+// NUEVO: Anunciar propiedad (HOST)
+router.post('/:id/advertise', 
+  authenticate,
+  isHost,
+  propertyController.advertiseProperty
+);
+
+// NUEVO: Despublicar propiedad (HOST)
+router.post('/:id/unadvertise', 
+  authenticate,
+  isHost,
+  propertyController.unadvertiseProperty
+);
+
+// Actualizar propiedad (HOST)
 router.put('/:id', 
   authenticate,
   isHost,
@@ -68,24 +86,36 @@ router.put('/:id',
   propertyController.update
 );
 
+// Eliminar propiedad (HOST)
 router.delete('/:id', 
   authenticate, 
   isHost, 
   propertyController.delete
 );
 
+// Actualizar estado (DEPRECADO - usar advertise/unadvertise)
 router.patch('/:id/status',
   authenticate,
   isHost,
-  body('status').isIn(['inactive', 'published', 'blocked']).withMessage('Estado inválido'),
+  body('status').isIn(['inactive', 'pending_approval', 'approved', 'rejected', 'published', 'blocked']).withMessage('Estado inválido'),
   handleValidationErrors,
   propertyController.updateStatus
 );
 
 // ====================================
-// RUTAS PÚBLICAS AL FINAL (menos específicas)
+// RUTAS PÚBLICAS - MENOS ESPECÍFICAS
 // ====================================
-router.get('/', searchValidation, handleValidationErrors, propertyController.getAll);
-router.get('/:id', propertyController.getById);
+
+// Buscar propiedades (PÚBLICO)
+router.get('/', 
+  searchValidation, 
+  handleValidationErrors, 
+  propertyController.getAll
+);
+
+// Obtener propiedad por ID (PÚBLICO/OWNER/ADMIN)
+router.get('/:id', 
+  propertyController.getById
+);
 
 module.exports = router;

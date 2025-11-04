@@ -2,6 +2,7 @@ const { Booking, Property, User, Payment } = require('../models');
 const { Op } = require('sequelize');
 const emailService = require('../services/email.service');
 const stripeService = require('../services/stripe.service');
+const availabilityService = require('../services/availability.service'); // ← NUEVO
 const sequelize = require('../config/database');
 
 class BookingController {
@@ -49,48 +50,37 @@ class BookingController {
         return res.status(404).json({ error: 'Propiedad no encontrada' });
       }
 
-      if (property.status !== 'approved' || !property.isAvailable) {
+      if (property.status !== 'published') {
         await t.rollback();
-        return res.status(400).json({ error: 'Propiedad no disponible' });
+        return res.status(400).json({ error: 'Propiedad no disponible para reservas' });
       }
 
-      if (numberOfGuests > property.maxGuests) {
+      if (numberOfGuests > property.capacity) {
         await t.rollback();
         return res.status(400).json({ 
-          error: `La propiedad admite máximo ${property.maxGuests} huéspedes` 
+          error: `La propiedad admite máximo ${property.capacity} huéspedes` 
         });
       }
 
-      // Verificar disponibilidad
-      const existingBooking = await Booking.findOne({
-        where: {
-          property_id: propertyId,
-          booking_status: { [Op.in]: ['pending', 'confirmed'] },
-          [Op.or]: [
-            {
-              check_in_date: { [Op.between]: [checkIn, checkOut] }
-            },
-            {
-              check_out_date: { [Op.between]: [checkIn, checkOut] }
-            },
-            {
-              [Op.and]: [
-                { check_in_date: { [Op.lte]: checkIn } },
-                { check_out_date: { [Op.gte]: checkOut } }
-              ]
-            }
-          ]
-        },
-        transaction: t
-      });
+      // ============ NUEVA VALIDACIÓN CON AVAILABILITY SERVICE ============
+      const availabilityCheck = await availabilityService.isAvailable(
+        propertyId,
+        checkIn,
+        checkOut
+      );
 
-      if (existingBooking) {
+      if (!availabilityCheck.available) {
         await t.rollback();
-        return res.status(409).json({ error: 'La propiedad no está disponible en esas fechas' });
+        return res.status(409).json({
+          error: 'La propiedad no está disponible en esas fechas',
+          reason: availabilityCheck.reason,
+          blockedDates: availabilityCheck.blockedDates
+        });
       }
+      // ============ FIN NUEVA VALIDACIÓN ============
 
       // Calcular precio total
-      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+      const nights = availabilityCheck.nights;
       const totalPrice = nights * property.price_per_night;
 
       // Crear reserva
@@ -101,6 +91,7 @@ class BookingController {
         special_requests: specialRequests,
         total_price: totalPrice,
         booking_status: 'pending',
+        payment_status: 'pending',
         guest_id: req.userId,
         property_id: property.id,
         host_id: property.host_id
@@ -179,7 +170,7 @@ class BookingController {
 
       // Actualizar estado de la reserva
       booking.booking_status = 'confirmed';
-      booking.payment_status = 'paid';
+      booking.payment_status = 'confirmed';
       booking.stripe_payment_intent_id = paymentIntentId;
       await booking.save({ transaction: t });
 
@@ -189,11 +180,24 @@ class BookingController {
         await booking.payment.save({ transaction: t });
       }
 
+      // ============ BLOQUEAR FECHAS AUTOMÁTICAMENTE ============
+      try {
+        await availabilityService.blockDatesForBooking(booking.id);
+      } catch (availError) {
+        console.error('Error bloqueando fechas:', availError);
+        // No fallar la confirmación si falla el bloqueo
+      }
+      // ============ FIN BLOQUEO AUTOMÁTICO ============
+
       await t.commit();
 
       // Enviar emails de confirmación
-      await emailService.sendBookingConfirmation(booking, booking.guest, booking.property);
-      await emailService.sendBookingNotificationToHost(booking, booking.host, booking.property, booking.guest);
+      try {
+        await emailService.sendBookingConfirmation(booking, booking.guest, booking.property);
+        await emailService.sendBookingNotificationToHost(booking, booking.host, booking.property, booking.guest);
+      } catch (emailError) {
+        console.error('Error enviando emails:', emailError);
+      }
 
       res.json({
         message: 'Reserva confirmada exitosamente',
@@ -230,7 +234,7 @@ class BookingController {
             include: [{
               model: User,
               as: 'host',
-              attributes: ['id', 'name', 'email', 'phone']
+              attributes: ['id', 'full_name', 'email', 'phone']
             }]
           },
           {
@@ -272,7 +276,7 @@ class BookingController {
           {
             model: User,
             as: 'guest',
-            attributes: ['id', 'name', 'email', 'phone']
+            attributes: ['id', 'full_name', 'email', 'phone']
           },
           {
             model: Payment,
@@ -301,13 +305,13 @@ class BookingController {
             include: [{
               model: User,
               as: 'host',
-              attributes: ['id', 'name', 'email', 'phone']
+              attributes: ['id', 'full_name', 'email', 'phone']
             }]
           },
           {
             model: User,
             as: 'guest',
-            attributes: ['id', 'name', 'email', 'phone']
+            attributes: ['id', 'full_name', 'email', 'phone']
           },
           {
             model: Payment,
@@ -394,7 +398,7 @@ class BookingController {
       }
 
       // Procesar reembolso si corresponde
-      if (booking.payment_status === 'paid' && refundAmount > 0 && booking.stripe_payment_intent_id) {
+      if (booking.payment_status === 'confirmed' && refundAmount > 0 && booking.stripe_payment_intent_id) {
         try {
           const refund = await stripeService.createRefund(booking.stripe_payment_intent_id, refundAmount);
 
@@ -412,10 +416,21 @@ class BookingController {
 
       // Actualizar estado de la reserva
       booking.booking_status = 'cancelled';
+      booking.cancellation_reason = reason;
+      booking.cancelled_at = new Date();
       if (refundAmount > 0) {
         booking.payment_status = 'refunded';
       }
       await booking.save({ transaction: t });
+
+      // ============ LIBERAR FECHAS AUTOMÁTICAMENTE ============
+      try {
+        await availabilityService.releaseDatesForBooking(booking.id);
+      } catch (availError) {
+        console.error('Error liberando fechas:', availError);
+        // No fallar la cancelación si falla la liberación
+      }
+      // ============ FIN LIBERACIÓN AUTOMÁTICA ============
 
       await t.commit();
 
@@ -433,7 +448,7 @@ class BookingController {
     }
   }
 
-  // Verificar disponibilidad
+  // Verificar disponibilidad (DEPRECADO - usar availability.service)
   async checkAvailability(req, res, next) {
     try {
       const { propertyId, checkIn, checkOut } = req.query;
@@ -450,41 +465,29 @@ class BookingController {
         return res.status(404).json({ error: 'Propiedad no encontrada' });
       }
 
-      const existingBooking = await Booking.findOne({
-        where: {
-          property_id: propertyId,
-          booking_status: { [Op.in]: ['pending', 'confirmed'] },
-          [Op.or]: [
-            {
-              check_in_date: { [Op.between]: [checkIn, checkOut] }
-            },
-            {
-              check_out_date: { [Op.between]: [checkIn, checkOut] }
-            },
-            {
-              [Op.and]: [
-                { check_in_date: { [Op.lte]: checkIn } },
-                { check_out_date: { [Op.gte]: checkOut } }
-              ]
-            }
-          ]
-        }
-      });
+      // Usar el nuevo servicio de disponibilidad
+      const availabilityResult = await availabilityService.isAvailable(
+        propertyId,
+        checkIn,
+        checkOut
+      );
 
-      const isAvailable = !existingBooking && property.isAvailable && property.status === 'approved';
+      if (availabilityResult.available) {
+        const totalPrice = availabilityResult.nights * parseFloat(property.price_per_night);
 
-      // Calcular precio
-      const checkInDate = new Date(checkIn);
-      const checkOutDate = new Date(checkOut);
-      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-      const totalPrice = nights * property.price_per_night;
-
-      res.json({
-        available: isAvailable,
-        nights,
-        pricePerNight: property.price_per_night,
-        totalPrice
-      });
+        res.json({
+          available: true,
+          nights: availabilityResult.nights,
+          pricePerNight: parseFloat(property.price_per_night),
+          totalPrice: parseFloat(totalPrice.toFixed(2))
+        });
+      } else {
+        res.json({
+          available: false,
+          reason: availabilityResult.reason,
+          blockedDates: availabilityResult.blockedDates
+        });
+      }
     } catch (error) {
       next(error);
     }

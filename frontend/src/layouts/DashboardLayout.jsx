@@ -33,12 +33,13 @@ const DashboardLayout = () => {
     { name: 'Reservas Recibidas', href: '/host/bookings', icon: CalendarIcon }
   ];
 
-  const adminNavigation = [
-    { name: 'Dashboard', href: '/admin', icon: HomeIcon },
-    { name: 'Propiedades Pendientes', href: '/admin/properties/pending', icon: BuildingOfficeIcon },
-    { name: 'Usuarios', href: '/admin/users', icon: UsersIcon },
-    { name: 'Reportes', href: '/admin/reports', icon: ChartBarIcon }
-  ];
+const adminNavigation = [
+  { name: 'Dashboard', href: '/admin', icon: HomeIcon },
+  { name: 'Propiedades Pendientes', href: '/admin/properties/pending', icon: BuildingOfficeIcon },
+  { name: 'Usuarios', href: '/admin/users', icon: UsersIcon },
+  { name: 'Tipos de Alojamiento', href: '/admin/accommodation-types', icon: BuildingOfficeIcon }, // ← NUEVA LÍNEA
+  { name: 'Reportes', href: '/admin/reports', icon: ChartBarIcon }
+];
 
   const navigation = isAdmin ? adminNavigation : (isHost ? hostNavigation : guestNavigation);
 

@@ -30,6 +30,9 @@ import PendingProperties from './pages/admin/PendingProperties';
 import ManageUsers from './pages/admin/ManageUsers';
 import Reports from './pages/admin/Reports';
 
+import AccommodationTypes from './pages/admin/AccommodationTypes';
+
+
 // Componente para rutas protegidas
 const ProtectedRoute = ({ children, roles = [] }) => {
   const { user, loading } = useAuth();
@@ -89,16 +92,17 @@ function App() {
       </Route>
 
       {/* Rutas protegidas - Admin */}
-      <Route path="/admin" element={
-        <ProtectedRoute roles={['admin']}>
-          <DashboardLayout />
-        </ProtectedRoute>
-      }>
-        <Route index element={<AdminDashboard />} />
-        <Route path="properties/pending" element={<PendingProperties />} />
-        <Route path="users" element={<ManageUsers />} />
-        <Route path="reports" element={<Reports />} />
-      </Route>
+<Route path="/admin" element={
+  <ProtectedRoute roles={['admin']}>
+    <DashboardLayout />
+  </ProtectedRoute>
+}>
+  <Route index element={<AdminDashboard />} />
+  <Route path="properties/pending" element={<PendingProperties />} />
+  <Route path="users" element={<ManageUsers />} />
+  <Route path="reports" element={<Reports />} />
+  <Route path="accommodation-types" element={<AccommodationTypes />} /> {/* ← NUEVA LÍNEA */}
+</Route>
 
       {/* 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
