@@ -10,6 +10,9 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-datepicker/dist/react-datepicker.css';
 
+// PWA Service Worker
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -26,7 +29,7 @@ root.render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />
-          <ToastContainer 
+          <ToastContainer
             position="top-right"
             autoClose={3000}
             hideProgressBar={false}
@@ -41,3 +44,22 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Register PWA Service Worker
+serviceWorkerRegistration.register({
+  onSuccess: (registration) => {
+    console.log('✅ PWA instalada y lista para uso offline');
+  },
+  onUpdate: (registration) => {
+    console.log('📦 Nueva versión disponible. Por favor recarga la página.');
+  }
+});
+
+// Setup online/offline detection
+serviceWorkerRegistration.setupOnlineOfflineDetection();
+
+// Setup install prompt
+serviceWorkerRegistration.setupInstallPrompt();
+
+// Optional: Request notification permission after user interaction
+// serviceWorkerRegistration.requestNotificationPermission();

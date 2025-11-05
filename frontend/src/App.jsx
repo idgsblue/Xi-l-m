@@ -6,6 +6,9 @@ import { useAuth } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 
+// PWA Install Prompt
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+
 // Pages públicas
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -29,6 +32,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import PendingProperties from './pages/admin/PendingProperties';
 import ManageUsers from './pages/admin/ManageUsers';
 import Reports from './pages/admin/Reports';
+import AllBookings from './pages/admin/AllBookings';
 
 import AccommodationTypes from './pages/admin/AccommodationTypes';
 
@@ -58,15 +62,16 @@ const ProtectedRoute = ({ children, roles = [] }) => {
 
 function App() {
   return (
-    <Routes>
-      {/* Rutas públicas */}
-      <Route path="/" element={<MainLayout />}>
-        <Route index element={<Home />} />
-        <Route path="search" element={<Search />} />
-        <Route path="property/:id" element={<PropertyDetail />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-      </Route>
+    <>
+      <Routes>
+        {/* Rutas públicas */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Home />} />
+          <Route path="search" element={<Search />} />
+          <Route path="property/:id" element={<PropertyDetail />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+        </Route>
 
       {/* Rutas protegidas - Huésped */}
       <Route path="/guest" element={
@@ -99,14 +104,19 @@ function App() {
 }>
   <Route index element={<AdminDashboard />} />
   <Route path="properties/pending" element={<PendingProperties />} />
+  <Route path="bookings" element={<AllBookings />} />
   <Route path="users" element={<ManageUsers />} />
   <Route path="reports" element={<Reports />} />
-  <Route path="accommodation-types" element={<AccommodationTypes />} /> {/* ← NUEVA LÍNEA */}
+  <Route path="accommodation-types" element={<AccommodationTypes />} />
 </Route>
 
-      {/* 404 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* PWA Install Banner */}
+      <PWAInstallPrompt />
+    </>
   );
 }
 

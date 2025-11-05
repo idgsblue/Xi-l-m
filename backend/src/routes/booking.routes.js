@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const bookingController = require('../controllers/booking.controller');
 const { authenticate } = require('../middleware/auth.middleware');
-const { isHost } = require('../middleware/roleCheck.middleware');
+const { isHost, isAdmin } = require('../middleware/roleCheck.middleware');
 const { body, query } = require('express-validator');
 const handleValidationErrors = require('../middleware/validation.middleware');
 
@@ -51,36 +51,41 @@ const checkAvailabilityValidation = [
 // Todas las rutas requieren autenticación
 router.use(authenticate);
 
-// Rutas para huéspedes
-router.post('/', 
-  createBookingValidation, 
-  handleValidationErrors, 
-  bookingController.create
-);
+// Rutas para administradores (IMPORTANTE: deben ir antes de las rutas con :id)
+router.get('/admin/all', isAdmin, bookingController.getAllBookingsAdmin);
 
-router.post('/confirm', 
-  confirmBookingValidation, 
-  handleValidationErrors, 
-  bookingController.confirmBooking
+// Rutas para anfitriones (IMPORTANTE: deben ir antes de las rutas con :id)
+router.get('/host/bookings', isHost, bookingController.getHostBookings);
+
+// Rutas específicas (IMPORTANTE: deben ir antes de las rutas con :id)
+router.get('/check-availability',
+  checkAvailabilityValidation,
+  handleValidationErrors,
+  bookingController.checkAvailability
 );
 
 router.get('/my-bookings', bookingController.getMyBookings);
 
-router.get('/check-availability', 
-  checkAvailabilityValidation, 
-  handleValidationErrors, 
-  bookingController.checkAvailability
+router.post('/confirm',
+  confirmBookingValidation,
+  handleValidationErrors,
+  bookingController.confirmBooking
 );
 
+// Rutas para huéspedes
+router.post('/',
+  createBookingValidation,
+  handleValidationErrors,
+  bookingController.create
+);
+
+// Rutas con parámetros dinámicos (IMPORTANTE: deben ir AL FINAL)
 router.get('/:id', bookingController.getById);
 
-router.post('/:id/cancel', 
+router.post('/:id/cancel',
   body('reason').optional().isString(),
   handleValidationErrors,
   bookingController.cancel
 );
-
-// Rutas para anfitriones
-router.get('/host/bookings', isHost, bookingController.getHostBookings);
 
 module.exports = router;

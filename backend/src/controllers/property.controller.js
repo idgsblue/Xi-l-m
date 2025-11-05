@@ -318,12 +318,23 @@ class PropertyController {
       });
 
       // Agregar información adicional de estado
-      const propertiesWithStats = properties.map(prop => ({
-        ...prop.toJSON(),
-        canAdvertise: prop.status === 'approved' && !prop.is_advertised,
-        canEdit: ['pending_approval', 'approved', 'rejected', 'inactive'].includes(prop.status),
-        statusMessage: this.getStatusMessage(prop.status, prop.rejection_reason)
-      }));
+      const propertiesWithStats = properties.map(prop => {
+        const statusMessages = {
+          'pending_approval': 'Pendiente de aprobación por administrador',
+          'approved': 'Aprobada. Puedes anunciarla cuando quieras',
+          'rejected': `Rechazada. Motivo: ${prop.rejection_reason || 'No especificado'}`,
+          'published': 'Publicada y visible para huéspedes',
+          'inactive': 'Inactiva',
+          'blocked': 'Bloqueada por administrador'
+        };
+
+        return {
+          ...prop.toJSON(),
+          canAdvertise: prop.status === 'approved' && !prop.is_advertised,
+          canEdit: ['pending_approval', 'approved', 'rejected', 'inactive'].includes(prop.status),
+          statusMessage: statusMessages[prop.status] || 'Estado desconocido'
+        };
+      });
 
       res.json({ properties: propertiesWithStats });
     } catch (error) {

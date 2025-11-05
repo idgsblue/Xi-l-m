@@ -12,7 +12,9 @@
     "seed:check": "node src/scripts/check-data.js",
     "db:reset": "node src/scripts/reset-database.js",
     "db:recreate": "node src/scripts/recreate-database.js",
-    "db:truncate": "node src/scripts/truncate-all.js"
+    "db:truncate": "node src/scripts/truncate-all.js",
+    "reset:passwords": "node src/scripts/reset-all-passwords.js",
+    "reset:admin": "node src/scripts/reset-admin-password.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

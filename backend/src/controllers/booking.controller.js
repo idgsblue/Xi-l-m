@@ -1,4 +1,4 @@
-const { Booking, Property, User, Payment } = require('../models');
+const { Booking, Property, User, PaymentTransaction } = require('../models');
 const { Op } = require('sequelize');
 const emailService = require('../services/email.service');
 const stripeService = require('../services/stripe.service');
@@ -105,7 +105,7 @@ class BookingController {
       );
 
       // Crear registro de pago
-      const payment = await Payment.create({
+      const payment = await PaymentTransaction.create({
         amount: totalPrice,
         stripe_payment_intent_id: paymentIntent.id,
         payment_status: 'pending',
@@ -140,7 +140,7 @@ class BookingController {
           { model: Property, as: 'property' },
           { model: User, as: 'guest' },
           { model: User, as: 'host' },
-          { model: Payment, as: 'payment' }
+          { model: PaymentTransaction, as: 'transactions' }
         ],
         transaction: t
       });
@@ -175,9 +175,9 @@ class BookingController {
       await booking.save({ transaction: t });
 
       // Actualizar estado del pago
-      if (booking.payment) {
-        booking.payment.payment_status = 'succeeded';
-        await booking.payment.save({ transaction: t });
+      if (booking.transactions && booking.transactions.length > 0) {
+        booking.transactions[0].payment_status = 'succeeded';
+        await booking.transactions[0].save({ transaction: t });
       }
 
       // ============ BLOQUEAR FECHAS AUTOMÁTICAMENTE ============
@@ -238,8 +238,8 @@ class BookingController {
             }]
           },
           {
-            model: Payment,
-            as: 'payment'
+            model: PaymentTransaction,
+            as: 'transactions'
           }
         ],
         order: [['check_in_date', 'DESC']]
@@ -251,27 +251,77 @@ class BookingController {
     }
   }
 
-  // Obtener reservas como anfitrión
+  // Obtener reservas como anfitrión con contadores
   async getHostBookings(req, res, next) {
     try {
-      const { propertyId, status } = req.query;
+      const { property_id, booking_status, payment_status, date_filter } = req.query;
 
-      const where = { host_id: req.userId };
+      // Construir WHERE base
+      const where = {};
 
-      if (propertyId) {
-        where.property_id = propertyId;
+      // Buscar todas las propiedades del host
+      const hostProperties = await Property.findAll({
+        where: { host_id: req.userId },
+        attributes: ['id']
+      });
+
+      const propertyIds = hostProperties.map(p => p.id);
+
+      if (propertyIds.length === 0) {
+        return res.json({
+          bookings: [],
+          stats: {
+            total: 0,
+            pending: 0,
+            confirmed: 0,
+            in_progress: 0,
+            completed: 0,
+            cancelled: 0,
+            propertyStats: []
+          }
+        });
       }
 
-      if (status) {
-        where.booking_status = status;
+      where.property_id = { [Op.in]: propertyIds };
+
+      // Aplicar filtros
+      if (property_id) {
+        where.property_id = property_id;
       }
 
+      if (booking_status) {
+        where.booking_status = booking_status;
+      }
+
+      if (payment_status) {
+        where.payment_status = payment_status;
+      }
+
+      // Filtros de fecha
+      if (date_filter) {
+        const now = new Date();
+        switch (date_filter) {
+          case 'upcoming':
+            where.check_in_date = { [Op.gte]: now };
+            break;
+          case 'current':
+            where.check_in_date = { [Op.lte]: now };
+            where.check_out_date = { [Op.gte]: now };
+            break;
+          case 'past':
+            where.check_out_date = { [Op.lt]: now };
+            break;
+        }
+      }
+
+      // Obtener reservas con relaciones
       const bookings = await Booking.findAll({
         where,
         include: [
           {
             model: Property,
-            as: 'property'
+            as: 'property',
+            attributes: ['id', 'title', 'location', 'price_per_night']
           },
           {
             model: User,
@@ -279,14 +329,63 @@ class BookingController {
             attributes: ['id', 'full_name', 'email', 'phone']
           },
           {
-            model: Payment,
-            as: 'payment'
+            model: PaymentTransaction,
+            as: 'transactions'
           }
         ],
         order: [['check_in_date', 'DESC']]
       });
 
-      res.json({ bookings });
+      // Calcular estadísticas generales
+      const allBookings = await Booking.findAll({
+        where: { property_id: { [Op.in]: propertyIds } },
+        attributes: ['booking_status', 'property_id']
+      });
+
+      const stats = {
+        total: allBookings.length,
+        pending: allBookings.filter(b => b.booking_status === 'pending').length,
+        confirmed: allBookings.filter(b => b.booking_status === 'confirmed').length,
+        in_progress: allBookings.filter(b => b.booking_status === 'in_progress').length,
+        completed: allBookings.filter(b => b.booking_status === 'completed').length,
+        cancelled: allBookings.filter(b => b.booking_status === 'cancelled').length
+      };
+
+      // Calcular estadísticas por propiedad
+      const propertyStats = {};
+
+      for (const property of hostProperties) {
+        const propertyBookings = allBookings.filter(b => b.property_id === property.id);
+
+        propertyStats[property.id] = {
+          total: propertyBookings.length,
+          pending: propertyBookings.filter(b => b.booking_status === 'pending').length,
+          confirmed: propertyBookings.filter(b => b.booking_status === 'confirmed').length,
+          in_progress: propertyBookings.filter(b => b.booking_status === 'in_progress').length,
+          completed: propertyBookings.filter(b => b.booking_status === 'completed').length,
+          cancelled: propertyBookings.filter(b => b.booking_status === 'cancelled').length
+        };
+      }
+
+      // Obtener información de propiedades para los stats
+      const propertiesWithStats = await Property.findAll({
+        where: { id: { [Op.in]: propertyIds } },
+        attributes: ['id', 'title', 'location']
+      });
+
+      const propertyStatsArray = propertiesWithStats.map(prop => ({
+        property_id: prop.id,
+        title: prop.title,
+        location: prop.location,
+        ...propertyStats[prop.id]
+      }));
+
+      stats.propertyStats = propertyStatsArray;
+
+      res.json({
+        bookings,
+        stats
+      });
     } catch (error) {
       next(error);
     }
@@ -314,8 +413,8 @@ class BookingController {
             attributes: ['id', 'full_name', 'email', 'phone']
           },
           {
-            model: Payment,
-            as: 'payment'
+            model: PaymentTransaction,
+            as: 'transactions'
           }
         ]
       });
@@ -352,7 +451,7 @@ class BookingController {
           { model: Property, as: 'property' },
           { model: User, as: 'guest' },
           { model: User, as: 'host' },
-          { model: Payment, as: 'payment' }
+          { model: PaymentTransaction, as: 'transactions' }
         ],
         transaction: t
       });
@@ -402,11 +501,11 @@ class BookingController {
         try {
           const refund = await stripeService.createRefund(booking.stripe_payment_intent_id, refundAmount);
 
-          if (booking.payment) {
-            booking.payment.payment_status = 'refunded';
-            booking.payment.refund_amount = refundAmount;
-            booking.payment.refund_reason = reason || 'Cancelación de reserva';
-            await booking.payment.save({ transaction: t });
+          if (booking.transactions && booking.transactions.length > 0) {
+            booking.transactions[0].payment_status = 'refunded';
+            booking.transactions[0].refund_amount = refundAmount;
+            booking.transactions[0].refund_reason = reason || 'Cancelación de reserva';
+            await booking.transactions[0].save({ transaction: t });
           }
         } catch (error) {
           console.error('Error procesando reembolso:', error);
@@ -489,6 +588,184 @@ class BookingController {
         });
       }
     } catch (error) {
+      next(error);
+    }
+  }
+
+  // =======================================
+  // ADMIN: Obtener todas las reservas con estadísticas
+  // =======================================
+  async getAllBookingsAdmin(req, res, next) {
+    try {
+      const {
+        property_id,
+        guest_id,
+        host_id,
+        booking_status,
+        payment_status,
+        date_filter,
+        search,
+        page = 1,
+        limit = 20
+      } = req.query;
+
+      // Verificar que sea admin
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Acceso denegado' });
+      }
+
+      // Construir WHERE dinámico
+      const where = {};
+
+      if (booking_status) {
+        where.booking_status = booking_status;
+      }
+
+      if (payment_status) {
+        where.payment_status = payment_status;
+      }
+
+      // Filtros de fecha
+      if (date_filter) {
+        const now = new Date();
+        switch (date_filter) {
+          case 'upcoming':
+            where.check_in_date = { [Op.gte]: now };
+            break;
+          case 'current':
+            where.check_in_date = { [Op.lte]: now };
+            where.check_out_date = { [Op.gte]: now };
+            break;
+          case 'past':
+            where.check_out_date = { [Op.lt]: now };
+            break;
+          case 'today':
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            where.check_in_date = { [Op.gte]: today, [Op.lt]: tomorrow };
+            break;
+        }
+      }
+
+      // Incluir relaciones
+      const include = [
+        {
+          model: Property,
+          as: 'property',
+          attributes: ['id', 'title', 'location', 'price_per_night', 'host_id'],
+          ...(property_id && { where: { id: property_id } }),
+          ...(host_id && { where: { host_id } }),
+          include: [
+            {
+              model: User,
+              as: 'host',
+              attributes: ['id', 'full_name', 'email']
+            }
+          ]
+        },
+        {
+          model: User,
+          as: 'guest',
+          attributes: ['id', 'full_name', 'email', 'phone'],
+          ...(guest_id && { where: { id: guest_id } }),
+          ...(search && {
+            where: {
+              [Op.or]: [
+                { full_name: { [Op.iLike]: `%${search}%` } },
+                { email: { [Op.iLike]: `%${search}%` } }
+              ]
+            }
+          })
+        },
+        {
+          model: PaymentTransaction,
+          as: 'transactions'
+        }
+      ];
+
+      // Paginación
+      const offset = (page - 1) * limit;
+
+      // Obtener reservas con paginación
+      const { count, rows: bookings } = await Booking.findAndCountAll({
+        where,
+        include,
+        limit: parseInt(limit),
+        offset,
+        order: [['created_at', 'DESC']],
+        distinct: true
+      });
+
+      // Calcular estadísticas globales
+      const [statsResult] = await sequelize.query(`
+        SELECT
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE booking_status = 'pending') as pending,
+          COUNT(*) FILTER (WHERE booking_status = 'confirmed') as confirmed,
+          COUNT(*) FILTER (WHERE booking_status = 'in_progress') as in_progress,
+          COUNT(*) FILTER (WHERE booking_status = 'completed') as completed,
+          COUNT(*) FILTER (WHERE booking_status = 'cancelled') as cancelled,
+          COUNT(*) FILTER (WHERE payment_status = 'pending') as payment_pending,
+          COUNT(*) FILTER (WHERE payment_status = 'confirmed') as payment_confirmed,
+          COUNT(*) FILTER (WHERE payment_status = 'rejected') as payment_rejected,
+          SUM(total_price) as total_revenue,
+          SUM(CASE WHEN booking_status = 'completed' THEN total_price ELSE 0 END) as completed_revenue
+        FROM bookings
+      `);
+
+      const stats = {
+        bookings: {
+          total: parseInt(statsResult[0].total),
+          pending: parseInt(statsResult[0].pending),
+          confirmed: parseInt(statsResult[0].confirmed),
+          in_progress: parseInt(statsResult[0].in_progress),
+          completed: parseInt(statsResult[0].completed),
+          cancelled: parseInt(statsResult[0].cancelled)
+        },
+        payments: {
+          pending: parseInt(statsResult[0].payment_pending),
+          confirmed: parseInt(statsResult[0].payment_confirmed),
+          rejected: parseInt(statsResult[0].payment_rejected)
+        },
+        revenue: {
+          total: parseFloat(statsResult[0].total_revenue || 0),
+          completed: parseFloat(statsResult[0].completed_revenue || 0)
+        }
+      };
+
+      // Estadísticas por mes (últimos 6 meses)
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const [monthlyStats] = await sequelize.query(`
+        SELECT
+          TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') as month,
+          COUNT(*) as count,
+          SUM(total_price) as revenue
+        FROM bookings
+        WHERE created_at >= :sixMonthsAgo
+        GROUP BY DATE_TRUNC('month', created_at)
+        ORDER BY month DESC
+      `, {
+        replacements: { sixMonthsAgo }
+      });
+
+      stats.monthlyTrends = monthlyStats;
+
+      res.json({
+        bookings,
+        pagination: {
+          total: count,
+          pages: Math.ceil(count / limit),
+          currentPage: parseInt(page),
+          perPage: parseInt(limit)
+        },
+        stats
+      });
+    } catch (error) {
+      console.error('Error en getAllBookingsAdmin:', error);
       next(error);
     }
   }
