@@ -106,13 +106,18 @@ class BookingController {
       );
 
       // Crear registro de pago
-      const payment = await PaymentTransaction.create({
-        amount: totalPrice,
-        stripe_payment_intent_id: paymentIntent.id,
-        payment_status: 'pending',
-        booking_id: booking.id,
-        user_id: req.userId
-      }, { transaction: t });
+     const platformCommissionRate = 0.10; // 10%
+const platformCommission = totalPrice * platformCommissionRate;
+
+// Crear registro de pago
+const payment = await PaymentTransaction.create({
+  amount: totalPrice,
+  platform_commission: platformCommission,
+  stripe_payment_intent_id: paymentIntent.id,
+  payment_status: 'pending',
+  booking_id: booking.id,
+  user_id: req.userId
+}, { transaction: t });
 
       await t.commit();
 
@@ -137,14 +142,20 @@ class BookingController {
 
       // Buscar reserva
       const booking = await Booking.findByPk(bookingId, {
-        include: [
-          { model: Property, as: 'property' },
-          { model: User, as: 'guest' },
-          { model: User, as: 'host' },
-          { model: PaymentTransaction, as: 'transactions' }
-        ],
-        transaction: t
-      });
+  include: [
+    { 
+      model: Property, 
+      as: 'property',
+      include: [{
+        model: User,
+        as: 'host'  // ← El host está asociado a Property, no a Booking
+      }]
+    },
+    { model: User, as: 'guest' },
+    { model: PaymentTransaction, as: 'transactions' }
+  ],
+  transaction: t
+});
 
       if (!booking) {
         await t.rollback();
@@ -176,10 +187,10 @@ class BookingController {
       await booking.save({ transaction: t });
 
       // Actualizar estado del pago
-      if (booking.payment) {
-        booking.payment.payment_status = 'succeeded';
-        await booking.payment.save({ transaction: t });
-      }
+if (booking.transactions && booking.transactions.length > 0) {
+  booking.transactions[0].payment_status = 'succeeded';
+  await booking.transactions[0].save({ transaction: t });
+}
 
       // ============ BLOQUEAR FECHAS AUTOMÁTICAMENTE ============
       try {

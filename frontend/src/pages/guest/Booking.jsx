@@ -8,7 +8,8 @@ import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
+const stripeKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY;
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 const BookingForm = ({ property, bookingData }) => {
   const stripe = useStripe();
@@ -20,11 +21,6 @@ const BookingForm = ({ property, bookingData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -34,21 +30,38 @@ const BookingForm = ({ property, bookingData }) => {
         checkIn: bookingData.checkIn,
         checkOut: bookingData.checkOut,
         numberOfGuests: bookingData.guests,
-        specialRequests
+        specialRequests,
       });
 
-      const { paymentClientSecret, bookingId } = bookingResponse.data;
+       const { booking, paymentClientSecret, paymentIntentId } = bookingResponse.data;
+    const bookingId = booking.id; // ← Esta es la línea clave
 
-      // Confirmar el pago con Stripe
+
+      // ⚠️ VALIDACIÓN TEMPORAL: permitir continuar sin Stripe
+      if (!stripe || !elements || !paymentClientSecret) {
+        toast.info('Stripe no está configurado — simulando pago exitoso');
+
+        await api.post('/bookings/confirm', {
+           bookingId: bookingId,
+          paymentIntentId: 'simulated_payment_intent',
+        });
+        
+        toast.success('¡Reserva confirmada exitosamente (modo prueba)!');
+        navigate(`/guest/booking-confirmation/${bookingId}`);
+        setLoading(false);
+        return;
+      }
+
+      // Confirmar el pago real con Stripe
       const card = elements.getElement(CardElement);
       const result = await stripe.confirmCardPayment(paymentClientSecret, {
         payment_method: {
           card,
           billing_details: {
             name: user.name,
-            email: user.email
-          }
-        }
+            email: user.email,
+          },
+        },
       });
 
       if (result.error) {
@@ -57,7 +70,7 @@ const BookingForm = ({ property, bookingData }) => {
         // Confirmar la reserva en el backend
         await api.post('/bookings/confirm', {
           bookingId,
-          paymentIntentId: result.paymentIntent.id
+          paymentIntentId: result.paymentIntent.id,
         });
 
         toast.success('¡Reserva confirmada exitosamente!');
@@ -97,7 +110,10 @@ const BookingForm = ({ property, bookingData }) => {
       </div>
 
       <div>
-        <label htmlFor="specialRequests" className="block text-sm font-medium text-neutral-700">
+        <label
+          htmlFor="specialRequests"
+          className="block text-sm font-medium text-neutral-700"
+        >
           Solicitudes especiales (opcional)
         </label>
         <textarea
@@ -111,7 +127,9 @@ const BookingForm = ({ property, bookingData }) => {
       </div>
 
       <div className="bg-primary-50 rounded-lg p-4">
-        <h4 className="font-semibold text-accent-900 mb-2">Política de cancelación</h4>
+        <h4 className="font-semibold text-accent-900 mb-2">
+          Política de cancelación
+        </h4>
         <ul className="text-sm text-neutral-600 space-y-1">
           <li>• Cancelación gratuita hasta 7 días antes del check-in</li>
           <li>• 50% de reembolso hasta 3 días antes</li>
@@ -121,7 +139,7 @@ const BookingForm = ({ property, bookingData }) => {
 
       <button
         type="submit"
-        disabled={!stripe || loading}
+        disabled={loading}
         className="btn-secondary w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Procesando...' : `Confirmar y pagar $${bookingData.totalPrice} MXN`}
@@ -178,7 +196,9 @@ const Booking = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-accent-900 mb-8">Confirmar reserva</h1>
+      <h1 className="text-3xl font-bold text-accent-900 mb-8">
+        Confirmar reserva
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
@@ -226,13 +246,17 @@ const Booking = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-neutral-600">Check-in:</span>
                 <span className="font-medium">
-                  {format(new Date(bookingData.checkIn), "dd 'de' MMMM, yyyy", { locale: es })}
+                  {format(new Date(bookingData.checkIn), "dd 'de' MMMM, yyyy", {
+                    locale: es,
+                  })}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-neutral-600">Check-out:</span>
                 <span className="font-medium">
-                  {format(new Date(bookingData.checkOut), "dd 'de' MMMM, yyyy", { locale: es })}
+                  {format(new Date(bookingData.checkOut), "dd 'de' MMMM, yyyy", {
+                    locale: es,
+                  })}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -244,7 +268,13 @@ const Booking = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-neutral-600">
-                  ${property?.pricePerNight} x {Math.ceil((new Date(bookingData.checkOut) - new Date(bookingData.checkIn)) / (1000 * 60 * 60 * 24))} noches
+                  ${property?.pricePerNight} x{' '}
+                  {Math.ceil(
+                    (new Date(bookingData.checkOut) -
+                      new Date(bookingData.checkIn)) /
+                      (1000 * 60 * 60 * 24)
+                  )}{' '}
+                  noches
                 </span>
                 <span>${bookingData.totalPrice}</span>
               </div>
