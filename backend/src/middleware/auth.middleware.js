@@ -22,6 +22,9 @@ const authenticate = async (req, res, next) => {
     req.user = user;
     req.userId = user.id;
     req.userRole = user.role;
+
+    console.log('User ID:', req.userId);
+console.log('User Role:', req.user?.role);
     
     next();
   } catch (error) {

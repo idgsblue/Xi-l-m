@@ -11,6 +11,9 @@ const adminRoutes = require('./routes/admin.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const accommodationTypeRoutes = require('./routes/accommodationType.routes');
 const availabilityRoutes = require('./routes/availability.routes'); // ← NUEVA LÍNEA
+const serviceRoutes = require('./routes/service.routes'); // ← NUEVA LÍNEA
+
+
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler.middleware');
@@ -39,6 +42,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/accommodation-types', accommodationTypeRoutes);
 app.use('/api/availability', availabilityRoutes); // ← NUEVA LÍNEA
+app.use('/api/services', serviceRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {

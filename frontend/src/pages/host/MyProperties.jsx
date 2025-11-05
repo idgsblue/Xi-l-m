@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import {
@@ -26,15 +27,40 @@ const MyProperties = () => {
   const [selectedPropertyForAdvertise, setSelectedPropertyForAdvertise] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      toast.error('No hay sesión activa');
+      return;
+    }
     loadProperties();
   }, []);
 
   const loadProperties = async () => {
     try {
       const response = await api.get('/properties/host/my-properties');
+      console.log('Properties response:', response.data); // Debug
+      
+      if (!response.data.properties) {
+        console.error('No properties array in response:', response.data);
+        toast.error('Formato de respuesta inválido');
+        return;
+      }
+      
       setProperties(response.data.properties);
     } catch (error) {
-      toast.error('Error cargando propiedades');
+      console.error('Error loading properties:', error);
+      console.error('Error response:', error.response);
+      
+      if (error.response?.status === 401) {
+        toast.error('Sesión expirada. Por favor inicia sesión nuevamente.');
+      } else if (error.response?.status === 403) {
+        toast.error('No tienes permisos para ver propiedades');
+      } else if (error.response?.status === 500) {
+        toast.error('Error del servidor. Por favor contacta al administrador.');
+        console.error('Server error details:', error.response?.data);
+      } else {
+        toast.error(error.response?.data?.error || 'Error cargando propiedades');
+      }
     } finally {
       setLoading(false);
     }
@@ -352,18 +378,15 @@ const MyProperties = () => {
                             </button>
                           )}
                           
-                          {actions.canManageAvailability && (
-                            <button
-                              onClick={() => {
-                                // Por ahora mostrar mensaje, luego implementaremos el calendario
-                                toast.info('Función de calendario en desarrollo');
-                              }}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Gestionar disponibilidad"
-                            >
-                              <CalendarIcon className="h-5 w-5" />
-                            </button>
-                          )}
+{actions.canManageAvailability && (
+  <Link
+    to={`/host/properties/${property.id}/availability`}
+    className="text-blue-600 hover:text-blue-900"
+    title="Gestionar disponibilidad"
+  >
+    <CalendarIcon className="h-5 w-5" />
+  </Link>
+)}
                         </div>
                         
                         {/* Fila 2: Botones de anunciar/despublicar */}

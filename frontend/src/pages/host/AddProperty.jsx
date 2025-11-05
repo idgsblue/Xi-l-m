@@ -187,22 +187,22 @@ const AddProperty = () => {
     setUploadedImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-const addService = () => {
-  const serviceName = newService.trim();
-
-  if (serviceName === '') {
-    toast.error('El nombre del servicio no puede estar vacío');
-    return;
-  }
-
-  if (services.includes(serviceName)) {
-    toast.error('Este servicio ya fue agregado');
-    return;
-  }
-
-  setServices(prev => [...prev, serviceName]);
-  setNewService('');
-};
+  const addService = () => {
+    const serviceId = parseInt(newService.trim());
+    
+    if (isNaN(serviceId)) {
+      toast.error('El ID del servicio debe ser un número');
+      return;
+    }
+    
+    if (services.includes(serviceId)) {
+      toast.error('Este servicio ya fue agregado');
+      return;
+    }
+    
+    setServices(prev => [...prev, serviceId]);
+    setNewService('');
+  };
 
   const removeService = (index) => {
     setServices(prev => prev.filter((_, i) => i !== index));

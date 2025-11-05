@@ -1,4 +1,5 @@
-const { Booking, Property, User, Payment } = require('../models');
+const { Booking, Property, User, PaymentTransaction } = require('../models');
+
 const { Op } = require('sequelize');
 const emailService = require('../services/email.service');
 const stripeService = require('../services/stripe.service');
@@ -105,7 +106,7 @@ class BookingController {
       );
 
       // Crear registro de pago
-      const payment = await Payment.create({
+      const payment = await PaymentTransaction.create({
         amount: totalPrice,
         stripe_payment_intent_id: paymentIntent.id,
         payment_status: 'pending',
@@ -140,7 +141,7 @@ class BookingController {
           { model: Property, as: 'property' },
           { model: User, as: 'guest' },
           { model: User, as: 'host' },
-          { model: Payment, as: 'payment' }
+          { model: PaymentTransaction, as: 'transactions' }
         ],
         transaction: t
       });
@@ -238,8 +239,8 @@ class BookingController {
             }]
           },
           {
-            model: Payment,
-            as: 'payment'
+            model: PaymentTransaction,
+            as: 'transactions'
           }
         ],
         order: [['check_in_date', 'DESC']]
@@ -252,46 +253,46 @@ class BookingController {
   }
 
   // Obtener reservas como anfitrión
-  async getHostBookings(req, res, next) {
-    try {
-      const { propertyId, status } = req.query;
+ async getHostBookings(req, res, next) {
+  try {
+    const { propertyId, status } = req.query;
 
-      const where = { host_id: req.userId };
-
-      if (propertyId) {
-        where.property_id = propertyId;
-      }
-
-      if (status) {
-        where.booking_status = status;
-      }
-
-      const bookings = await Booking.findAll({
-        where,
-        include: [
-          {
-            model: Property,
-            as: 'property'
-          },
-          {
-            model: User,
-            as: 'guest',
-            attributes: ['id', 'full_name', 'email', 'phone']
-          },
-          {
-            model: Payment,
-            as: 'payment'
-          }
-        ],
-        order: [['check_in_date', 'DESC']]
-      });
-
-      res.json({ bookings });
-    } catch (error) {
-      next(error);
+    // Filtros opcionales para Booking
+    const where = {};
+    if (propertyId) {
+      where.property_id = propertyId;
     }
-  }
+    if (status) {
+      where.booking_status = status;
+    }
 
+    const bookings = await Booking.findAll({
+      where, // ✅ ahora solo filtra por propertyId o status
+      include: [
+        {
+          model: Property,
+          as: 'property',
+          where: { host_id: req.userId }, // ✅ filtro correcto
+          attributes: ['id', 'title', 'host_id', 'price_per_night']
+        },
+        {
+          model: User,
+          as: 'guest',
+          attributes: ['id', 'full_name', 'email', 'phone']
+        },
+        {
+          model: PaymentTransaction,
+          as: 'transactions'
+        }
+      ],
+      order: [['check_in_date', 'DESC']]
+    });
+
+    res.json({ bookings });
+  } catch (error) {
+    next(error);
+  }
+}
   // Obtener una reserva específica
   async getById(req, res, next) {
     try {
@@ -314,8 +315,8 @@ class BookingController {
             attributes: ['id', 'full_name', 'email', 'phone']
           },
           {
-            model: Payment,
-            as: 'payment'
+            model: PaymentTransaction,
+            as: 'transactions'
           }
         ]
       });
@@ -352,7 +353,7 @@ class BookingController {
           { model: Property, as: 'property' },
           { model: User, as: 'guest' },
           { model: User, as: 'host' },
-          { model: Payment, as: 'payment' }
+          { model: PaymentTransaction, as: 'transactions' }
         ],
         transaction: t
       });
