@@ -33,7 +33,13 @@ class AvailabilityService {
     });
 
     const blockedDatesMap = new Map(
-      manuallyBlocked.map(record => [record.date.toISOString().split('T')[0], true])
+      manuallyBlocked.map(record => {
+        // record.date puede ser string o Date, normalizar a string YYYY-MM-DD
+        const dateStr = typeof record.date === 'string' 
+          ? record.date 
+          : record.date.toISOString().split('T')[0];
+        return [dateStr, true];
+      })
     );
 
     // Obtener reservas activas en el mes
@@ -130,7 +136,6 @@ class AvailabilityService {
       // Validar que la propiedad existe y pertenece al host
       const property = await Property.findByPk(propertyId, { transaction: t });
       if (!property) {
-        await t.rollback();
         throw new Error('Propiedad no encontrada');
       }
 
@@ -140,7 +145,6 @@ class AvailabilityService {
       // Validar que no haya fechas pasadas
       const pastDates = dates.filter(date => new Date(date) < today);
       if (pastDates.length > 0) {
-        await t.rollback();
         throw new Error('No puedes modificar fechas pasadas');
       }
 
@@ -163,7 +167,6 @@ class AvailabilityService {
         });
 
         if (bookingsInDates.length > 0) {
-          await t.rollback();
           throw new Error('No puedes marcar como disponible fechas con reservas activas');
         }
       }
@@ -209,7 +212,10 @@ class AvailabilityService {
         datesAffected: dates
       };
     } catch (error) {
-      await t.rollback();
+      // Solo hacer rollback si la transacción no ha sido finalizada
+      if (!t.finished) {
+        await t.rollback();
+      }
       throw error;
     }
   }
@@ -404,7 +410,10 @@ class AvailabilityService {
 
     // Agregar fechas bloqueadas manualmente
     manuallyBlocked.forEach(record => {
-      unavailableDates.add(record.date.toISOString().split('T')[0]);
+      const dateStr = typeof record.date === 'string' 
+        ? record.date 
+        : record.date.toISOString().split('T')[0];
+      unavailableDates.add(dateStr);
     });
 
     // Agregar fechas de reservas

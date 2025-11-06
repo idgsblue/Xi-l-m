@@ -60,7 +60,7 @@ router.post('/',
 router.get('/host/my-properties', 
   authenticate, 
   isHost, 
-  propertyController.getMyProperties
+  propertyController.getMyProperties.bind(propertyController)
 );
 
 // NUEVO: Anunciar propiedad (HOST)
@@ -115,6 +115,7 @@ router.get('/',
 
 // Obtener propiedad por ID (PÚBLICO/OWNER/ADMIN)
 router.get('/:id', 
+  authenticate,  // ← AGREGAR ESTA LÍNEA
   propertyController.getById
 );
 

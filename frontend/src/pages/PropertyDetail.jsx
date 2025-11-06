@@ -23,9 +23,11 @@ const PropertyDetail = () => {
   const [guests, setGuests] = useState(1);
   const [availability, setAvailability] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
+  const [bookedDates, setBookedDates] = useState([]);
 
   useEffect(() => {
     loadProperty();
+    loadBookedDates();
   }, [id]);
 
   useEffect(() => {
@@ -43,6 +45,19 @@ const PropertyDetail = () => {
       navigate('/');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadBookedDates = async () => {
+    try {
+      const response = await api.get(`/bookings/property/${id}/booked-dates`);
+      if (response.data.bookedDates) {
+        // Convertir las fechas a objetos Date
+        const dates = response.data.bookedDates.map(dateStr => new Date(dateStr));
+        setBookedDates(dates);
+      }
+    } catch (error) {
+      console.error('Error cargando fechas ocupadas:', error);
     }
   };
 
@@ -84,6 +99,13 @@ const PropertyDetail = () => {
     });
   };
 
+  // Función para deshabilitar fechas ocupadas en el DatePicker
+  const isDateDisabled = (date) => {
+    return bookedDates.some(bookedDate => 
+      bookedDate.toDateString() === date.toDateString()
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -105,10 +127,10 @@ const PropertyDetail = () => {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Título y ubicación */}
         <div className="mb-6">
-          <h1 className="heading-1">{property.name}</h1>
+          <h1 className="heading-1">{property.title}</h1>
           <div className="mt-2 flex items-center text-neutral-600">
             <MapPinIcon className="h-5 w-5 mr-1 icon-accent" />
-            <span>{property.address}, {property.zone}</span>
+            <span>{property.location}</span>
           </div>
         </div>
 
@@ -118,8 +140,7 @@ const PropertyDetail = () => {
             {property.images && property.images.length > 0 ? (
               <img
                 src={property.images[imageIndex]?.image_url || property.images[imageIndex]}
-
-                alt={property.name}
+                alt={property.title}
                 className="w-full h-96 object-cover rounded-lg"
               />
             ) : (
@@ -146,7 +167,7 @@ const PropertyDetail = () => {
           <div className="bg-primary-50 rounded-lg p-6">
             <div className="mb-4">
               <span className="text-3xl font-bold text-accent-900">
-                ${property.pricePerNight}
+                ${parseFloat(property.price_per_night).toFixed(2)}
               </span>
               <span className="text-neutral-600"> MXN / noche</span>
             </div>
@@ -163,8 +184,11 @@ const PropertyDetail = () => {
                   startDate={checkIn}
                   endDate={checkOut}
                   minDate={new Date()}
+                  excludeDates={bookedDates}
+                  filterDate={(date) => !isDateDisabled(date)}
                   placeholderText="Selecciona fecha"
                   className="input w-full"
+                  dateFormat="dd/MM/yyyy"
                 />
               </div>
 
@@ -179,8 +203,11 @@ const PropertyDetail = () => {
                   startDate={checkIn}
                   endDate={checkOut}
                   minDate={checkIn || new Date()}
+                  excludeDates={bookedDates}
+                  filterDate={(date) => !isDateDisabled(date)}
                   placeholderText="Selecciona fecha"
                   className="input w-full"
+                  dateFormat="dd/MM/yyyy"
                 />
               </div>
 
@@ -193,7 +220,7 @@ const PropertyDetail = () => {
                   onChange={(e) => setGuests(e.target.value)}
                   className="input w-full"
                 >
-                  {[...Array(property.maxGuests)].map((_, i) => (
+                  {[...Array(property.capacity)].map((_, i) => (
                     <option key={i + 1} value={i + 1}>
                       {i + 1} {i === 0 ? 'huésped' : 'huéspedes'}
                     </option>
@@ -205,7 +232,7 @@ const PropertyDetail = () => {
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-sm">
                     <span>
-                      ${property.pricePerNight} x {availability.nights} noches
+                      ${parseFloat(property.price_per_night).toFixed(2)} x {availability.nights} noches
                     </span>
                     <span>${availability.totalPrice}</span>
                   </div>
@@ -249,33 +276,39 @@ const PropertyDetail = () => {
 
             <div className="border-b pb-6 mb-6">
               <h2 className="heading-2 mb-4">
-                Características
+                Tipo de alojamiento
               </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center">
-                  <UsersIcon className="h-5 w-5 mr-3 icon-neutral" />
-                  <span>Hasta {property.maxGuests} huéspedes</span>
-                </div>
-                <div className="flex items-center">
-                  <HomeIcon className="h-5 w-5 mr-3 icon-neutral" />
-                  <span>{property.bedrooms} habitaciones</span>
-                </div>
-                <div className="flex items-center">
-                  <SparklesIcon className="h-5 w-5 mr-3 icon-neutral" />
-                  <span>{property.bathrooms} baños</span>
-                </div>
+              <div className="flex items-center">
+                <HomeIcon className="h-5 w-5 mr-3 icon-neutral" />
+                <span>{property.accommodationType?.name}</span>
               </div>
             </div>
 
-            {property.amenities && property.amenities.length > 0 && (
+            <div className="border-b pb-6 mb-6">
+              <h2 className="heading-2 mb-4">
+                Capacidad
+              </h2>
+              <div className="flex items-center">
+                <UsersIcon className="h-5 w-5 mr-3 icon-neutral" />
+                <span>Hasta {property.capacity} huéspedes</span>
+              </div>
+            </div>
+
+            {property.services && property.services.length > 0 && (
               <div className="border-b pb-6 mb-6">
                 <h2 className="heading-2 mb-4">
-                  Amenidades
+                  Servicios
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {property.amenities.map((amenity, idx) => (
-                    <div key={idx} className="flex items-center">
-                      <span className="text-neutral-600">• {amenity}</span>
+                  {property.services.map((service) => (
+                    <div key={service.id} className="flex items-center">
+                      <SparklesIcon className="h-5 w-5 mr-2 icon-accent" />
+                      <div>
+                        <p className="font-medium text-neutral-900">{service.name}</p>
+                        {service.description && (
+                          <p className="text-sm text-neutral-600">{service.description}</p>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -291,11 +324,11 @@ const PropertyDetail = () => {
               <div className="flex items-center">
                 <div className="h-12 w-12 rounded-full bg-primary-300 flex items-center justify-center">
                   <span className="text-xl font-semibold text-neutral-600">
-                    {property.host?.name?.charAt(0).toUpperCase()}
+                    {property.host?.full_name?.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="ml-4">
-                  <p className="font-medium text-accent-900">{property.host?.name}</p>
+                  <p className="font-medium text-accent-900">{property.host?.full_name}</p>
                   <p className="text-sm text-neutral-600">Anfitrión verificado</p>
                 </div>
               </div>

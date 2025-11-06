@@ -65,6 +65,7 @@ class PropertyController {
         });
       }
 
+
       // ============ VALIDACIÓN DE RANGO DE PRECIO ============
       if (accommodation_type_id && price_per_night) {
         const accommodationType = await AccommodationType.findByPk(accommodation_type_id);
@@ -341,6 +342,8 @@ class PropertyController {
       next(error);
     }
   }
+
+  
 
   // Método auxiliar para mensajes de estado
   getStatusMessage(status, rejectionReason) {

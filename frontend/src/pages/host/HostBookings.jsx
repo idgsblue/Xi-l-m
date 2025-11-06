@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { format, isValid, parseISO } from "date-fns";
+
+import { es } from "date-fns/locale";
+
 import { toast } from 'react-toastify';
 import {
   CalendarIcon,
@@ -15,6 +17,12 @@ import {
   FunnelIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
+
+const formatDateSafe = (dateStr, fmt = "dd MMM yyyy") => {
+  if (!dateStr) return null;
+  const date = parseISO(dateStr);
+  return isValid(date) ? format(date, fmt, { locale: es }) : null;
+};
 
 const HostBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -352,17 +360,22 @@ const HostBookings = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-accent-900">
-                      <div className="flex items-center">
-                        <CalendarIcon className="h-4 w-4 icon-muted mr-1" />
-                        {format(new Date(booking.check_in_date), "dd MMM", { locale: es })} -
-                        {format(new Date(booking.check_out_date), "dd MMM yyyy", { locale: es })}
-                      </div>
-                      <div className="text-neutral-500">
-                        {booking.number_of_guests} {booking.number_of_guests === 1 ? 'huésped' : 'huéspedes'}
-                      </div>
-                    </div>
-                  </td>
+  <div className="text-sm text-accent-900">
+    <div className="flex items-center">
+      <CalendarIcon className="h-4 w-4 icon-muted mr-1" />
+      {formatDateSafe(booking.checkIn, "dd MMM") && formatDateSafe(booking.checkOut, "dd MMM yyyy") ? (
+        <>
+          {formatDateSafe(booking.checkIn, "dd MMM")} - {formatDateSafe(booking.checkOut, "dd MMM yyyy")}
+        </>
+      ) : (
+        "Fechas no disponibles"
+      )}
+    </div>
+    <div className="text-neutral-500">
+      {booking.numberOfGuests} {booking.numberOfGuests === 1 ? "huésped" : "huéspedes"}
+    </div>
+  </div>
+</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.booking_status)}`}>
                       {getStatusIcon(booking.booking_status)}

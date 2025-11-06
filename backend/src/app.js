@@ -11,41 +11,34 @@ const adminRoutes = require('./routes/admin.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const accommodationTypeRoutes = require('./routes/accommodationType.routes');
 const availabilityRoutes = require('./routes/availability.routes'); // ← NUEVA LÍNEA
+const serviceRoutes = require('./routes/service.routes'); // ← NUEVA LÍNEA
+
+
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler.middleware');
 
 const app = express();
 
-// Configuración CORS - Permitir múltiples orígenes
+// Configuración CORS
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://localhost:3000',
-  process.env.FRONTEND_URL,
-  // Agregar más URLs según sea necesario
+  'https://xilmq.com',
+  process.env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Permitir requests sin origin (como mobile apps o curl requests)
+    // Permitir requests sin origin (como mobile apps o curl)
     if (!origin) return callback(null, true);
-
-    // Verificar si el origin está en la lista permitida
+    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      // En desarrollo, permitir cualquier localhost
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        callback(null, true);
-      } else {
-        console.warn(`CORS blocked origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
+      callback(new Error('No permitido por CORS'));
     }
   },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  credentials: true
 }));
 
 // Middlewares
@@ -64,6 +57,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/accommodation-types', accommodationTypeRoutes);
 app.use('/api/availability', availabilityRoutes); // ← NUEVA LÍNEA
+app.use('/api/services', serviceRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {

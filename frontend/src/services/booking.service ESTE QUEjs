@@ -104,33 +104,13 @@ const propertyService = {
     }
   },
 
-  // ✅ CORREGIDO: Obtener mis propiedades (host)
+  // Obtener mis propiedades (host)
   getMyProperties: async () => {
     try {
-      const response = await api.get('/properties/host/my-properties');
+      const response = await api.get('/properties/my-properties');
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error al obtener mis propiedades' };
-    }
-  },
-
-  // ✅ NUEVO: Anunciar propiedad (cambiar de approved a published)
-  advertiseProperty: async (propertyId) => {
-    try {
-      const response = await api.post(`/properties/${propertyId}/advertise`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Error al anunciar propiedad' };
-    }
-  },
-
-  // ✅ NUEVO: Despublicar propiedad (cambiar de published a approved)
-  unadvertiseProperty: async (propertyId) => {
-    try {
-      const response = await api.post(`/properties/${propertyId}/unadvertise`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Error al despublicar propiedad' };
     }
   },
 

@@ -1,160 +1,86 @@
-// src/services/property.service.js
+// src/services/booking.service.js
 import api from './api';
 
-const propertyService = {
-  // Obtener todas las propiedades (con filtros opcionales)
-  getAllProperties: async (filters = {}) => {
+const bookingService = {
+  // 📘 Obtener una reserva por ID
+  getBookingById: async (id) => {
     try {
-      const queryParams = new URLSearchParams(filters).toString();
-      const response = await api.get(`/properties?${queryParams}`);
+      const response = await api.get(`/bookings/${id}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Error al obtener propiedades' };
+      throw error.response?.data || { message: 'Error al obtener la reserva' };
     }
   },
 
-  // Buscar propiedades
-  searchProperties: async (searchParams) => {
+  // 🧾 Crear una nueva reserva
+  createBooking: async (bookingData) => {
     try {
-      const response = await api.post('/properties/search', searchParams);
+      const response = await api.post('/bookings', bookingData);
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Error en la búsqueda' };
+      throw error.response?.data || { message: 'Error al crear la reserva' };
     }
   },
 
-  // Obtener propiedad por ID
-  getPropertyById: async (id) => {
+  // ✅ Confirmar una reserva (Stripe u otro método de pago)
+  confirmBooking: async (confirmData) => {
     try {
-      const response = await api.get(`/properties/${id}`);
+      const response = await api.post('/bookings/confirm', confirmData);
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Error al obtener propiedad' };
+      throw error.response?.data || { message: 'Error al confirmar la reserva' };
     }
   },
 
-  // Crear nueva propiedad
-  createProperty: async (propertyData) => {
+  // ❌ Cancelar una reserva (opcionalmente con razón)
+  cancelBooking: async (id, reason = '') => {
     try {
-      const response = await api.post('/properties', propertyData);
+      const response = await api.post(`/bookings/${id}/cancel`, { reason });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Error al crear propiedad' };
+      throw error.response?.data || { message: 'Error al cancelar la reserva' };
     }
   },
 
-  // Actualizar propiedad
-  updateProperty: async (id, propertyData) => {
+  // 🧍 Obtener reservas del usuario autenticado
+  getMyBookings: async () => {
     try {
-      const response = await api.put(`/properties/${id}`, propertyData);
+      const response = await api.get('/bookings/my-bookings');
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Error al actualizar propiedad' };
+      throw error.response?.data || { message: 'Error al obtener mis reservas' };
     }
   },
 
-  // Eliminar propiedad
-  deleteProperty: async (id) => {
+  // 🏠 Obtener reservas del anfitrión (solo host)
+  getHostBookings: async () => {
     try {
-      const response = await api.delete(`/properties/${id}`);
+      const response = await api.get('/bookings/host/bookings');
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Error al eliminar propiedad' };
+      throw error.response?.data || { message: 'Error al obtener reservas del anfitrión' };
     }
   },
 
-  // Subir imágenes de propiedad
-  uploadImages: async (propertyId, images) => {
+  // 🧑‍💼 Obtener todas las reservas (solo admin)
+  getAllBookingsAdmin: async () => {
     try {
-      const formData = new FormData();
-      images.forEach((image) => {
-        formData.append('images', image);
-      });
-
-      const response = await api.post(`/properties/${propertyId}/images`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.get('/bookings/admin/all');
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Error al subir imágenes' };
+      throw error.response?.data || { message: 'Error al obtener todas las reservas' };
     }
   },
 
-  // Eliminar imagen de propiedad
-  deleteImage: async (propertyId, imageId) => {
+  // 📅 Verificar disponibilidad antes de crear una reserva
+  checkAvailability: async (params) => {
     try {
-      const response = await api.delete(`/properties/${propertyId}/images/${imageId}`);
+      const response = await api.get('/bookings/check-availability', { params });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Error al eliminar imagen' };
-    }
-  },
-
-  // Obtener disponibilidad de propiedad
-  getAvailability: async (propertyId, startDate, endDate) => {
-    try {
-      const response = await api.get(`/properties/${propertyId}/availability`, {
-        params: { startDate, endDate },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Error al obtener disponibilidad' };
-    }
-  },
-
-  // Obtener mis propiedades (host)
-  getMyProperties: async () => {
-    try {
-      const response = await api.get('/properties/my-properties');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Error al obtener mis propiedades' };
-    }
-  },
-
-  // Obtener reviews de una propiedad
-  getPropertyReviews: async (propertyId) => {
-    try {
-      const response = await api.get(`/properties/${propertyId}/reviews`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Error al obtener reviews' };
-    }
-  },
-
-  // Agregar review a una propiedad
-  addReview: async (propertyId, reviewData) => {
-    try {
-      const response = await api.post(`/properties/${propertyId}/reviews`, reviewData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Error al agregar review' };
-    }
-  },
-
-  // Obtener propiedades destacadas
-  getFeaturedProperties: async (limit = 6) => {
-    try {
-      const response = await api.get(`/properties/featured?limit=${limit}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Error al obtener propiedades destacadas' };
-    }
-  },
-
-  // Obtener propiedades cercanas
-  getNearbyProperties: async (latitude, longitude, radius = 10) => {
-    try {
-      const response = await api.get('/properties/nearby', {
-        params: { latitude, longitude, radius },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Error al obtener propiedades cercanas' };
+      throw error.response?.data || { message: 'Error al verificar disponibilidad' };
     }
   },
 };
 
-export default propertyService;
+export default bookingService;

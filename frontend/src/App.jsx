@@ -36,6 +36,9 @@ import AllBookings from './pages/admin/AllBookings';
 
 import AccommodationTypes from './pages/admin/AccommodationTypes';
 
+import AvailabilityCalendar from './pages/host/AvailabilityCalendar';
+
+
 
 // Componente para rutas protegidas
 const ProtectedRoute = ({ children, roles = [] }) => {
@@ -85,16 +88,18 @@ function App() {
       </Route>
 
       {/* Rutas protegidas - Anfitrión */}
-      <Route path="/host" element={
-        <ProtectedRoute roles={['host', 'admin']}>
-          <DashboardLayout />
-        </ProtectedRoute>
-      }>
-        <Route path="properties" element={<MyProperties />} />
-        <Route path="properties/add" element={<AddProperty />} />
-        <Route path="properties/edit/:id" element={<EditProperty />} />
-        <Route path="bookings" element={<HostBookings />} />
-      </Route>
+<Route path="/host" element={
+  <ProtectedRoute roles={['host', 'admin']}>
+    <DashboardLayout />
+  </ProtectedRoute>
+}>
+  <Route path="properties" element={<MyProperties />} />
+  <Route path="properties/add" element={<AddProperty />} />
+  <Route path="properties/edit/:id" element={<EditProperty />} />
+  {/* ✅ NUEVA RUTA */}
+  <Route path="properties/:id/availability" element={<AvailabilityCalendar />} />
+  <Route path="bookings" element={<HostBookings />} />
+</Route>
 
       {/* Rutas protegidas - Admin */}
 <Route path="/admin" element={

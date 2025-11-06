@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 // Usar variable de entorno o fallback a localhost
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+=======
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.xilmq.com/api';
+>>>>>>> 8555a83b368a468101356680e2e2a9621e47cf4a
 
 const api = axios.create({
   baseURL: API_URL,
