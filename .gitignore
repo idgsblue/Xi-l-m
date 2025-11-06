@@ -13,3 +13,12 @@ ios/
 
 
 backend/src/config/firebase-service-account.json
+
+
+# Firebase
+.firebase/
+firebase-debug.log
+.firebaserc
+
+# Build
+frontend/build/
