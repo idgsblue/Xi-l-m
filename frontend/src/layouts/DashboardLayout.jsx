@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PendingBookingsBadge from '../components/PendingBookingsBadge';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -30,14 +31,15 @@ const DashboardLayout = () => {
 
   const hostNavigation = [
     { name: 'Mis Propiedades', href: '/host/properties', icon: BuildingOfficeIcon },
-    { name: 'Reservas Recibidas', href: '/host/bookings', icon: CalendarIcon }
+    { name: 'Reservas Recibidas', href: '/host/bookings', icon: CalendarIcon, showBadge: true }
   ];
 
 const adminNavigation = [
   { name: 'Dashboard', href: '/admin', icon: HomeIcon },
   { name: 'Propiedades Pendientes', href: '/admin/properties/pending', icon: BuildingOfficeIcon },
+  { name: 'Todas las Reservas', href: '/admin/bookings', icon: CalendarIcon, showBadge: true },
   { name: 'Usuarios', href: '/admin/users', icon: UsersIcon },
-  { name: 'Tipos de Alojamiento', href: '/admin/accommodation-types', icon: BuildingOfficeIcon }, // ← NUEVA LÍNEA
+  { name: 'Tipos de Alojamiento', href: '/admin/accommodation-types', icon: BuildingOfficeIcon },
   { name: 'Reportes', href: '/admin/reports', icon: ChartBarIcon }
 ];
 
@@ -71,14 +73,17 @@ const adminNavigation = [
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-2 py-2 text-base font-medium rounded-button transition-colors ${
+                    className={`group flex items-center justify-between px-2 py-2 text-base font-medium rounded-button transition-colors ${
                       location.pathname === item.href
                         ? 'bg-secondary-500 text-white'
                         : 'text-neutral-700 hover:bg-primary-100 hover:text-accent-800'
                     }`}
                   >
-                    <item.icon className={`mr-4 h-6 w-6 ${location.pathname === item.href ? 'icon-muted' : 'icon-interactive'}`} />
-                    {item.name}
+                    <div className="flex items-center">
+                      <item.icon className={`mr-4 h-6 w-6 ${location.pathname === item.href ? 'icon-muted' : 'icon-interactive'}`} />
+                      {item.name}
+                    </div>
+                    {item.showBadge && <PendingBookingsBadge userRole={user?.role} />}
                   </Link>
                 ))}
               </nav>
@@ -110,14 +115,17 @@ const adminNavigation = [
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-button transition-colors ${
+                    className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-button transition-colors ${
                       location.pathname === item.href
                         ? 'bg-secondary-500 text-white'
                         : 'text-neutral-700 hover:bg-primary-100 hover:text-accent-800'
                     }`}
                   >
-                    <item.icon className={`mr-3 h-6 w-6 ${location.pathname === item.href ? 'icon-muted' : 'icon-interactive'}`} />
-                    {item.name}
+                    <div className="flex items-center">
+                      <item.icon className={`mr-3 h-6 w-6 ${location.pathname === item.href ? 'icon-muted' : 'icon-interactive'}`} />
+                      {item.name}
+                    </div>
+                    {item.showBadge && <PendingBookingsBadge userRole={user?.role} />}
                   </Link>
                 ))}
               </nav>
