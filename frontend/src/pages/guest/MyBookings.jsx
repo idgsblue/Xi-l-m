@@ -107,14 +107,14 @@ const MyBookings = () => {
   const filteredBookings = bookings.filter(booking => {
     if (filter === 'all') return true;
     if (filter === 'upcoming') {
-      const checkIn = new Date(booking.checkIn);
+      const checkIn = new Date(booking.check_in_date);
       return (
-        ['confirmed', 'pending'].includes(booking.status) &&
+        ['confirmed', 'pending'].includes(booking.booking_status) &&
         isValid(checkIn) &&
         checkIn > new Date()
       );
     }
-    return booking.status === filter;
+    return booking.booking_status === filter;
   });
 
   if (loading) {
@@ -176,10 +176,10 @@ const MyBookings = () => {
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.booking_status)}`}
                       >
-                        {getStatusIcon(booking.status)}
-                        <span className="ml-1">{getStatusText(booking.status)}</span>
+                        {getStatusIcon(booking.booking_status)}
+                        <span className="ml-1">{getStatusText(booking.booking_status)}</span>
                       </span>
                       <span className="ml-3 text-sm text-neutral-500">
                         Reserva #{booking.id}
@@ -187,31 +187,48 @@ const MyBookings = () => {
                     </div>
 
                     <h3 className="text-lg font-semibold text-accent-900 mb-2">
-                      {booking.property?.name || 'Propiedad sin nombre'}
+                      {booking.property?.title || 'Propiedad sin nombre'}
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-neutral-600">
                       <div className="flex items-center">
                         <MapPinIcon className="h-4 w-4 mr-2 icon-accent" />
-                        {booking.property?.address || 'Dirección no disponible'}
+                        {booking.property?.location || 'Ubicación no disponible'}
                       </div>
                       <div className="flex items-center">
                         <UsersIcon className="h-4 w-4 mr-2 icon-neutral" />
-                        {booking.numberOfGuests} {booking.numberOfGuests === 1 ? 'huésped' : 'huéspedes'}
+                        {booking.total_guests} {booking.total_guests === 1 ? 'huésped' : 'huéspedes'}
                       </div>
                       <div className="flex items-center">
                         <CalendarIcon className="h-4 w-4 mr-2 icon-neutral" />
-                        {safeFormatDate(booking.checkIn)} - {safeFormatDate(booking.checkOut)}
+                        {safeFormatDate(booking.check_in_date)} - {safeFormatDate(booking.check_out_date)}
                       </div>
                       <div className="font-semibold text-accent-900">
-                        Total: ${booking.totalPrice} MXN
+                        Total: ${parseFloat(booking.total_price).toFixed(2)} MXN
                       </div>
                     </div>
 
-                    {booking.specialRequests && (
-                      <div className="mt-3 p-3 bg-neutral-50 rounded-md">
-                        <p className="text-sm text-neutral-600">
-                          <span className="font-medium">Solicitudes especiales:</span> {booking.specialRequests}
+                    {/* Estado de pago */}
+                    <div className="mt-3 flex items-center space-x-4 text-sm">
+                      <span className="text-neutral-600">
+                        Estado de pago: 
+                        <span className={`ml-1 font-medium ${
+                          booking.payment_status === 'confirmed' ? 'text-green-600' : 'text-yellow-600'
+                        }`}>
+                          {booking.payment_status === 'confirmed' ? 'Pagado' : 'Pendiente'}
+                        </span>
+                      </span>
+                      {booking.transactions && booking.transactions.length > 0 && (
+                        <span className="text-neutral-500">
+                          • Comisión plataforma: ${parseFloat(booking.transactions[0].platform_commission).toFixed(2)} MXN
+                        </span>
+                      )}
+                    </div>
+
+                    {booking.cancellation_reason && (
+                      <div className="mt-3 p-3 bg-red-50 rounded-md">
+                        <p className="text-sm text-red-600">
+                          <span className="font-medium">Motivo de cancelación:</span> {booking.cancellation_reason}
                         </p>
                       </div>
                     )}
@@ -219,13 +236,15 @@ const MyBookings = () => {
 
                   <div className="ml-4 flex flex-col space-y-2">
                     <Link
-                      to={`/property/${booking.propertyId}`}
+                      to={`/property/${booking.property_id}`}
                       className="text-sm text-secondary-600 hover:text-secondary-500 font-medium"
                     >
                       Ver propiedad
                     </Link>
 
-                    {booking.status === 'confirmed' && isValid(new Date(booking.checkIn)) && new Date(booking.checkIn) > new Date() && (
+                    {booking.booking_status === 'confirmed' && 
+                     isValid(new Date(booking.check_in_date)) && 
+                     new Date(booking.check_in_date) > new Date() && (
                       <button
                         onClick={() => handleCancel(booking.id)}
                         disabled={cancellingId === booking.id}
@@ -240,9 +259,12 @@ const MyBookings = () => {
                 {/* Información del anfitrión */}
                 <div className="mt-4 pt-4 border-t">
                   <p className="text-sm text-neutral-600">
-                    Anfitrión: <span className="font-medium">{booking.property?.host?.name || 'No disponible'}</span>
+                    Anfitrión: <span className="font-medium">{booking.property?.host?.full_name || 'No disponible'}</span>
                     {booking.property?.host?.phone && (
                       <span> • Tel: {booking.property.host.phone}</span>
+                    )}
+                    {booking.property?.host?.email && (
+                      <span> • Email: {booking.property.host.email}</span>
                     )}
                   </p>
                 </div>

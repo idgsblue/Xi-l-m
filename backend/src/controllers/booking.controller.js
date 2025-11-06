@@ -8,129 +8,167 @@ const sequelize = require('../config/database');
 class BookingController {
   // Crear reserva
   async create(req, res, next) {
-    const t = await sequelize.transaction();
-    
-    try {
-      const {
-        propertyId,
-        checkIn,
-        checkOut,
-        numberOfGuests,
-        specialRequests,
-        paymentMethodId
-      } = req.body;
+  const t = await sequelize.transaction();
+  
+  try {
+    const {
+      propertyId,
+      checkIn,
+      checkOut,
+      numberOfGuests,
+      specialRequests,
+      paymentMethodId,
+      simulatePayment = false // ← NUEVO parámetro
+    } = req.body;
 
-      // Validar fechas
-      const checkInDate = new Date(checkIn);
-      const checkOutDate = new Date(checkOut);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    // Validar fechas
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-      if (checkInDate < today) {
-        await t.rollback();
-        return res.status(400).json({ error: 'La fecha de check-in debe ser futura' });
-      }
+    if (checkInDate < today) {
+      await t.rollback();
+      return res.status(400).json({ error: 'La fecha de check-in debe ser futura' });
+    }
 
-      if (checkOutDate <= checkInDate) {
-        await t.rollback();
-        return res.status(400).json({ error: 'La fecha de check-out debe ser posterior al check-in' });
-      }
+    if (checkOutDate <= checkInDate) {
+      await t.rollback();
+      return res.status(400).json({ error: 'La fecha de check-out debe ser posterior al check-in' });
+    }
 
-      // Buscar propiedad
-      const property = await Property.findByPk(propertyId, {
-        include: [{
-          model: User,
-          as: 'host'
-        }],
-        transaction: t
+    // Buscar propiedad
+    const property = await Property.findByPk(propertyId, {
+      include: [{
+        model: User,
+        as: 'host'
+      }],
+      transaction: t
+    });
+
+    if (!property) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Propiedad no encontrada' });
+    }
+
+    if (property.status !== 'published') {
+      await t.rollback();
+      return res.status(400).json({ error: 'Propiedad no disponible para reservas' });
+    }
+
+    if (numberOfGuests > property.capacity) {
+      await t.rollback();
+      return res.status(400).json({ 
+        error: `La propiedad admite máximo ${property.capacity} huéspedes` 
       });
+    }
 
-      if (!property) {
-        await t.rollback();
-        return res.status(404).json({ error: 'Propiedad no encontrada' });
-      }
+    // Validar disponibilidad
+    const availabilityCheck = await availabilityService.isAvailable(
+      propertyId,
+      checkIn,
+      checkOut
+    );
 
-      if (property.status !== 'published') {
-        await t.rollback();
-        return res.status(400).json({ error: 'Propiedad no disponible para reservas' });
-      }
+    if (!availabilityCheck.available) {
+      await t.rollback();
+      return res.status(409).json({
+        error: 'La propiedad no está disponible en esas fechas',
+        reason: availabilityCheck.reason,
+        blockedDates: availabilityCheck.blockedDates
+      });
+    }
 
-      if (numberOfGuests > property.capacity) {
-        await t.rollback();
-        return res.status(400).json({ 
-          error: `La propiedad admite máximo ${property.capacity} huéspedes` 
-        });
-      }
+    // Calcular precio total
+    const nights = availabilityCheck.nights;
+    const totalPrice = nights * property.price_per_night;
 
-      // ============ NUEVA VALIDACIÓN CON AVAILABILITY SERVICE ============
-      const availabilityCheck = await availabilityService.isAvailable(
-        propertyId,
-        checkIn,
-        checkOut
-      );
+    // Crear reserva
+    const booking = await Booking.create({
+      check_in_date: checkIn,
+      check_out_date: checkOut,
+      total_guests: numberOfGuests,
+      special_requests: specialRequests,
+      total_price: totalPrice,
+      booking_status: 'pending',
+      payment_status: 'pending',
+      guest_id: req.userId,
+      property_id: property.id,
+      host_id: property.host_id
+    }, { transaction: t });
 
-      if (!availabilityCheck.available) {
-        await t.rollback();
-        return res.status(409).json({
-          error: 'La propiedad no está disponible en esas fechas',
-          reason: availabilityCheck.reason,
-          blockedDates: availabilityCheck.blockedDates
-        });
-      }
-      // ============ FIN NUEVA VALIDACIÓN ============
+    // ============ MODO SIMULADO (SIN STRIPE) ============
+    if (simulatePayment || !process.env.STRIPE_SECRET_KEY) {
+      console.log('💳 MODO SIMULADO: Creando pago simulado para booking:', booking.id);
 
-      // Calcular precio total
-      const nights = availabilityCheck.nights;
-      const totalPrice = nights * property.price_per_night;
+      const paymentIntentId = `pi_simulated_${Date.now()}_${booking.id}`;
+      const clientSecret = `${paymentIntentId}_secret`;
 
-      // Crear reserva
-      const booking = await Booking.create({
-        check_in_date: checkIn,
-        check_out_date: checkOut,
-        total_guests: numberOfGuests,
-        special_requests: specialRequests,
-        total_price: totalPrice,
-        booking_status: 'pending',
+      booking.stripe_payment_intent_id = paymentIntentId;
+      await booking.save({ transaction: t });
+
+      // Crear registro de pago simulado
+      const platformCommissionRate = property.accommodationType?.platform_commission_percentage 
+        ? parseFloat(property.accommodationType.platform_commission_percentage) / 100
+        : 0.10;
+      const platformCommission = totalPrice * platformCommissionRate;
+
+      await PaymentTransaction.create({
+        amount: totalPrice,
+        platform_commission: platformCommission,
+        stripe_payment_intent_id: paymentIntentId,
         payment_status: 'pending',
-        guest_id: req.userId,
-        property_id: property.id,
-        host_id: property.host_id
+        booking_id: booking.id,
+        user_id: req.userId
       }, { transaction: t });
-
-      // Crear PaymentIntent en Stripe
-      const paymentIntent = await stripeService.createPaymentIntent(
-        totalPrice,
-        booking.id,
-        req.user.email
-      );
-
-      // Crear registro de pago
-     const platformCommissionRate = 0.10; // 10%
-const platformCommission = totalPrice * platformCommissionRate;
-
-// Crear registro de pago
-const payment = await PaymentTransaction.create({
-  amount: totalPrice,
-  platform_commission: platformCommission,
-  stripe_payment_intent_id: paymentIntent.id,
-  payment_status: 'pending',
-  booking_id: booking.id,
-  user_id: req.userId
-}, { transaction: t });
 
       await t.commit();
 
-      res.status(201).json({
-        message: 'Reserva creada, procede con el pago',
+      return res.status(201).json({
+        message: 'Reserva creada en modo simulado',
         booking,
-        paymentClientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id
+        paymentClientSecret: clientSecret,
+        paymentIntentId,
+        simulatedMode: true,
+        note: 'Usa /bookings/confirm con este paymentIntentId para simular pago exitoso'
       });
-    } catch (error) {
-      await t.rollback();
-      next(error);
     }
+
+    // ============ MODO REAL CON STRIPE ============
+    const paymentIntent = await stripeService.createPaymentIntent(
+      totalPrice,
+      booking.id,
+      req.user.email
+    );
+
+    const platformCommissionRate = property.accommodationType?.platform_commission_percentage 
+      ? parseFloat(property.accommodationType.platform_commission_percentage) / 100
+      : 0.10;
+    const platformCommission = totalPrice * platformCommissionRate;
+
+    await PaymentTransaction.create({
+      amount: totalPrice,
+      platform_commission: platformCommission,
+      stripe_payment_intent_id: paymentIntent.id,
+      payment_status: 'pending',
+      booking_id: booking.id,
+      user_id: req.userId
+    }, { transaction: t });
+
+    await t.commit();
+
+    res.status(201).json({
+      message: 'Reserva creada, procede con el pago',
+      booking,
+      paymentClientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      simulatedMode: false
+    });
+  } catch (error) {
+    await t.rollback();
+    next(error);
   }
+}
 
   // Confirmar reserva después del pago
   async confirmBooking(req, res, next) {
