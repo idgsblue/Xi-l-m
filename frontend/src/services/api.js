@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// FORZADO A LOCALHOST (para desarrollo)
-const API_URL = 'http://localhost:5000/api';
-// const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Usar variable de entorno o fallback a localhost
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
