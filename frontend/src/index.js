@@ -45,21 +45,27 @@ root.render(
   </React.StrictMode>
 );
 
-// Register PWA Service Worker
-serviceWorkerRegistration.register({
-  onSuccess: (registration) => {
-    console.log('✅ PWA instalada y lista para uso offline');
-  },
-  onUpdate: (registration) => {
-    console.log('📦 Nueva versión disponible. Por favor recarga la página.');
-  }
-});
+// Register PWA Service Worker (Deshabilitado en desarrollo para evitar problemas de caché)
+if (process.env.NODE_ENV === 'production') {
+  serviceWorkerRegistration.register({
+    onSuccess: (registration) => {
+      console.log('✅ PWA instalada y lista para uso offline');
+    },
+    onUpdate: (registration) => {
+      console.log('📦 Nueva versión disponible. Por favor recarga la página.');
+    }
+  });
 
-// Setup online/offline detection
-serviceWorkerRegistration.setupOnlineOfflineDetection();
+  // Setup online/offline detection
+  serviceWorkerRegistration.setupOnlineOfflineDetection();
 
-// Setup install prompt
-serviceWorkerRegistration.setupInstallPrompt();
+  // Setup install prompt
+  serviceWorkerRegistration.setupInstallPrompt();
+} else {
+  console.log('⚠️ Service Worker deshabilitado en desarrollo');
+  // Desregistrar service workers existentes en desarrollo
+  serviceWorkerRegistration.unregister();
+}
 
 // Optional: Request notification permission after user interaction
 // serviceWorkerRegistration.requestNotificationPermission();

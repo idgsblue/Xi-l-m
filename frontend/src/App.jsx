@@ -20,6 +20,8 @@ import Register from './pages/Register';
 import MyBookings from './pages/guest/MyBookings';
 import Booking from './pages/guest/Booking';
 import BookingConfirmation from './pages/guest/BookingConfirmation';
+import BookingPaymentForm from './pages/guest/BookingPaymentForm';
+import BookingPayment from './pages/guest/BookingPayment';
 
 // Pages protegidas - Anfitrión
 import MyProperties from './pages/host/MyProperties';
@@ -84,6 +86,8 @@ function App() {
       }>
         <Route path="bookings" element={<MyBookings />} />
         <Route path="booking/:propertyId" element={<Booking />} />
+        <Route path="booking-payment-form/:bookingId" element={<BookingPaymentForm />} />
+        <Route path="booking-payment" element={<BookingPayment />} />
         <Route path="booking-confirmation/:bookingId" element={<BookingConfirmation />} />
       </Route>
 

@@ -3,6 +3,40 @@ const stripeService = require('../services/stripe.service');
 const { Op } = require('sequelize');
 
 class PaymentController {
+  // Obtener client secret de un Payment Intent
+  async getPaymentIntent(req, res, next) {
+    try {
+      const { paymentIntentId } = req.params;
+
+      // Buscar la reserva asociada a este Payment Intent
+      const booking = await Booking.findOne({
+        where: { stripe_payment_intent_id: paymentIntentId },
+        include: ['guest']
+      });
+
+      if (!booking) {
+        return res.status(404).json({ error: 'Reserva no encontrada' });
+      }
+
+      // Verificar permisos
+      if (booking.guest_id !== req.userId && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'No tienes acceso a este pago' });
+      }
+
+      // Obtener el Payment Intent de Stripe
+      const paymentIntent = await stripeService.getPaymentIntent(paymentIntentId);
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        status: paymentIntent.status,
+        amount: paymentIntent.amount / 100
+      });
+    } catch (error) {
+      console.error('Error obteniendo Payment Intent:', error);
+      next(error);
+    }
+  }
+
   // Obtener detalles del pago
   async getPaymentDetails(req, res, next) {
     try {

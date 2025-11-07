@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -9,20 +7,12 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import QuickRegisterModal from '../../components/QuickRegisterModal';
 
-
-
-const stripeKey = process.env.REACT_APP_STRIPE_PUBLIC_KEY;
-const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
-
 const BookingForm = ({ property, bookingData, loadProperty, showQuickRegister, setShowQuickRegister }) => {
   const location = useLocation();
-  const stripe = useStripe();
-  const elements = useElements();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [specialRequests, setSpecialRequests] = useState('');
-  const [simulatePayment, setSimulatePayment] = useState(!process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
   
 
@@ -38,58 +28,17 @@ const BookingForm = ({ property, bookingData, loadProperty, showQuickRegister, s
         checkOut: bookingData.checkOut,
         numberOfGuests: bookingData.guests,
         specialRequests,
-        simulatePayment // ← Enviar flag de simulación
+        simulatePayment: false // Siempre crear Payment Intent real
       });
 
-      const { booking, paymentClientSecret, paymentIntentId, simulatedMode } = bookingResponse.data;
+      const { booking } = bookingResponse.data;
       const bookingId = booking.id;
 
-      // ============ MODO SIMULADO ============
-      if (simulatedMode || !stripe || !elements) {
-        toast.info('Modo de pago simulado activado');
+      toast.success('Reserva creada exitosamente');
 
-        // Simular confirmación automática después de 2 segundos
-        setTimeout(async () => {
-          try {
-            await api.post('/bookings/confirm', {
-              bookingId,
-              paymentIntentId
-            });
+      // Redirigir al formulario de pago de Stripe
+      navigate(`/guest/booking-payment-form/${bookingId}`);
 
-            toast.success('¡Reserva confirmada exitosamente! (modo simulado)');
-            navigate(`/guest/booking-confirmation/${bookingId}`);
-          } catch (error) {
-            toast.error('Error confirmando reserva simulada');
-          }
-        }, 2000);
-
-        return;
-      }
-
-      // ============ MODO REAL CON STRIPE ============
-      const card = elements.getElement(CardElement);
-      const result = await stripe.confirmCardPayment(paymentClientSecret, {
-        payment_method: {
-          card,
-          billing_details: {
-            name: user.full_name || user.name,
-            email: user.email,
-          },
-        },
-      });
-
-      if (result.error) {
-        toast.error(result.error.message);
-      } else {
-        // Confirmar la reserva en el backend
-        await api.post('/bookings/confirm', {
-          bookingId,
-          paymentIntentId: result.paymentIntent.id,
-        });
-
-        toast.success('¡Reserva confirmada exitosamente!');
-        navigate(`/guest/booking-confirmation/${bookingId}`);
-      }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Error procesando la reserva');
     } finally {
@@ -148,42 +97,6 @@ const BookingForm = ({ property, bookingData, loadProperty, showQuickRegister, s
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Mostrar modo de pago */}
-      {simulatePayment && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-sm text-yellow-800 font-medium">
-            ⚠️ Modo de prueba: El pago será simulado (Stripe no configurado)
-          </p>
-        </div>
-      )}
-
-      {/* Campo de pago con Stripe (solo si está configurado) */}
-      {!simulatePayment && stripe && elements && (
-        <div>
-          <h3 className="text-lg font-semibold text-accent-900 mb-4">
-            Información de pago
-          </h3>
-          <div className="bg-neutral-50 p-4 rounded-lg">
-            <CardElement
-              options={{
-                style: {
-                  base: {
-                    fontSize: '16px',
-                    color: '#424770',
-                    '::placeholder': {
-                      color: '#aab7c4',
-                    },
-                  },
-                  invalid: {
-                    color: '#9e2146',
-                  },
-                },
-              }}
-            />
-          </div>
-        </div>
-      )}
-
       <div>
         <label
           htmlFor="specialRequests"
@@ -212,6 +125,12 @@ const BookingForm = ({ property, bookingData, loadProperty, showQuickRegister, s
         </ul>
       </div>
 
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-800">
+          🔒 En el siguiente paso ingresarás los datos de tu tarjeta de forma segura con Stripe
+        </p>
+      </div>
+
       <button
         type="submit"
         disabled={loading}
@@ -223,15 +142,9 @@ const BookingForm = ({ property, bookingData, loadProperty, showQuickRegister, s
             Procesando...
           </>
         ) : (
-          `${simulatePayment ? 'Simular pago y' : 'Confirmar y pagar'} $${bookingData.totalPrice} MXN`
+          `Continuar al pago - $${bookingData.totalPrice} MXN`
         )}
       </button>
-
-      {simulatePayment && (
-        <p className="text-xs text-center text-neutral-500">
-          El pago se simulará automáticamente en 2 segundos
-        </p>
-      )}
     </form>
   );
 };
@@ -317,7 +230,6 @@ useEffect(() => {
           </div>
 
           <div className="mt-6">
-            <Elements stripe={stripePromise}>
              <BookingForm
   property={property}
   bookingData={bookingData}
@@ -325,7 +237,6 @@ useEffect(() => {
   showQuickRegister={showQuickRegister}
   setShowQuickRegister={setShowQuickRegister}
 />
-            </Elements>
           </div>
         </div>
 
