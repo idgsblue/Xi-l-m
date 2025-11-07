@@ -33,6 +33,7 @@ jobs:
         env:
           CI: false
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+          REACT_APP_STRIPE_PUBLIC_KEY: ${{ secrets.REACT_APP_STRIPE_PUBLIC_KEY }}
           GENERATE_SOURCEMAP: false
       
       - name: Deploy a Firebase Hosting
