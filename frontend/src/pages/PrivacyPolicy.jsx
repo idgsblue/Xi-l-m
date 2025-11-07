@@ -235,12 +235,56 @@ const PrivacyPolicy = () => {
             o el manejo de su información personal, puede contactarnos:
           </p>
 
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <p className="font-bold text-gray-800 mb-2">Arroyo Seco Booking</p>
-            <ul className="space-y-1 text-gray-700">
-              <li><strong>Correo electrónico:</strong> <a href="mailto:maridimas08@gmail.com" className="text-primary-600 hover:underline">maridimas08@gmail.com</a></li>
-              <li><strong>Sitio web:</strong> <a href="https://xilmq.com" className="text-primary-600 hover:underline">https://xilmq.com</a></li>
-              <li><strong>Tiempo de respuesta:</strong> Dentro de 30 días hábiles</li>
+          <div className="bg-blue-50 border-2 border-blue-200 p-6 rounded-lg">
+            <p className="font-bold text-gray-800 mb-4 text-lg">Arroyo Seco Booking - Xi'lúm</p>
+            <ul className="space-y-3 text-gray-700">
+              <li className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <div>
+                  <strong>Correo electrónico:</strong>{' '}
+                  <a href="mailto:maridimas08@gmail.com" className="text-primary-600 hover:underline font-semibold">
+                    maridimas08@gmail.com
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <div>
+                  <strong>Teléfono:</strong>{' '}
+                  <a href="tel:+524428139975" className="text-primary-600 hover:underline font-semibold">
+                    +52 442 813 9975
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+                <div>
+                  <strong>Sitio web:</strong>{' '}
+                  <a href="https://xilmq.com" className="text-primary-600 hover:underline">https://xilmq.com</a>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <strong>Tiempo de respuesta:</strong> Dentro de 30 días hábiles
+                </div>
+              </li>
+              <li className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <strong>Horario:</strong> Lunes a Viernes, 9:00 AM - 6:00 PM (Hora del Centro de México)
+                </div>
+              </li>
             </ul>
           </div>
         </section>
