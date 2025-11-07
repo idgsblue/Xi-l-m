@@ -1,292 +1,244 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
-import api from '../../services/api';
-import { toast } from 'react-toastify';
-import {
-  UsersIcon,
-  HomeIcon,
-  CalendarIcon,
-  CurrencyDollarIcon,
-  ChartBarIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon
-} from '@heroicons/react/24/outline';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
+import adminService from '../../services/admin.service';
 
-const Dashboard = () => {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalProperties: 0,
-    totalBookings: 0,
-    pendingProperties: 0,
-    totalRevenue: 0
-  });
-  const [monthlyData, setMonthlyData] = useState([]);
-  const [topProperties, setTopProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
+const AdminDashboard = () => {
+  const { data, isLoading, error } = useQuery('adminDashboard', adminService.getDashboard);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      const response = await api.get('/admin/dashboard');
-      setStats(response.data.stats);
-      
-      // Formatear datos mensuales para el gráfico
-      const formattedMonthly = response.data.monthlyBookings.map(item => ({
-        month: new Date(item.month).toLocaleDateString('es-MX', { month: 'short', year: 'numeric' }),
-        reservas: parseInt(item.count),
-        ingresos: parseFloat(item.revenue)
-      }));
-      setMonthlyData(formattedMonthly);
-      
-      setTopProperties(response.data.topProperties);
-    } catch (error) {
-      toast.error('Error cargando el dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-500"></div>
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          Error al cargar dashboard: {error.message}
+        </div>
+      </div>
+    );
+  }
+
+  const { properties, users, bookings } = data || {};
+
   return (
-    <div>
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
-        <p className="mt-2 text-gray-600">Vista general de la plataforma Arroyo Seco</p>
+        <h1 className="text-3xl font-bold text-neutral-900">Panel de Administración</h1>
+        <p className="text-neutral-600 mt-2">Vista general del sistema Arroyo Seco</p>
       </div>
 
-      {/* Estadísticas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
-              <UsersIcon className="h-6 w-6 text-blue-600" />
+      {/* Métricas principales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Total Propiedades */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-neutral-600">Total Propiedades</p>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">{properties?.total || 0}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Usuarios Totales</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+            <div className="bg-secondary-100 p-3 rounded-full">
+              <svg className="w-8 h-8 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
             </div>
+          </div>
+          <div className="mt-4 flex gap-4 text-sm">
+            <span className="text-green-600">
+              ✓ {properties?.published || 0} publicadas
+            </span>
+            <span className="text-yellow-600">
+              ⏳ {properties?.pending || 0} pendientes
+            </span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-              <HomeIcon className="h-6 w-6 text-green-600" />
+        {/* Total Usuarios */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-neutral-600">Total Usuarios</p>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">{users?.total || 0}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Propiedades</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalProperties}</p>
+            <div className="bg-green-100 p-3 rounded-full">
+              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
             </div>
+          </div>
+          <div className="mt-4 flex gap-4 text-sm">
+            <span className="text-blue-600">
+              🏠 {users?.hosts || 0} anfitriones
+            </span>
+            <span className="text-purple-600">
+              👤 {users?.guests || 0} huéspedes
+            </span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
-              <CalendarIcon className="h-6 w-6 text-purple-600" />
+        {/* Reservas del Mes */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-neutral-600">Reservas del Mes</p>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">{bookings?.thisMonth || 0}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Reservas</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalBookings}</p>
+            <div className="bg-purple-100 p-3 rounded-full">
+              <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
             </div>
+          </div>
+          <div className="mt-4 text-sm text-neutral-600">
+            Mes actual: {new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-              <ClockIcon className="h-6 w-6 text-yellow-600" />
+        {/* Tasa de Cancelación */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-neutral-600">Tasa Cancelación</p>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">{bookings?.cancellationRate || 0}%</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pendientes</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.pendingProperties}</p>
-              {stats.pendingProperties > 0 && (
-                <Link to="/admin/properties/pending" className="text-xs text-blue-600 hover:text-blue-500">
-                  Ver pendientes →
-                </Link>
-              )}
+            <div className="bg-red-100 p-3 rounded-full">
+              <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-              <CurrencyDollarIcon className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Ingresos Totales</p>
-              <p className="text-2xl font-bold text-gray-900">
-                ${stats.totalRevenue?.toLocaleString('es-MX')}
-              </p>
-            </div>
+          <div className="mt-4 text-sm text-neutral-600">
+            {parseFloat(bookings?.cancellationRate || 0) < 10 ? 
+              '✓ Dentro del rango aceptable' : 
+              '⚠ Revisar causas'}
           </div>
-        </div>
-      </div>
-
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Gráfico de reservas por mes */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Reservas por Mes
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="reservas" 
-                stroke="#3B82F6" 
-                strokeWidth={2}
-                name="Reservas"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Gráfico de ingresos por mes */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Ingresos por Mes
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => `$${value.toLocaleString('es-MX')}`} />
-              <Legend />
-              <Bar 
-                dataKey="ingresos" 
-                fill="#10B981"
-                name="Ingresos (MXN)"
-              />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Propiedades más reservadas */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Propiedades Más Reservadas
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Propiedad
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reservas
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {topProperties.map((property) => (
-                <tr key={property.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {property.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {property.bookingCount} reservas
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <Link
-                      to={`/property/${property.id}`}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      Ver detalles
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Enlaces rápidos */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Accesos rápidos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Link
           to="/admin/properties/pending"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+          className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-6 hover:shadow-md transition-all group"
         >
-          <div className="flex items-center">
-            <ClockIcon className="h-8 w-8 text-yellow-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-900">Revisar Propiedades Pendientes</p>
-              <p className="text-sm text-gray-500">{stats.pendingProperties} pendientes</p>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-neutral-900">Propiedades Pendientes</h3>
+            <div className="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
+              {properties?.pending || 0}
             </div>
+          </div>
+          <p className="text-neutral-600 text-sm mb-4">
+            Revisa y aprueba propiedades en espera de validación
+          </p>
+          <div className="flex items-center text-yellow-700 font-medium group-hover:text-yellow-800">
+            <span>Ver pendientes</span>
+            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </Link>
 
         <Link
           to="/admin/users"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+          className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6 hover:shadow-md transition-all group"
         >
-          <div className="flex items-center">
-            <UsersIcon className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-900">Gestionar Usuarios</p>
-              <p className="text-sm text-gray-500">{stats.totalUsers} usuarios</p>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-neutral-900">Gestión de Usuarios</h3>
+            <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
+              {users?.total || 0}
             </div>
+          </div>
+          <p className="text-neutral-600 text-sm mb-4">
+            Administra usuarios, roles y permisos del sistema
+          </p>
+          <div className="flex items-center text-blue-700 font-medium group-hover:text-blue-800">
+            <span>Gestionar usuarios</span>
+            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </Link>
+
+        <Link
+          to="/admin/accommodation-types"
+          className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-6 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-neutral-900">Tipos de Alojamiento</h3>
+            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <p className="text-neutral-600 text-sm mb-4">
+            Configura tipos, rangos de precio y comisiones
+          </p>
+          <div className="flex items-center text-green-700 font-medium group-hover:text-green-800">
+            <span>Configurar tipos</span>
+            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </Link>
 
         <Link
           to="/admin/reports"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+          className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-6 hover:shadow-md transition-all group"
         >
-          <div className="flex items-center">
-            <ChartBarIcon className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-900">Generar Reportes</p>
-              <p className="text-sm text-gray-500">Análisis detallado</p>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-neutral-900">Reportes</h3>
+            <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p className="text-neutral-600 text-sm mb-4">
+            Genera reportes de reservas, ingresos y propiedades
+          </p>
+          <div className="flex items-center text-purple-700 font-medium group-hover:text-purple-800">
+            <span>Ver reportes</span>
+            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </Link>
+      </div>
+
+      {/* Desglose de propiedades */}
+      <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+        <h2 className="text-xl font-bold text-neutral-900 mb-4">Estado de Propiedades</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="text-center p-4 bg-neutral-50 rounded-lg">
+            <p className="text-2xl font-bold text-neutral-900">{properties?.total || 0}</p>
+            <p className="text-sm text-neutral-600 mt-1">Total</p>
+          </div>
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <p className="text-2xl font-bold text-green-700">{properties?.published || 0}</p>
+            <p className="text-sm text-neutral-600 mt-1">Publicadas</p>
+          </div>
+          <div className="text-center p-4 bg-yellow-50 rounded-lg">
+            <p className="text-2xl font-bold text-yellow-700">{properties?.pending || 0}</p>
+            <p className="text-sm text-neutral-600 mt-1">Pendientes</p>
+          </div>
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <p className="text-2xl font-bold text-blue-700">
+              {(properties?.total || 0) - (properties?.published || 0) - (properties?.pending || 0)}
+            </p>
+            <p className="text-sm text-neutral-600 mt-1">Otras</p>
+          </div>
+          <div className="text-center p-4 bg-neutral-50 rounded-lg">
+            <p className="text-2xl font-bold text-neutral-900">
+              {properties?.total ? ((properties.published / properties.total) * 100).toFixed(0) : 0}%
+            </p>
+            <p className="text-sm text-neutral-600 mt-1">Tasa publicación</p>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;

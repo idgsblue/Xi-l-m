@@ -15,6 +15,9 @@ const sequelize = new Sequelize(
       min: 0,
       acquire: 30000,
       idle: 10000
+    },
+    define: {
+      schema: process.env.DB_SCHEMA || 'public'
     }
   }
 );

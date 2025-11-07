@@ -6,6 +6,9 @@ import { useAuth } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 
+// PWA Install Prompt
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+
 // Pages públicas
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -17,6 +20,8 @@ import Register from './pages/Register';
 import MyBookings from './pages/guest/MyBookings';
 import Booking from './pages/guest/Booking';
 import BookingConfirmation from './pages/guest/BookingConfirmation';
+import BookingPaymentForm from './pages/guest/BookingPaymentForm';
+import BookingPayment from './pages/guest/BookingPayment';
 
 // Pages protegidas - Anfitrión
 import MyProperties from './pages/host/MyProperties';
@@ -29,6 +34,13 @@ import AdminDashboard from './pages/admin/Dashboard';
 import PendingProperties from './pages/admin/PendingProperties';
 import ManageUsers from './pages/admin/ManageUsers';
 import Reports from './pages/admin/Reports';
+import AllBookings from './pages/admin/AllBookings';
+
+import AccommodationTypes from './pages/admin/AccommodationTypes';
+
+import AvailabilityCalendar from './pages/host/AvailabilityCalendar';
+
+
 
 // Componente para rutas protegidas
 const ProtectedRoute = ({ children, roles = [] }) => {
@@ -36,8 +48,8 @@ const ProtectedRoute = ({ children, roles = [] }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-primary-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-500"></div>
       </div>
     );
   }
@@ -55,15 +67,16 @@ const ProtectedRoute = ({ children, roles = [] }) => {
 
 function App() {
   return (
-    <Routes>
-      {/* Rutas públicas */}
-      <Route path="/" element={<MainLayout />}>
-        <Route index element={<Home />} />
-        <Route path="search" element={<Search />} />
-        <Route path="property/:id" element={<PropertyDetail />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-      </Route>
+    <>
+      <Routes>
+        {/* Rutas públicas */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Home />} />
+          <Route path="search" element={<Search />} />
+          <Route path="property/:id" element={<PropertyDetail />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+        </Route>
 
       {/* Rutas protegidas - Huésped */}
       <Route path="/guest" element={
@@ -73,36 +86,46 @@ function App() {
       }>
         <Route path="bookings" element={<MyBookings />} />
         <Route path="booking/:propertyId" element={<Booking />} />
+        <Route path="booking-payment-form/:bookingId" element={<BookingPaymentForm />} />
+        <Route path="booking-payment" element={<BookingPayment />} />
         <Route path="booking-confirmation/:bookingId" element={<BookingConfirmation />} />
       </Route>
 
       {/* Rutas protegidas - Anfitrión */}
-      <Route path="/host" element={
-        <ProtectedRoute roles={['host', 'admin']}>
-          <DashboardLayout />
-        </ProtectedRoute>
-      }>
-        <Route path="properties" element={<MyProperties />} />
-        <Route path="properties/add" element={<AddProperty />} />
-        <Route path="properties/edit/:id" element={<EditProperty />} />
-        <Route path="bookings" element={<HostBookings />} />
-      </Route>
+<Route path="/host" element={
+  <ProtectedRoute roles={['host', 'admin']}>
+    <DashboardLayout />
+  </ProtectedRoute>
+}>
+  <Route path="properties" element={<MyProperties />} />
+  <Route path="properties/add" element={<AddProperty />} />
+  <Route path="properties/edit/:id" element={<EditProperty />} />
+  {/* ✅ NUEVA RUTA */}
+  <Route path="properties/:id/availability" element={<AvailabilityCalendar />} />
+  <Route path="bookings" element={<HostBookings />} />
+</Route>
 
       {/* Rutas protegidas - Admin */}
-      <Route path="/admin" element={
-        <ProtectedRoute roles={['admin']}>
-          <DashboardLayout />
-        </ProtectedRoute>
-      }>
-        <Route index element={<AdminDashboard />} />
-        <Route path="properties/pending" element={<PendingProperties />} />
-        <Route path="users" element={<ManageUsers />} />
-        <Route path="reports" element={<Reports />} />
-      </Route>
+<Route path="/admin" element={
+  <ProtectedRoute roles={['admin']}>
+    <DashboardLayout />
+  </ProtectedRoute>
+}>
+  <Route index element={<AdminDashboard />} />
+  <Route path="properties/pending" element={<PendingProperties />} />
+  <Route path="bookings" element={<AllBookings />} />
+  <Route path="users" element={<ManageUsers />} />
+  <Route path="reports" element={<Reports />} />
+  <Route path="accommodation-types" element={<AccommodationTypes />} />
+</Route>
 
-      {/* 404 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* PWA Install Banner */}
+      <PWAInstallPrompt />
+    </>
   );
 }
 

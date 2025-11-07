@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PendingBookingsBadge from '../components/PendingBookingsBadge';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -30,65 +31,70 @@ const DashboardLayout = () => {
 
   const hostNavigation = [
     { name: 'Mis Propiedades', href: '/host/properties', icon: BuildingOfficeIcon },
-    { name: 'Reservas Recibidas', href: '/host/bookings', icon: CalendarIcon }
+    { name: 'Reservas Recibidas', href: '/host/bookings', icon: CalendarIcon, showBadge: true }
   ];
 
-  const adminNavigation = [
-    { name: 'Dashboard', href: '/admin', icon: HomeIcon },
-    { name: 'Propiedades Pendientes', href: '/admin/properties/pending', icon: BuildingOfficeIcon },
-    { name: 'Usuarios', href: '/admin/users', icon: UsersIcon },
-    { name: 'Reportes', href: '/admin/reports', icon: ChartBarIcon }
-  ];
+const adminNavigation = [
+  { name: 'Dashboard', href: '/admin', icon: HomeIcon },
+  { name: 'Propiedades Pendientes', href: '/admin/properties/pending', icon: BuildingOfficeIcon },
+  { name: 'Todas las Reservas', href: '/admin/bookings', icon: CalendarIcon, showBadge: true },
+  { name: 'Usuarios', href: '/admin/users', icon: UsersIcon },
+  { name: 'Tipos de Alojamiento', href: '/admin/accommodation-types', icon: BuildingOfficeIcon },
+  { name: 'Reportes', href: '/admin/reports', icon: ChartBarIcon }
+];
 
   const navigation = isAdmin ? adminNavigation : (isHost ? hostNavigation : guestNavigation);
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-100">
+    <div className="h-screen flex overflow-hidden bg-neutral-50">
       {/* Sidebar móvil */}
       <div className={`md:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 flex z-40">
           <div className="fixed inset-0" onClick={() => setSidebarOpen(false)}>
-            <div className="absolute inset-0 bg-gray-600 opacity-75"></div>
+            <div className="absolute inset-0 bg-neutral-900 opacity-75"></div>
           </div>
 
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-large">
             <div className="absolute top-0 right-0 -mr-12 pt-2">
               <button
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-300"
                 onClick={() => setSidebarOpen(false)}
               >
-                <XMarkIcon className="h-6 w-6 text-white" />
+                <XMarkIcon className="h-6 w-6 text-white icon-muted" />
               </button>
             </div>
 
             <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
               <div className="flex-shrink-0 flex items-center px-4">
-                <h1 className="text-xl font-bold text-gray-900">Arroyo Seco</h1>
+                <h1 className="text-xl font-bold text-accent-800">Arroyo Seco</h1>
               </div>
               <nav className="mt-5 px-2 space-y-1">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${
+                    className={`group flex items-center justify-between px-2 py-2 text-base font-medium rounded-button transition-colors ${
                       location.pathname === item.href
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-secondary-500 text-white'
+                        : 'text-neutral-700 hover:bg-primary-100 hover:text-accent-800'
                     }`}
                   >
-                    <item.icon className="mr-4 h-6 w-6" />
-                    {item.name}
+                    <div className="flex items-center">
+                      <item.icon className={`mr-4 h-6 w-6 ${location.pathname === item.href ? 'icon-muted' : 'icon-interactive'}`} />
+                      {item.name}
+                    </div>
+                    {item.showBadge && <PendingBookingsBadge userRole={user?.role} />}
                   </Link>
                 ))}
               </nav>
             </div>
 
-            <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+            <div className="flex-shrink-0 flex border-t border-primary-200 p-4">
               <div className="flex items-center">
-                <UserCircleIcon className="h-10 w-10 text-gray-400" />
+                <UserCircleIcon className="h-10 w-10 icon-neutral" />
                 <div className="ml-3">
-                  <p className="text-base font-medium text-gray-700">{user?.name}</p>
-                  <p className="text-sm font-medium text-gray-500">{user?.role}</p>
+                  <p className="text-base font-medium text-accent-800">{user?.name}</p>
+                  <p className="text-sm font-medium text-neutral-600">{user?.role}</p>
                 </div>
               </div>
             </div>
@@ -99,41 +105,45 @@ const DashboardLayout = () => {
       {/* Sidebar desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
+          <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-primary-200 shadow-soft">
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-xl font-bold text-gray-900">Arroyo Seco</h1>
+                <h1 className="text-xl font-bold text-accent-800">Arroyo Seco</h1>
               </div>
               <nav className="mt-5 flex-1 px-2 bg-white space-y-1">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-button transition-colors ${
                       location.pathname === item.href
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-secondary-500 text-white'
+                        : 'text-neutral-700 hover:bg-primary-100 hover:text-accent-800'
                     }`}
                   >
-                    <item.icon className="mr-3 h-6 w-6" />
-                    {item.name}
+                    <div className="flex items-center">
+                      <item.icon className={`mr-3 h-6 w-6 ${location.pathname === item.href ? 'icon-muted' : 'icon-interactive'}`} />
+                      {item.name}
+                    </div>
+                    {item.showBadge && <PendingBookingsBadge userRole={user?.role} />}
                   </Link>
                 ))}
               </nav>
             </div>
 
-            <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+            <div className="flex-shrink-0 flex border-t border-primary-200 p-4">
               <div className="flex items-center w-full">
-                <UserCircleIcon className="h-10 w-10 text-gray-400" />
+                <UserCircleIcon className="h-10 w-10 icon-neutral" />
                 <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-gray-700">{user?.name}</p>
-                  <p className="text-xs font-medium text-gray-500">{user?.role}</p>
+                  <p className="text-sm font-medium text-accent-800">{user?.name}</p>
+                  <p className="text-xs font-medium text-neutral-600">{user?.role}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="ml-auto text-gray-400 hover:text-gray-600"
+                  className="ml-auto group transition-colors"
+                  title="Cerrar sesión"
                 >
-                  <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+                  <ArrowLeftOnRectangleIcon className="h-5 w-5 icon-neutral group-hover:text-accent-700" />
                 </button>
               </div>
             </div>
@@ -143,12 +153,12 @@ const DashboardLayout = () => {
 
       {/* Contenido principal */}
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        <div className="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3">
+        <div className="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-white border-b border-primary-100">
           <button
-            className="h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+            className="h-12 w-12 inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary-500"
             onClick={() => setSidebarOpen(true)}
           >
-            <Bars3Icon className="h-6 w-6" />
+            <Bars3Icon className="h-6 w-6 icon-interactive" />
           </button>
         </div>
 

@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.git
+.env
+.env.local
+.env.production
+.DS_Store
+*.log
+*.md
+*.bat
+*.sql
+nul
+.gcloudignore
+.dockerignore

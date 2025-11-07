@@ -1,5 +1,6 @@
 node_modules/ 
 .env 
+.claude
 .env.local 
 build/ 
 dist/ 
@@ -9,3 +10,15 @@ android/
 ios/
 *.orig
 .DS_Store
+
+
+backend/src/config/firebase-service-account.json
+
+
+# Firebase
+.firebase/
+firebase-debug.log
+.firebaserc
+
+# Build
+frontend/build/

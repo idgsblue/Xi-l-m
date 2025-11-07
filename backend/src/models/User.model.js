@@ -8,16 +8,8 @@ const User = sequelize.define('User', {
     primaryKey: true,
     autoIncrement: true
   },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [2, 100]
-    }
-  },
   email: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(255),
     allowNull: false,
     unique: true,
     validate: {
@@ -25,28 +17,46 @@ const User = sequelize.define('User', {
     }
   },
   password: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(255),
     allowNull: false
   },
+  full_name: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    field: 'full_name'
+  },
   phone: {
-    type: DataTypes.STRING,
-    validate: {
-      is: /^[0-9-+().\s]+$/
-    }
+    type: DataTypes.STRING(20)
   },
   role: {
-    type: DataTypes.ENUM('guest', 'host', 'admin'),
-    defaultValue: 'guest'
+    type: DataTypes.STRING(20),
+    validate: {
+      isIn: [['guest', 'host', 'admin']]
+    }
   },
-  isActive: {
+  is_first_user: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    field: 'is_first_user'
+  },
+  status: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
   },
-  refreshToken: {
-    type: DataTypes.TEXT
+  email_verified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    field: 'email_verified'
+  },
+  last_login: {
+    type: DataTypes.DATE,
+    field: 'last_login'
   }
 }, {
+  tableName: 'users',
   timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
   hooks: {
     beforeCreate: async (user) => {
       if (user.password) {
@@ -69,7 +79,6 @@ User.prototype.validatePassword = async function(password) {
 User.prototype.toJSON = function() {
   const values = Object.assign({}, this.get());
   delete values.password;
-  delete values.refreshToken;
   return values;
 };
 

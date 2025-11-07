@@ -1,14 +1,48 @@
-const { Payment, Booking } = require('../models');
+const { PaymentTransaction, Booking } = require('../models');
 const stripeService = require('../services/stripe.service');
 const { Op } = require('sequelize');
 
 class PaymentController {
+  // Obtener client secret de un Payment Intent
+  async getPaymentIntent(req, res, next) {
+    try {
+      const { paymentIntentId } = req.params;
+
+      // Buscar la reserva asociada a este Payment Intent
+      const booking = await Booking.findOne({
+        where: { stripe_payment_intent_id: paymentIntentId },
+        include: ['guest']
+      });
+
+      if (!booking) {
+        return res.status(404).json({ error: 'Reserva no encontrada' });
+      }
+
+      // Verificar permisos
+      if (booking.guest_id !== req.userId && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'No tienes acceso a este pago' });
+      }
+
+      // Obtener el Payment Intent de Stripe
+      const paymentIntent = await stripeService.getPaymentIntent(paymentIntentId);
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        status: paymentIntent.status,
+        amount: paymentIntent.amount / 100
+      });
+    } catch (error) {
+      console.error('Error obteniendo Payment Intent:', error);
+      next(error);
+    }
+  }
+
   // Obtener detalles del pago
   async getPaymentDetails(req, res, next) {
     try {
       const { id } = req.params;
 
-      const payment = await Payment.findByPk(id, {
+      const payment = await PaymentTransaction.findByPk(id, {
         include: [{
           model: Booking,
           as: 'booking',
@@ -22,8 +56,8 @@ class PaymentController {
 
       // Verificar permisos
       if (
-        payment.userId !== req.userId &&
-        payment.booking.hostId !== req.userId &&
+        payment.user_id !== req.userId &&
+        payment.booking.host_id !== req.userId &&
         req.user.role !== 'admin'
       ) {
         return res.status(403).json({ error: 'No tienes acceso a este pago' });
@@ -73,19 +107,19 @@ class PaymentController {
   // Manejar pago exitoso
   async handlePaymentSuccess(paymentIntent) {
     try {
-      const payment = await Payment.findOne({
-        where: { stripePaymentIntentId: paymentIntent.id }
+      const payment = await PaymentTransaction.findOne({
+        where: { stripe_payment_intent_id: paymentIntent.id }
       });
 
       if (payment) {
-        payment.status = 'succeeded';
+        payment.payment_status = 'succeeded';
         await payment.save();
 
         // Actualizar reserva
-        const booking = await Booking.findByPk(payment.bookingId);
+        const booking = await Booking.findByPk(payment.booking_id);
         if (booking) {
-          booking.status = 'confirmed';
-          booking.paymentStatus = 'paid';
+          booking.booking_status = 'confirmed';
+          booking.payment_status = 'confirmed';
           await booking.save();
         }
       }
@@ -97,18 +131,18 @@ class PaymentController {
   // Manejar fallo de pago
   async handlePaymentFailure(paymentIntent) {
     try {
-      const payment = await Payment.findOne({
-        where: { stripePaymentIntentId: paymentIntent.id }
+      const payment = await PaymentTransaction.findOne({
+        where: { stripe_payment_intent_id: paymentIntent.id }
       });
 
       if (payment) {
-        payment.status = 'failed';
+        payment.payment_status = 'failed';
         await payment.save();
 
         // Actualizar reserva
-        const booking = await Booking.findByPk(payment.bookingId);
-        if (booking && booking.status === 'pending') {
-          booking.status = 'cancelled';
+        const booking = await Booking.findByPk(payment.booking_id);
+        if (booking && booking.booking_status === 'pending') {
+          booking.booking_status = 'cancelled';
           await booking.save();
         }
       }
@@ -120,13 +154,13 @@ class PaymentController {
   // Manejar reembolso
   async handleRefund(charge) {
     try {
-      const payment = await Payment.findOne({
-        where: { stripePaymentIntentId: charge.payment_intent }
+      const payment = await PaymentTransaction.findOne({
+        where: { stripe_payment_intent_id: charge.payment_intent }
       });
 
       if (payment) {
-        payment.status = 'refunded';
-        payment.refundAmount = charge.amount_refunded / 100;
+        payment.payment_status = 'refunded';
+        payment.refund_amount = charge.amount_refunded / 100;
         await payment.save();
       }
     } catch (error) {
@@ -137,14 +171,14 @@ class PaymentController {
   // Obtener historial de pagos del usuario
   async getUserPayments(req, res, next) {
     try {
-      const payments = await Payment.findAll({
-        where: { userId: req.userId },
+      const payments = await PaymentTransaction.findAll({
+        where: { user_id: req.userId },
         include: [{
           model: Booking,
           as: 'booking',
           include: ['property']
         }],
-        order: [['createdAt', 'DESC']]
+        order: [['created_at', 'DESC']]
       });
 
       res.json({ payments });

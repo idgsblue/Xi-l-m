@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  
 
   useEffect(() => {
     if (token) {
@@ -129,6 +130,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const quickRegister = async (userData) => {
+  try {
+    const response = await api.post('/auth/quick-register', userData);
+    const { user, accessToken, refreshToken } = response.data;
+
+    // Guardar tokens
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+
+    // Actualizar estado
+    setUser(user);
+    //setIsAuthenticated(true);
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
   const value = {
     user,
     loading,
@@ -137,6 +157,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile,
     refreshAccessToken,
+    quickRegister,
     isAuthenticated: !!user,
     isHost: user?.role === 'host' || user?.role === 'admin',
     isAdmin: user?.role === 'admin'

@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
+import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -8,6 +9,9 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-datepicker/dist/react-datepicker.css';
+
+// PWA Service Worker
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +29,7 @@ root.render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />
-          <ToastContainer 
+          <ToastContainer
             position="top-right"
             autoClose={3000}
             hideProgressBar={false}
@@ -40,3 +44,28 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Register PWA Service Worker (Deshabilitado en desarrollo para evitar problemas de caché)
+if (process.env.NODE_ENV === 'production') {
+  serviceWorkerRegistration.register({
+    onSuccess: (registration) => {
+      console.log('✅ PWA instalada y lista para uso offline');
+    },
+    onUpdate: (registration) => {
+      console.log('📦 Nueva versión disponible. Por favor recarga la página.');
+    }
+  });
+
+  // Setup online/offline detection
+  serviceWorkerRegistration.setupOnlineOfflineDetection();
+
+  // Setup install prompt
+  serviceWorkerRegistration.setupInstallPrompt();
+} else {
+  console.log('⚠️ Service Worker deshabilitado en desarrollo');
+  // Desregistrar service workers existentes en desarrollo
+  serviceWorkerRegistration.unregister();
+}
+
+// Optional: Request notification permission after user interaction
+// serviceWorkerRegistration.requestNotificationPermission();

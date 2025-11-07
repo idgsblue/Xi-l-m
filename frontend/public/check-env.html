@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Environment Variables</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #00ff00;
+        }
+        .box {
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin: 20px 0;
+            background: #2d2d2d;
+        }
+        h1 { color: #00ff00; }
+        .error { color: #ff0000; }
+        .success { color: #00ff00; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Environment Variables Check</h1>
+
+    <div class="box">
+        <h2>Expected Configuration:</h2>
+        <p>API URL: <span class="success">http://localhost:5000/api</span></p>
+        <p>Stripe Key: <span class="success">pk_test_51QKr...</span></p>
+    </div>
+
+    <div class="box">
+        <h2>Current Configuration:</h2>
+        <p>API URL: <span id="apiUrl" class="error">Loading...</span></p>
+        <p>Stripe Key: <span id="stripeKey" class="error">Loading...</span></p>
+    </div>
+
+    <div class="box">
+        <h2>Instructions:</h2>
+        <ol>
+            <li>Stop the React dev server (Ctrl+C)</li>
+            <li>Delete node_modules/.cache folder</li>
+            <li>Run: npm start</li>
+            <li>Open this page again</li>
+        </ol>
+    </div>
+
+    <script>
+        // This won't work in a static HTML file, but useful for documentation
+        document.getElementById('apiUrl').textContent = 'Check in browser console: window.location.origin';
+        document.getElementById('stripeKey').textContent = 'React env vars not accessible here';
+
+        console.log('To check React env vars, open React app and run in console:');
+        console.log('console.log(process.env.REACT_APP_API_URL)');
+        console.log('console.log(process.env.REACT_APP_STRIPE_PUBLIC_KEY)');
+    </script>
+</body>
+</html>

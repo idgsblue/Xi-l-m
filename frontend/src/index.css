@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Custom color palette variables */
+    --color-primary: #b5d3d3;
+    --color-secondary: #88b7a3;
+    --color-accent: #535911;
+    --color-neutral: #9a9997;
+    --color-tertiary: #b8a177;
+  }
+
+  * {
+    @apply border-neutral-200;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-900 font-sans antialiased;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+}
+
+@layer components {
+  /* Button styles */
+  .btn {
+    @apply px-6 py-2.5 rounded-button font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-200 text-accent-900 hover:bg-primary-300 focus:ring-primary-400;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-400;
+  }
+
+  .btn-accent {
+    @apply btn bg-accent-500 text-white hover:bg-accent-600 focus:ring-accent-400;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-primary-200 text-accent-800 hover:bg-primary-50 focus:ring-primary-300;
+  }
+
+  .btn-neutral {
+    @apply btn bg-neutral-100 text-neutral-800 hover:bg-neutral-200 focus:ring-neutral-300;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-card shadow-soft p-6 transition-shadow duration-200 hover:shadow-medium;
+  }
+
+  .card-hover {
+    @apply card cursor-pointer hover:shadow-large;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-4 py-2.5 border border-neutral-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-transparent transition-all duration-200;
+  }
+
+  .input-error {
+    @apply input border-red-500 focus:ring-red-300;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-neutral-700 mb-2;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge bg-secondary-100 text-secondary-800;
+  }
+
+  .badge-warning {
+    @apply badge bg-tertiary-100 text-tertiary-800;
+  }
+
+  .badge-error {
+    @apply badge bg-red-100 text-red-800;
+  }
+
+  .badge-info {
+    @apply badge bg-primary-100 text-primary-800;
+  }
+
+  /* Icon styles */
+  .icon {
+    @apply transition-colors duration-200;
+  }
+
+  .icon-primary {
+    @apply icon text-primary-400 hover:text-primary-500;
+  }
+
+  .icon-secondary {
+    @apply icon text-secondary-500 hover:text-secondary-600;
+  }
+
+  .icon-accent {
+    @apply icon text-accent-600 hover:text-accent-700;
+  }
+
+  .icon-neutral {
+    @apply icon text-neutral-500 hover:text-neutral-600;
+  }
+
+  .icon-muted {
+    @apply icon text-neutral-400;
+  }
+
+  .icon-interactive {
+    @apply icon text-neutral-600 hover:text-secondary-600 cursor-pointer;
+  }
+
+  .icon-success {
+    @apply icon text-secondary-600;
+  }
+
+  .icon-warning {
+    @apply icon text-tertiary-600;
+  }
+
+  .icon-error {
+    @apply icon text-red-600;
+  }
+
+  .icon-info {
+    @apply icon text-primary-600;
+  }
+
+  /* Container styles */
+  .container-custom {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Section styles */
+  .section {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+
+  /* Heading styles */
+  .heading-1 {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold text-accent-800 mb-4;
+  }
+
+  .heading-2 {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold text-accent-800 mb-3;
+  }
+
+  .heading-3 {
+    @apply text-2xl md:text-3xl font-semibold text-accent-700 mb-2;
+  }
+
+  .heading-4 {
+    @apply text-xl md:text-2xl font-semibold text-accent-700 mb-2;
+  }
+
+  /* Link styles */
+  .link {
+    @apply text-secondary-600 hover:text-secondary-700 transition-colors duration-200;
+  }
+
+  .link-primary {
+    @apply text-primary-600 hover:text-primary-700 transition-colors duration-200;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-neutral-200 my-6;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #b5d3d3 0%, #88b7a3 100%);
+  }
+
+  .bg-gradient-accent {
+    background: linear-gradient(135deg, #88b7a3 0%, #535911 100%);
+  }
+
+  .bg-gradient-warm {
+    background: linear-gradient(135deg, #b8a177 0%, #9a9997 100%);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-neutral-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-neutral-400 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neutral-500;
+}
+
+/* React DatePicker custom styles */
+.react-datepicker {
+  @apply border-neutral-300 rounded-button shadow-medium;
+}
+
+.react-datepicker__header {
+  @apply bg-primary-100 border-b border-neutral-300;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  @apply text-accent-800;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  @apply bg-secondary-500 text-white;
+}
+
+.react-datepicker__day:hover {
+  @apply bg-primary-200;
+}
+
+/* React Toastify custom styles */
+.Toastify__toast {
+  @apply rounded-button shadow-medium;
+}
+
+.Toastify__toast--success {
+  @apply bg-secondary-500;
+}
+
+.Toastify__toast--error {
+  @apply bg-red-500;
+}
+
+.Toastify__toast--warning {
+  @apply bg-tertiary-500;
+}
+
+.Toastify__toast--info {
+  @apply bg-primary-300;
+}
+
+.Toastify__progress-bar--success {
+  @apply bg-secondary-700;
+}
+
+.Toastify__progress-bar--error {
+  @apply bg-red-700;
+}
+
+.Toastify__progress-bar--warning {
+  @apply bg-tertiary-700;
+}
+
+.Toastify__progress-bar--info {
+  @apply bg-primary-500;
+}

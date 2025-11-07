@@ -7,65 +7,84 @@ const Booking = sequelize.define('Booking', {
     primaryKey: true,
     autoIncrement: true
   },
-  checkIn: {
-    type: DataTypes.DATEONLY,
-    allowNull: false
+  property_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'property_id',
+    references: {
+      model: 'properties',
+      key: 'id'
+    },
+    onDelete: 'SET NULL'
   },
-  checkOut: {
-    type: DataTypes.DATEONLY,
-    allowNull: false
+  guest_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'guest_id',
+    references: {
+      model: 'users',
+      key: 'id'
+    },
+    onDelete: 'SET NULL'
   },
-  totalPrice: {
+  check_in_date: {
+    type: DataTypes.DATEONLY,
+    allowNull: false,
+    field: 'check_in_date'
+  },
+  check_out_date: {
+    type: DataTypes.DATEONLY,
+    allowNull: false,
+    field: 'check_out_date'
+  },
+  total_guests: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'total_guests'
+  },
+  total_price: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
-  },
-  numberOfGuests: {
-    type: DataTypes.INTEGER,
     allowNull: false,
+    field: 'total_price'
+  },
+  payment_status: {
+    type: DataTypes.STRING(20),
+    field: 'payment_status',
     validate: {
-      min: 1
+      isIn: [['pending', 'confirmed', 'rejected', 'cancelled']]
     }
   },
-  status: {
-    type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),
-    defaultValue: 'pending'
-  },
-  paymentStatus: {
-    type: DataTypes.ENUM('pending', 'paid', 'refunded'),
-    defaultValue: 'pending'
-  },
-  stripePaymentId: {
-    type: DataTypes.STRING
-  },
-  specialRequests: {
-    type: DataTypes.TEXT
-  },
-  guestId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Users',
-      key: 'id'
+  booking_status: {
+    type: DataTypes.STRING(20),
+    field: 'booking_status',
+    validate: {
+      isIn: [['pending', 'confirmed', 'in_progress', 'completed', 'cancelled']]
     }
   },
-  propertyId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Properties',
-      key: 'id'
-    }
+  stripe_payment_intent_id: {
+    type: DataTypes.STRING(255),
+    field: 'stripe_payment_intent_id'
   },
-  hostId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Users',
-      key: 'id'
-    }
+  cancellation_reason: {
+    type: DataTypes.TEXT,
+    field: 'cancellation_reason'
+  },
+  cancelled_at: {
+    type: DataTypes.DATE,
+    field: 'cancelled_at'
   }
 }, {
-  timestamps: true
+  tableName: 'bookings',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  validate: {
+    checkDates() {
+      if (this.check_out_date <= this.check_in_date) {
+        throw new Error('Check-out date must be after check-in date');
+      }
+    }
+  }
 });
 
 module.exports = Booking;

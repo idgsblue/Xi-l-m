@@ -30,11 +30,13 @@ router.post('/properties/:id/reject',
   adminController.rejectProperty
 );
 
-// Gestión de usuarios
+// Gestión de usuarios - CORREGIDO
 router.get('/users', 
-  query('role').optional().isIn(['guest', 'host', 'admin']),
-  query('isActive').optional().isBoolean(),
+  query('role').optional().custom(value => !value || ['guest', 'host', 'admin'].includes(value)),
+  query('isActive').optional().custom(value => !value || ['true', 'false'].includes(value)),
   query('search').optional().isString(),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
   handleValidationErrors,
   adminController.getUsers
 );
@@ -64,16 +66,18 @@ router.post('/price-range',
 
 // Gestión de reservas
 router.get('/bookings', 
-  query('status').optional().isIn(['pending', 'confirmed', 'cancelled', 'completed']),
+  query('status').optional().custom(value => !value || ['pending', 'confirmed', 'cancelled', 'completed'].includes(value)),
   query('startDate').optional().isISO8601().toDate(),
   query('endDate').optional().isISO8601().toDate(),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
   handleValidationErrors,
   adminController.getAllBookings
 );
 
-// Reportes
+// Reportes - CORREGIDO
 router.get('/reports', 
-  query('type').isIn(['bookings', 'revenue', 'properties']).withMessage('Tipo de reporte inválido'),
+  query('type').custom(value => !value || ['bookings', 'revenue', 'properties'].includes(value)),
   query('startDate').optional().isISO8601().toDate(),
   query('endDate').optional().isISO8601().toDate(),
   handleValidationErrors,

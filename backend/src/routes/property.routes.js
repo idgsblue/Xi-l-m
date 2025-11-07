@@ -7,76 +7,116 @@ const handleValidationErrors = require('../middleware/validation.middleware');
 
 // Validaciones
 const propertyValidation = [
-  body('name')
-    .notEmpty().withMessage('El nombre es requerido')
-    .isLength({ min: 3, max: 200 }).withMessage('El nombre debe tener entre 3 y 200 caracteres'),
+  body('title')
+    .notEmpty().withMessage('El título es requerido')
+    .isLength({ min: 3, max: 255 }).withMessage('El título debe tener entre 3 y 255 caracteres'),
   body('description')
     .notEmpty().withMessage('La descripción es requerida')
-    .isLength({ min: 10, max: 1000 }).withMessage('La descripción debe tener entre 10 y 1000 caracteres'),
-  body('shortDescription')
-    .optional()
-    .isLength({ max: 300 }).withMessage('La descripción corta no puede exceder 300 caracteres'),
-  body('address')
-    .notEmpty().withMessage('La dirección es requerida'),
-  body('zone')
-    .notEmpty().withMessage('La zona es requerida'),
-  body('pricePerNight')
+    .isLength({ min: 10 }).withMessage('La descripción debe tener al menos 10 caracteres'),
+  body('location')
+    .notEmpty().withMessage('La ubicación es requerida'),
+  body('price_per_night')
     .isFloat({ min: 0 }).withMessage('El precio debe ser un número positivo'),
-  body('maxGuests')
+  body('capacity')
     .optional()
-    .isInt({ min: 1, max: 20 }).withMessage('El número de huéspedes debe estar entre 1 y 20'),
-  body('bedrooms')
+    .isInt({ min: 1, max: 20 }).withMessage('La capacidad debe estar entre 1 y 20'),
+  body('accommodation_type_id')
     .optional()
-    .isInt({ min: 0 }).withMessage('El número de habitaciones debe ser positivo'),
-  body('bathrooms')
+    .isInt().withMessage('El tipo de alojamiento debe ser un número válido'),
+  body('services')
     .optional()
-    .isInt({ min: 0 }).withMessage('El número de baños debe ser positivo')
+    .isArray().withMessage('Los servicios deben ser un arreglo'),
+  body('images')
+    .optional()
+    .isArray().withMessage('Las imágenes deben ser un arreglo de URLs')
 ];
 
 const searchValidation = [
-  query('zone').optional().isString(),
+  query('location').optional().isString(),
   query('minPrice').optional().isFloat({ min: 0 }),
   query('maxPrice').optional().isFloat({ min: 0 }),
   query('guests').optional().isInt({ min: 1 }),
+  query('accommodation_type_id').optional().isInt(),
   query('checkIn').optional().isISO8601().toDate(),
   query('checkOut').optional().isISO8601().toDate(),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 })
 ];
 
-// Rutas públicas (no requieren autenticación)
-router.get('/', searchValidation, handleValidationErrors, propertyController.getAll);
-router.get('/:id', propertyController.getById);
+// ====================================
+// RUTAS PROTEGIDAS (HOST) - MÁS ESPECÍFICAS PRIMERO
+// ====================================
 
-// Rutas protegidas
-router.use(authenticate);
-
-// Rutas para anfitriones
+// Crear propiedad (HOST)
 router.post('/', 
+  authenticate,
   isHost, 
-  propertyController.uploadImages,
   propertyValidation, 
   handleValidationErrors, 
   propertyController.create
 );
 
-router.get('/host/my-properties', isHost, propertyController.getMyProperties);
+// Obtener mis propiedades (HOST)
+router.get('/host/my-properties', 
+  authenticate, 
+  isHost, 
+  propertyController.getMyProperties.bind(propertyController)
+);
 
-router.put('/:id', 
+// NUEVO: Anunciar propiedad (HOST)
+router.post('/:id/advertise', 
+  authenticate,
   isHost,
-  propertyController.uploadImages,
+  propertyController.advertiseProperty
+);
+
+// NUEVO: Despublicar propiedad (HOST)
+router.post('/:id/unadvertise', 
+  authenticate,
+  isHost,
+  propertyController.unadvertiseProperty
+);
+
+// Actualizar propiedad (HOST)
+router.put('/:id', 
+  authenticate,
+  isHost,
   propertyValidation, 
   handleValidationErrors, 
   propertyController.update
 );
 
-router.delete('/:id', isHost, propertyController.delete);
+// Eliminar propiedad (HOST)
+router.delete('/:id', 
+  authenticate, 
+  isHost, 
+  propertyController.delete
+);
 
-router.patch('/:id/availability', 
+// Actualizar estado (DEPRECADO - usar advertise/unadvertise)
+router.patch('/:id/status',
+  authenticate,
   isHost,
-  body('isAvailable').isBoolean().withMessage('isAvailable debe ser booleano'),
+  body('status').isIn(['inactive', 'pending_approval', 'approved', 'rejected', 'published', 'blocked']).withMessage('Estado inválido'),
   handleValidationErrors,
-  propertyController.updateAvailability
+  propertyController.updateStatus
+);
+
+// ====================================
+// RUTAS PÚBLICAS - MENOS ESPECÍFICAS
+// ====================================
+
+// Buscar propiedades (PÚBLICO)
+router.get('/', 
+  searchValidation, 
+  handleValidationErrors, 
+  propertyController.getAll
+);
+
+// Obtener propiedad por ID (PÚBLICO/OWNER/ADMIN)
+router.get('/:id', 
+  authenticate,  // ← AGREGAR ESTA LÍNEA
+  propertyController.getById
 );
 
 module.exports = router;
