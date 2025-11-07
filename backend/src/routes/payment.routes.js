@@ -16,6 +16,8 @@ router.use(authenticate);
 
 router.get('/history', paymentController.getUserPayments);
 
+router.get('/intent/:paymentIntentId', paymentController.getPaymentIntent);
+
 router.get('/:id', paymentController.getPaymentDetails);
 
 router.post('/retry', 

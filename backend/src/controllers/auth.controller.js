@@ -188,6 +188,123 @@ class AuthController {
       next(error);
     }
   }
+
+  async deleteAccount(req, res, next) {
+    try {
+      const userId = req.userId;
+      const { password, reason } = req.body;
+
+      // Buscar usuario
+      const user = await User.findByPk(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // Verificar contraseña para seguridad
+      const isValidPassword = await user.validatePassword(password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Contraseña incorrecta' });
+      }
+
+      // Verificar si tiene reservas activas
+      const { Booking } = require('../models');
+      const activeBookings = await Booking.count({
+        where: {
+          guest_id: userId,
+          booking_status: ['pending', 'confirmed', 'in_progress'],
+          check_out_date: {
+            [require('sequelize').Op.gte]: new Date()
+          }
+        }
+      });
+
+      if (activeBookings > 0) {
+        return res.status(400).json({
+          error: 'No puedes eliminar tu cuenta con reservas activas',
+          activeBookings
+        });
+      }
+
+      // Si es anfitrión, verificar propiedades con reservas activas
+      if (user.role === 'host') {
+        const { Property } = require('../models');
+        const hostProperties = await Property.findAll({
+          where: { host_id: userId },
+          attributes: ['id']
+        });
+
+        const propertyIds = hostProperties.map(p => p.id);
+
+        if (propertyIds.length > 0) {
+          const activeHostBookings = await Booking.count({
+            where: {
+              property_id: propertyIds,
+              booking_status: ['pending', 'confirmed', 'in_progress'],
+              check_out_date: {
+                [require('sequelize').Op.gte]: new Date()
+              }
+            }
+          });
+
+          if (activeHostBookings > 0) {
+            return res.status(400).json({
+              error: 'No puedes eliminar tu cuenta con reservas activas en tus propiedades',
+              activeBookings: activeHostBookings
+            });
+          }
+        }
+
+        // Marcar propiedades como inactivas (no eliminar por historial)
+        await Property.update(
+          { status: 'inactive' },
+          { where: { host_id: userId } }
+        );
+      }
+
+      // Registrar motivo de eliminación (opcional, para análisis)
+      console.log(`Usuario ${user.email} eliminó su cuenta. Motivo: ${reason || 'No especificado'}`);
+
+      // IMPORTANTE: No eliminamos bookings completados (requisito fiscal/legal)
+      // Solo marcamos las reservas canceladas
+      await Booking.update(
+        {
+          booking_status: 'cancelled',
+          cancellation_reason: 'Cuenta eliminada por el usuario',
+          cancelled_at: new Date()
+        },
+        {
+          where: {
+            guest_id: userId,
+            booking_status: 'pending'
+          }
+        }
+      );
+
+      // Eliminar datos personales pero mantener registro anónimo
+      await user.update({
+        full_name: 'Usuario Eliminado',
+        email: `deleted_${userId}_${Date.now()}@deleted.local`,
+        phone: null,
+        password: 'DELETED',
+        status: false
+      });
+
+      // Nota: En producción real, considera:
+      // - Eliminar completamente después de período de retención legal (ej: 30 días)
+      // - Mantener registros de transacciones por requisitos fiscales (5-7 años)
+      // - Anonimizar en lugar de eliminar completamente
+
+      res.json({
+        message: 'Tu cuenta ha sido eliminada exitosamente',
+        note: 'Los registros de transacciones completadas se mantendrán por requisitos legales'
+      });
+
+    } catch (error) {
+      console.error('Error eliminando cuenta:', error);
+      next(error);
+    }
+  }
 }
 
 module.exports = new AuthController();

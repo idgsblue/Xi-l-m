@@ -67,5 +67,16 @@ router.put('/profile',
 );
 router.post('/change-password', changePasswordValidation, handleValidationErrors, authController.changePassword);
 router.post('/logout', authController.logout);
+router.delete('/account',
+  [
+    body('password')
+      .notEmpty().withMessage('La contraseña es requerida para confirmar la eliminación'),
+    body('reason')
+      .optional()
+      .isLength({ max: 500 }).withMessage('El motivo no puede exceder 500 caracteres')
+  ],
+  handleValidationErrors,
+  authController.deleteAccount
+);
 
 module.exports = router;
