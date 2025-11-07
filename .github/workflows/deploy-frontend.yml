@@ -2,7 +2,7 @@ name: Deploy Frontend to Firebase
 
 on:
   push:
-    branches: [ marco ]
+    branches: [ main ]
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
