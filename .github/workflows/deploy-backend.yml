@@ -2,7 +2,7 @@ name: Deploy Backend to VPS
 
 on:
   push:
-    branches: [ marco ]
+    branches: [ main ]
     paths:
       - 'backend/**'
       - '.github/workflows/deploy-backend.yml'
