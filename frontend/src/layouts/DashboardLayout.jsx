@@ -11,7 +11,8 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowLeftOnRectangleIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 
 const DashboardLayout = () => {
@@ -90,11 +91,28 @@ const adminNavigation = [
             </div>
 
             <div className="flex-shrink-0 flex border-t border-primary-200 p-4">
-              <div className="flex items-center">
+              <div className="flex items-center w-full">
                 <UserCircleIcon className="h-10 w-10 icon-neutral" />
-                <div className="ml-3">
+                <div className="ml-3 flex-1">
                   <p className="text-base font-medium text-accent-800">{user?.name}</p>
                   <p className="text-sm font-medium text-neutral-600">{user?.role}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={`/${user?.role}/settings`}
+                    className="group transition-colors"
+                    title="Configuración"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Cog6ToothIcon className="h-6 w-6 icon-neutral group-hover:text-accent-700" />
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="group transition-colors"
+                    title="Cerrar sesión"
+                  >
+                    <ArrowLeftOnRectangleIcon className="h-6 w-6 icon-neutral group-hover:text-accent-700" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -138,13 +156,22 @@ const adminNavigation = [
                   <p className="text-sm font-medium text-accent-800">{user?.name}</p>
                   <p className="text-xs font-medium text-neutral-600">{user?.role}</p>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="ml-auto group transition-colors"
-                  title="Cerrar sesión"
-                >
-                  <ArrowLeftOnRectangleIcon className="h-5 w-5 icon-neutral group-hover:text-accent-700" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={`/${user?.role}/settings`}
+                    className="group transition-colors"
+                    title="Configuración"
+                  >
+                    <Cog6ToothIcon className="h-5 w-5 icon-neutral group-hover:text-accent-700" />
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="group transition-colors"
+                    title="Cerrar sesión"
+                  >
+                    <ArrowLeftOnRectangleIcon className="h-5 w-5 icon-neutral group-hover:text-accent-700" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

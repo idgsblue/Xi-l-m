@@ -18,6 +18,7 @@ import Register from './pages/Register';
 import Settings from './pages/Settings';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import CancellationPolicy from './pages/CancellationPolicy';
 
 // Pages protegidas - Huésped
 import MyBookings from './pages/guest/MyBookings';
@@ -79,9 +80,12 @@ function App() {
           <Route path="property/:id" element={<PropertyDetail />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
-          <Route path="privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="terms-of-service" element={<TermsOfService />} />
         </Route>
+
+        {/* Rutas de políticas - Accesibles desde cualquier parte */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/cancellation" element={<CancellationPolicy />} />
 
       {/* Rutas protegidas - Huésped */}
       <Route path="/guest" element={
