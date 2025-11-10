@@ -66,11 +66,17 @@ const cancellationRate = totalBookings > 0 ?
             model: PropertyImage,
             as: 'images'
           },
+          
           {
             model: AccommodationType,
             as: 'accommodationType',
             attributes: ['id', 'name', 'min_price', 'max_price']
-          }
+          },
+          {
+          model: AccommodationType,
+          as: 'accommodationType',
+          attributes: ['id', 'name', 'min_price', 'max_price', 'platform_commission_percentage'] // Agregar este campo
+        }
         ],
         order: [['created_at', 'ASC']]
       });
