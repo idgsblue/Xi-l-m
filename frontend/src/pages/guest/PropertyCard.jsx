@@ -15,7 +15,7 @@ const imageUrl = property.images && property.images.length > 0
       <div className="relative">
         <img
           src={imageUrl}
-          alt={property.name}
+          alt={property.title}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
           onError={(e) => {
             e.target.src = '/placeholder-property.jpg';
@@ -30,12 +30,12 @@ const imageUrl = property.images && property.images.length > 0
       
       <div className="p-4">
         <h3 className="text-lg font-semibold text-accent-900 group-hover:text-secondary-600 transition-colors">
-          {property.name}
+          {property.title}
         </h3>
 
         <div className="mt-1 flex items-center text-sm text-neutral-600">
           <MapPinIcon className="h-4 w-4 mr-1 icon-accent" />
-          <span className="truncate">{property.zone}</span>
+          <span className="truncate">{property.location}</span>
         </div>
 
         <p className="mt-2 text-sm text-neutral-600 line-clamp-2">
@@ -45,12 +45,12 @@ const imageUrl = property.images && property.images.length > 0
         <div className="mt-3 flex items-center justify-between">
           <div className="flex items-center text-sm text-neutral-600">
             <UsersIcon className="h-4 w-4 mr-1 icon-neutral" />
-            <span>{property.maxGuests} huéspedes</span>
+            <span>{property.capacity} huéspedes</span>
           </div>
 
           <div className="text-right">
             <span className="text-lg font-bold text-accent-900">
-              ${property.pricePerNight}
+            ${parseFloat(property.price_per_night).toFixed(2)}
             </span>
             <span className="text-sm text-neutral-600"> /noche</span>
           </div>
