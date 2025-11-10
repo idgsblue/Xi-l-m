@@ -5,7 +5,9 @@ import {
   Bars3Icon,
   XMarkIcon,
   UserCircleIcon,
-  HomeIcon
+  HomeIcon,
+  Cog6ToothIcon,
+  ArrowLeftOnRectangleIcon
 } from '@heroicons/react/24/outline';
 
 const Header = () => {
@@ -70,13 +72,20 @@ const Header = () => {
                 >
                   Mis Reservas
                 </Link>
-                <div className="relative ml-3">
+                <div className="flex items-center gap-3 ml-3 pl-3 border-l border-neutral-200">
+                  <Link
+                    to={`/${user?.role}/settings`}
+                    className="group transition-colors"
+                    title="Configuración"
+                  >
+                    <Cog6ToothIcon className="h-6 w-6 text-neutral-500 group-hover:text-accent-700" />
+                  </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center text-sm font-medium text-neutral-700 hover:text-accent-800 transition-colors"
+                    className="group transition-colors"
+                    title="Cerrar sesión"
                   >
-                    <UserCircleIcon className="h-8 w-8 text-neutral-500" />
-                    <span className="ml-2">{user.name}</span>
+                    <ArrowLeftOnRectangleIcon className="h-6 w-6 text-neutral-500 group-hover:text-accent-700" />
                   </button>
                 </div>
               </div>
@@ -135,13 +144,30 @@ const Header = () => {
               <>
                 <div className="flex items-center px-4">
                   <UserCircleIcon className="h-10 w-10 text-neutral-500" />
-                  <div className="ml-3">
+                  <div className="ml-3 flex-1">
                     <div className="text-base font-medium text-accent-800">
                       {user.name}
                     </div>
                     <div className="text-sm font-medium text-neutral-600">
                       {user.email}
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/${user?.role}/settings`}
+                      className="group transition-colors"
+                      title="Configuración"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Cog6ToothIcon className="h-6 w-6 text-neutral-500 group-hover:text-accent-700" />
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="group transition-colors"
+                      title="Cerrar sesión"
+                    >
+                      <ArrowLeftOnRectangleIcon className="h-6 w-6 text-neutral-500 group-hover:text-accent-700" />
+                    </button>
                   </div>
                 </div>
                 <div className="mt-3 space-y-1">
@@ -167,12 +193,6 @@ const Header = () => {
                       Admin
                     </Link>
                   )}
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full px-4 py-2 text-left text-base font-medium text-neutral-600 hover:bg-primary-50 hover:text-accent-800 transition-colors"
-                  >
-                    Cerrar Sesión
-                  </button>
                 </div>
               </>
             ) : (

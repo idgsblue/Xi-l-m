@@ -15,6 +15,10 @@ import Search from './pages/Search';
 import PropertyDetail from './pages/PropertyDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Settings from './pages/Settings';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CancellationPolicy from './pages/CancellationPolicy';
 
 // Pages protegidas - Huésped
 import MyBookings from './pages/guest/MyBookings';
@@ -78,6 +82,11 @@ function App() {
           <Route path="register" element={<Register />} />
         </Route>
 
+        {/* Rutas de políticas - Accesibles desde cualquier parte */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/cancellation" element={<CancellationPolicy />} />
+
       {/* Rutas protegidas - Huésped */}
       <Route path="/guest" element={
         <ProtectedRoute>
@@ -89,6 +98,7 @@ function App() {
         <Route path="booking-payment-form/:bookingId" element={<BookingPaymentForm />} />
         <Route path="booking-payment" element={<BookingPayment />} />
         <Route path="booking-confirmation/:bookingId" element={<BookingConfirmation />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
 
       {/* Rutas protegidas - Anfitrión */}
@@ -103,6 +113,7 @@ function App() {
   {/* ✅ NUEVA RUTA */}
   <Route path="properties/:id/availability" element={<AvailabilityCalendar />} />
   <Route path="bookings" element={<HostBookings />} />
+  <Route path="settings" element={<Settings />} />
 </Route>
 
       {/* Rutas protegidas - Admin */}
@@ -117,6 +128,7 @@ function App() {
   <Route path="users" element={<ManageUsers />} />
   <Route path="reports" element={<Reports />} />
   <Route path="accommodation-types" element={<AccommodationTypes />} />
+  <Route path="settings" element={<Settings />} />
 </Route>
 
         {/* 404 */}

@@ -23,6 +23,10 @@ const app = express();
 // Configuración CORS
 const allowedOrigins = [
   'http://localhost:3000',
+  'https://localhost',           // Para Capacitor (apps móviles Android)
+  'capacitor://localhost',       // Para Capacitor iOS
+  'http://10.0.2.2:5000',
+      // Para emulador Android -> localhost
   'https://xilmq.com',
   process.env.FRONTEND_URL
 ].filter(Boolean);

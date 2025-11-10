@@ -133,6 +133,41 @@ const Register = () => {
             </div>
 
             <div>
+              <label htmlFor="age" className="block text-sm font-medium text-neutral-700">
+                Edad *
+              </label>
+              <div className="mt-1">
+                <input
+                  {...register('age', {
+                    required: 'La edad es requerida',
+                    min: {
+                      value: 13,
+                      message: 'Debes tener al menos 13 años para registrarte'
+                    },
+                    max: {
+                      value: 120,
+                      message: 'Por favor ingresa una edad válida'
+                    },
+                    valueAsNumber: true
+                  })}
+                  type="number"
+                  min="13"
+                  max="120"
+                  className="input"
+                  placeholder="Ej: 25"
+                />
+                {errors.age && (
+                  <p className="mt-1 text-sm text-red-600">{errors.age.message}</p>
+                )}
+                {watch('age') >= 13 && watch('age') < 18 && (
+                  <p className="mt-2 text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                    ⚠️ Los usuarios menores de 18 años requieren supervisión de un padre o tutor para realizar reservas.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
               <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
                 Contraseña
               </label>
