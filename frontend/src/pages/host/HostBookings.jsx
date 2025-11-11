@@ -1,426 +1,314 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { format, isValid, parseISO } from "date-fns";
-
 import { es } from "date-fns/locale";
-
 import { toast } from 'react-toastify';
 import {
-  CalendarIcon,
-  UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  HomeIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
-  FunnelIcon,
-  ArrowPathIcon
+  CalendarIcon, UserIcon, EnvelopeIcon, PhoneIcon, HomeIcon,
+  CheckCircleIcon, XCircleIcon, ClockIcon, FunnelIcon, ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
-const formatDateSafe = (dateStr, fmt = "dd MMM yyyy") => {
-  if (!dateStr) return null;
-  const date = parseISO(dateStr);
-  return isValid(date) ? format(date, fmt, { locale: es }) : null;
+// Config
+const STATUS = {
+  confirmed: { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: CheckCircleIcon, label: 'Confirmada' },
+  pending: { bg: 'bg-amber-50', text: 'text-amber-700', icon: ClockIcon, label: 'Pendiente' },
+  cancelled: { bg: 'bg-red-50', text: 'text-red-700', icon: XCircleIcon, label: 'Cancelada' },
+  in_progress: { bg: 'bg-blue-50', text: 'text-blue-700', icon: ClockIcon, label: 'En Progreso' },
+  completed: { bg: 'bg-slate-50', text: 'text-slate-700', icon: CheckCircleIcon, label: 'Completada' }
 };
+
+const PAYMENT = {
+  confirmed: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Confirmado' },
+  pending: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pendiente' },
+  rejected: { bg: 'bg-red-50', text: 'text-red-700', label: 'Rechazado' }
+};
+
+// Utils
+const fmtDate = (d, f = "dd MMM yyyy") => {
+  if (!d) return 'N/A';
+  const date = parseISO(d);
+  return isValid(date) ? format(date, f, { locale: es }) : 'N/A';
+};
+
+const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
+
+// Components
+const Stat = ({ title, value, from, to }) => (
+  <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
+    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</p>
+    <p className={`mt-3 text-4xl font-bold bg-gradient-to-br ${from} ${to} bg-clip-text text-transparent`}>{value}</p>
+  </div>
+);
+
+const Badge = ({ status, config }) => {
+  const cfg = config[status] || {};
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text} border ${cfg.bg.replace('50', '200')}`}>
+      {Icon && <Icon className="h-3.5 w-3.5" />}
+      {cfg.label}
+    </span>
+  );
+};
+
+const Row = ({ b }) => (
+  <tr className="hover:bg-slate-50/50 transition-colors">
+    <td className="px-4 py-4 text-sm font-bold text-slate-900">#{b.id}</td>
+    <td className="px-4 py-4">
+      <div className="flex items-start gap-2">
+        <div className="p-2 bg-slate-100 rounded-lg">
+          <HomeIcon className="h-4 w-4 text-slate-600" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-900 truncate">{b.property?.title}</p>
+          <p className="text-xs text-slate-500 truncate">{b.property?.location}</p>
+        </div>
+      </div>
+    </td>
+    <td className="px-4 py-4">
+      <div className="space-y-1">
+        <div className="flex items-center gap-1.5 text-sm font-medium text-slate-900">
+          <UserIcon className="h-3.5 w-3.5 text-slate-400" />
+          <span className="truncate">{b.guest?.full_name}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <EnvelopeIcon className="h-3 w-3" />
+          <span className="truncate">{b.guest?.email}</span>
+        </div>
+        {b.guest?.phone && (
+          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <PhoneIcon className="h-3 w-3" />
+            {b.guest.phone}
+          </div>
+        )}
+      </div>
+    </td>
+    <td className="px-4 py-4">
+      <div className="flex items-center gap-1.5 text-sm text-slate-900 font-medium">
+        <CalendarIcon className="h-4 w-4 text-slate-400" />
+        <span className="whitespace-nowrap">{fmtDate(b.checkIn, "dd MMM")} - {fmtDate(b.checkOut, "dd MMM yy")}</span>
+      </div>
+      <p className="text-xs text-slate-500 mt-1 pl-5">{b.numberOfGuests} {b.numberOfGuests === 1 ? "huésped" : "huéspedes"}</p>
+    </td>
+    <td className="px-4 py-4"><Badge status={b.booking_status} config={STATUS} /></td>
+    <td className="px-4 py-4"><Badge status={b.payment_status} config={PAYMENT} /></td>
+    <td className="px-4 py-4 text-sm font-bold text-slate-900">{fmtMoney(b.total_price)}</td>
+  </tr>
+);
+
+const Filters = ({ f, stats, onChange, onClear, onRefresh }) => (
+  <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 shadow-sm border border-slate-200">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+      {stats?.propertyStats?.length > 0 && (
+        <select value={f.property_id} onChange={(e) => onChange('property_id', e.target.value)}
+          className="px-3 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+          <option value="">📍 Todas</option>
+          {stats.propertyStats.map(p => (
+            <option key={p.property_id} value={p.property_id}>{p.title} ({p.total})</option>
+          ))}
+        </select>
+      )}
+      <select value={f.booking_status} onChange={(e) => onChange('booking_status', e.target.value)}
+        className="px-3 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+        <option value="">📋 Estados</option>
+        <option value="pending">Pendientes</option>
+        <option value="confirmed">Confirmadas</option>
+        <option value="in_progress">En Progreso</option>
+        <option value="completed">Completadas</option>
+        <option value="cancelled">Canceladas</option>
+      </select>
+      <select value={f.payment_status} onChange={(e) => onChange('payment_status', e.target.value)}
+        className="px-3 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+        <option value="">💳 Pagos</option>
+        <option value="pending">Pendientes</option>
+        <option value="confirmed">Confirmados</option>
+        <option value="rejected">Rechazados</option>
+      </select>
+      <select value={f.date_filter} onChange={(e) => onChange('date_filter', e.target.value)}
+        className="px-3 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+        <option value="">📅 Fechas</option>
+        <option value="upcoming">Próximas</option>
+        <option value="current">Actuales</option>
+        <option value="past">Pasadas</option>
+      </select>
+      <button onClick={onClear}
+        className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all duration-200">
+        Limpiar
+      </button>
+      <button onClick={onRefresh}
+        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+        style={{ backgroundColor: '#535911' }}
+        onMouseEnter={(e) => e.target.style.backgroundColor = '#3d4109'}
+        onMouseLeave={(e) => e.target.style.backgroundColor = '#535911'}>
+        <ArrowPathIcon className="h-4 w-4" />
+        Actualizar
+      </button>
+    </div>
+  </div>
+);
 
 const HostBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ property_id: '', booking_status: '', payment_status: '', date_filter: '' });
 
-  const [filters, setFilters] = useState({
-    property_id: '',
-    booking_status: '',
-    payment_status: '',
-    date_filter: ''
-  });
-
-  useEffect(() => {
-    loadBookings();
-  }, [filters]);
+  useEffect(() => { loadBookings(); }, [filters]);
 
   const loadBookings = async () => {
     try {
       setLoading(true);
-
       const params = new URLSearchParams();
-      Object.keys(filters).forEach(key => {
-        if (filters[key]) params.append(key, filters[key]);
-      });
-
+      Object.entries(filters).forEach(([k, v]) => v && params.append(k, v));
       const { data } = await api.get(`/bookings/host/bookings?${params}`);
-
       setBookings(data.bookings || []);
       setStats(data.stats || null);
-    } catch (error) {
-      console.error('Error cargando reservas:', error);
+    } catch (err) {
+      console.error('Error:', err);
       toast.error('Error cargando reservas');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      property_id: '',
-      booking_status: '',
-      payment_status: '',
-      date_filter: ''
-    });
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'confirmed':
-        return 'badge-success';
-      case 'pending':
-        return 'badge-warning';
-      case 'cancelled':
-        return 'badge-error';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-neutral-100 text-neutral-800';
-      default:
-        return 'bg-neutral-100 text-neutral-800';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'confirmed':
-        return <CheckCircleIcon className="h-5 w-5 icon-success" />;
-      case 'pending':
-        return <ClockIcon className="h-5 w-5 icon-warning" />;
-      case 'cancelled':
-        return <XCircleIcon className="h-5 w-5 icon-error" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'confirmed':
-        return 'Confirmada';
-      case 'pending':
-        return 'Pendiente';
-      case 'cancelled':
-        return 'Cancelada';
-      case 'in_progress':
-        return 'En Progreso';
-      case 'completed':
-        return 'Completada';
-      default:
-        return status;
-    }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN'
-    }).format(amount);
-  };
-
   if (loading && !stats) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-600"></div>
-      </div>
+      <>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-emerald-600 absolute top-0"></div>
+          </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div>
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-accent-900">Reservas Recibidas</h1>
-          <p className="mt-2 text-neutral-600">Gestiona las reservas de tus propiedades</p>
+    <>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Reservas Recibidas</h1>
+            <p className="mt-2 text-slate-600">Gestiona todas las reservas de tus propiedades</p>
+          </div>
+          <button onClick={() => setShowFilters(!showFilters)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-md transition-all duration-200">
+            <FunnelIcon className="h-5 w-5" />
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </button>
         </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-        >
-          <FunnelIcon className="h-5 w-5 mr-2" />
-          {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-        </button>
-      </div>
 
-      {/* Estadísticas Globales */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <StatCard title="Total" value={stats.total || 0} color="blue" />
-          <StatCard title="Pendientes" value={stats.pending || 0} color="yellow" />
-          <StatCard title="Confirmadas" value={stats.confirmed || 0} color="green" />
-          <StatCard title="En Progreso" value={stats.in_progress || 0} color="blue" />
-          <StatCard title="Completadas" value={stats.completed || 0} color="gray" />
-        </div>
-      )}
+        {/* Stats */}
+        {stats && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <Stat title="Total" value={stats.total || 0} from="from-blue-600" to="to-blue-500" />
+            <Stat title="Pendientes" value={stats.pending || 0} from="from-amber-600" to="to-amber-500" />
+            <Stat title="Confirmadas" value={stats.confirmed || 0} from="from-emerald-600" to="to-emerald-500" />
+            <Stat title="En Progreso" value={stats.in_progress || 0} from="from-blue-600" to="to-cyan-500" />
+            <Stat title="Completadas" value={stats.completed || 0} from="from-slate-600" to="to-slate-500" />
+          </div>
+        )}
 
-      {/* Filtros */}
-      {showFilters && (
-        <div className="card mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            {/* Filtro por Propiedad */}
-            {stats?.propertyStats && stats.propertyStats.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
-                  Propiedad
-                </label>
-                <select
-                  value={filters.property_id}
-                  onChange={(e) => handleFilterChange('property_id', e.target.value)}
-                  className="input w-full"
-                >
-                  <option value="">Todas las propiedades</option>
-                  {stats.propertyStats.map(prop => (
-                    <option key={prop.property_id} value={prop.property_id}>
-                      {prop.title} ({prop.total} reservas)
-                    </option>
-                  ))}
-                </select>
+        {/* Filters */}
+        {showFilters && (
+          <div className="mb-8">
+            <Filters
+              f={filters}
+              stats={stats}
+              onChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))}
+              onClear={() => setFilters({ property_id: '', booking_status: '', payment_status: '', date_filter: '' })}
+              onRefresh={loadBookings}
+            />
+          </div>
+        )}
+
+        {/* Table / Cards */}
+        {bookings.length === 0 ? (
+          <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl p-16 text-center shadow-sm border border-slate-200">
+            <div className="inline-flex p-4 bg-slate-100 rounded-2xl mb-4">
+              <CalendarIcon className="h-12 w-12 text-slate-400" />
+            </div>
+            <p className="text-lg font-semibold text-slate-900">No hay reservas</p>
+            <p className="mt-2 text-slate-600">Aquí aparecerán las reservas cuando lleguen</p>
+          </div>
+        ) : (
+          <>
+            {/* Vista Desktop - Tabla */}
+            <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
+                    <tr>
+                      {['Reserva', 'Propiedad', 'Huésped', 'Fechas', 'Estado', 'Pago', 'Total'].map(h => (
+                        <th key={h} className="px-4 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {bookings.map(b => <Row key={b.id} b={b} />)}
+                  </tbody>
+                </table>
               </div>
-            )}
-
-            {/* Estado de Reserva */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Estado de Reserva
-              </label>
-              <select
-                value={filters.booking_status}
-                onChange={(e) => handleFilterChange('booking_status', e.target.value)}
-                className="input w-full"
-              >
-                <option value="">Todos los estados</option>
-                <option value="pending">Pendientes</option>
-                <option value="confirmed">Confirmadas</option>
-                <option value="in_progress">En Progreso</option>
-                <option value="completed">Completadas</option>
-                <option value="cancelled">Canceladas</option>
-              </select>
             </div>
 
-            {/* Estado de Pago */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Estado de Pago
-              </label>
-              <select
-                value={filters.payment_status}
-                onChange={(e) => handleFilterChange('payment_status', e.target.value)}
-                className="input w-full"
-              >
-                <option value="">Todos los pagos</option>
-                <option value="pending">Pendientes</option>
-                <option value="confirmed">Confirmados</option>
-                <option value="rejected">Rechazados</option>
-              </select>
-            </div>
-
-            {/* Filtro por Fecha */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Periodo
-              </label>
-              <select
-                value={filters.date_filter}
-                onChange={(e) => handleFilterChange('date_filter', e.target.value)}
-                className="input w-full"
-              >
-                <option value="">Todas las fechas</option>
-                <option value="upcoming">Próximas</option>
-                <option value="current">Actuales</option>
-                <option value="past">Pasadas</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Botones de Acción */}
-          <div className="flex gap-2 justify-end">
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Limpiar Filtros
-            </button>
-            <button
-              onClick={loadBookings}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <ArrowPathIcon className="h-5 w-5 mr-2" />
-              Actualizar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Stats por Propiedad */}
-      {stats?.propertyStats && stats.propertyStats.length > 0 && !filters.property_id && (
-        <div className="card mb-6">
-          <h2 className="text-lg font-semibold mb-4 text-accent-900">Reservas por Propiedad</h2>
-          <div className="space-y-2">
-            {stats.propertyStats.map(prop => (
-              <div
-                key={prop.property_id}
-                className="flex justify-between items-center p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
-                onClick={() => handleFilterChange('property_id', prop.property_id.toString())}
-              >
-                <div>
-                  <p className="font-medium text-accent-900">{prop.title}</p>
-                  <p className="text-sm text-neutral-600">{prop.location}</p>
-                </div>
-                <div className="flex gap-4 text-sm">
-                  <span className="text-yellow-600 font-medium">Pendientes: {prop.pending}</span>
-                  <span className="text-green-600 font-medium">Confirmadas: {prop.confirmed}</span>
-                  <span className="text-neutral-600 font-medium">Total: {prop.total}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Lista de reservas */}
-      {bookings.length === 0 ? (
-        <div className="card text-center">
-          <CalendarIcon className="mx-auto h-12 w-12 icon-muted" />
-          <p className="mt-2 text-neutral-600">No hay reservas que mostrar</p>
-        </div>
-      ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <table className="min-w-full divide-y divide-primary-200">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Reserva
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Propiedad
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Huésped
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Fechas
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Pago
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-primary-200">
-              {bookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-neutral-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-accent-900">
-                    #{booking.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <HomeIcon className="h-5 w-5 icon-muted mr-2" />
-                      <div>
-                        <div className="text-sm font-medium text-accent-900">
-                          {booking.property?.title}
-                        </div>
-                        <div className="text-sm text-neutral-500">
-                          {booking.property?.location}
-                        </div>
-                      </div>
+            {/* Vista Mobile - Cards */}
+            <div className="lg:hidden space-y-4">
+              {bookings.map(b => (
+                <div key={b.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="text-sm font-bold text-slate-900">#{b.id}</span>
+                    <Badge status={b.booking_status} config={STATUS} />
+                  </div>
+                  
+                  <div className="flex items-start gap-3 mb-3 pb-3 border-b border-slate-100">
+                    <div className="p-2 bg-slate-100 rounded-lg flex-shrink-0">
+                      <HomeIcon className="h-5 w-5 text-slate-600" />
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="flex items-center text-sm font-medium text-accent-900">
-                        <UserIcon className="h-4 w-4 icon-muted mr-1" />
-                        {booking.guest?.full_name}
-                      </div>
-                      <div className="flex items-center text-sm text-neutral-500">
-                        <EnvelopeIcon className="h-4 w-4 icon-muted mr-1" />
-                        {booking.guest?.email}
-                      </div>
-                      {booking.guest?.phone && (
-                        <div className="flex items-center text-sm text-neutral-500">
-                          <PhoneIcon className="h-4 w-4 icon-muted mr-1" />
-                          {booking.guest.phone}
-                        </div>
-                      )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-900">{b.property?.title}</p>
+                      <p className="text-xs text-slate-500">{b.property?.location}</p>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-  <div className="text-sm text-accent-900">
-    <div className="flex items-center">
-      <CalendarIcon className="h-4 w-4 icon-muted mr-1" />
-      {formatDateSafe(booking.checkIn, "dd MMM") && formatDateSafe(booking.checkOut, "dd MMM yyyy") ? (
-        <>
-          {formatDateSafe(booking.checkIn, "dd MMM")} - {formatDateSafe(booking.checkOut, "dd MMM yyyy")}
-        </>
-      ) : (
-        "Fechas no disponibles"
-      )}
-    </div>
-    <div className="text-neutral-500">
-      {booking.numberOfGuests} {booking.numberOfGuests === 1 ? "huésped" : "huéspedes"}
-    </div>
-  </div>
-</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.booking_status)}`}>
-                      {getStatusIcon(booking.booking_status)}
-                      <span className="ml-1">{getStatusText(booking.booking_status)}</span>
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      booking.payment_status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                      booking.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {booking.payment_status === 'confirmed' ? 'Confirmado' :
-                       booking.payment_status === 'pending' ? 'Pendiente' : 'Rechazado'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-accent-900">
-                    {formatCurrency(booking.total_price)}
-                  </td>
-                </tr>
+                  </div>
+
+                  <div className="space-y-2 mb-3 pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2 text-sm">
+                      <UserIcon className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                      <span className="text-slate-900 font-medium truncate">{b.guest?.full_name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <EnvelopeIcon className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                      <span className="truncate">{b.guest?.email}</span>
+                    </div>
+                    {b.guest?.phone && (
+                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                        <PhoneIcon className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                        <span>{b.guest.phone}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm text-slate-900 mb-3">
+                    <CalendarIcon className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                    <span className="font-medium">{fmtDate(b.checkIn, "dd MMM")} - {fmtDate(b.checkOut, "dd MMM yy")}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-3">{b.numberOfGuests} {b.numberOfGuests === 1 ? "huésped" : "huéspedes"}</p>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <Badge status={b.payment_status} config={PAYMENT} />
+                    <span className="text-lg font-bold text-slate-900">{fmtMoney(b.total_price)}</span>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const StatCard = ({ title, value, color = 'blue' }) => {
-  const colors = {
-    blue: 'from-blue-500 to-blue-600',
-    green: 'from-green-500 to-green-600',
-    yellow: 'from-yellow-500 to-yellow-600',
-    gray: 'from-gray-500 to-gray-600',
-    red: 'from-red-500 to-red-600'
-  };
-
-  return (
-    <div className="card">
-      <div className="text-sm font-medium text-neutral-500">{title}</div>
-      <div className={`mt-2 text-3xl font-bold bg-gradient-to-r ${colors[color]} bg-clip-text text-transparent`}>
-        {value}
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </>
   );
 };
 

@@ -30,9 +30,9 @@ jobs:
             echo " Ubicación actual: $(pwd)"
             
             echo " Actualizando código desde GitHub..."
-            git fetch origin marco
-            git reset --hard origin/marco
-            git pull origin marco
+            git fetch origin main
+            git reset --hard origin/main
+            git pull origin main
             
             echo " Código actualizado"
           EOF

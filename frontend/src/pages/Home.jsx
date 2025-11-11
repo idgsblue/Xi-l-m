@@ -26,8 +26,7 @@ const Home = () => {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="relative bg-gradient-accent py-32">
+      <section id="main-content" className="relative bg-gradient-accent py-32" tabIndex="-1">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="heading-1 text-white drop-shadow-md">
@@ -43,7 +42,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Propiedades Destacadas */}
       <section className="section bg-primary-50">
         <div className="container-custom">
           <div className="text-center">
@@ -84,7 +82,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="bg-white section">
         <div className="container-custom">
           <div className="bg-gradient-primary rounded-2xl px-6 py-16 sm:p-16 shadow-large">
