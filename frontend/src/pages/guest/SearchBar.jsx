@@ -37,13 +37,13 @@ const SearchBar = ({ initialValues = {} }) => {
             value={searchData.zone}
             onChange={(e) => setSearchData({ ...searchData, zone: e.target.value })}
             placeholder="¿A dónde vas?"
-            className="input"
+            className="input pl-10"
           />
         </div>
 
         {/* Check-in */}
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
             <CalendarIcon className="h-5 w-5 text-neutral-400" />
           </div>
           <DatePicker
@@ -54,13 +54,13 @@ const SearchBar = ({ initialValues = {} }) => {
             endDate={searchData.checkOut}
             minDate={new Date()}
             placeholderText="Check-in"
-            className="input"
+            className="input pl-10"
           />
         </div>
 
         {/* Check-out */}
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
             <CalendarIcon className="h-5 w-5 text-neutral-400" />
           </div>
           <DatePicker
@@ -71,20 +71,20 @@ const SearchBar = ({ initialValues = {} }) => {
             endDate={searchData.checkOut}
             minDate={searchData.checkIn || new Date()}
             placeholderText="Check-out"
-            className="input"
+            className="input pl-10"
           />
         </div>
 
         {/* Huéspedes y Buscar */}
         <div className="flex space-x-2">
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
               <UsersIcon className="h-5 w-5 text-neutral-400" />
             </div>
             <select
               value={searchData.guests}
               onChange={(e) => setSearchData({ ...searchData, guests: e.target.value })}
-              className="input"
+              className="input pl-10"
             >
               {[...Array(10)].map((_, i) => (
                 <option key={i + 1} value={i + 1}>
@@ -93,12 +93,12 @@ const SearchBar = ({ initialValues = {} }) => {
               ))}
             </select>
           </div>
-          
+
           <button
             type="submit"
-            className="btn-secondary"
+            className="btn-secondary flex items-center justify-center"
           >
-            <MagnifyingGlassIcon className="h-5 w-5 icon-secondary" />
+            <MagnifyingGlassIcon className="h-5 w-5" />
             <span className="hidden sm:ml-2 sm:inline">Buscar</span>
           </button>
         </div>

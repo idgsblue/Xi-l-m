@@ -94,7 +94,7 @@ const Home = () => {
               </p>
               <Link
                 to="/register?role=host"
-                className="btn-accent mt-8"
+                className="btn-accent mt-8 inline-block"
               >
                 Conviértete en Anfitrión
               </Link>
