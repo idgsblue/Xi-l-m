@@ -26,17 +26,17 @@ const Home = () => {
 
   return (
     <div>
-      <section id="main-content" className="bg-gradient-accent dark:bg-gradient-to-br dark:from-neutral-800 dark:to-neutral-900 py-32" tabIndex="-1">
+      <section id="main-content" className="bg-gradient-accent dark:bg-gradient-to-br dark:from-neutral-800 dark:to-neutral-900 py-16 sm:py-24 md:py-32" tabIndex="-1">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="heading-1 text-white dark:text-neutral-100 drop-shadow-md">
+            <h1 className="heading-1 text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white dark:text-neutral-100 drop-shadow-md">
               Descubre Arroyo Seco
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-xl text-white dark:text-neutral-300 drop-shadow">
+            <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-base sm:text-lg md:text-xl text-white dark:text-neutral-300 drop-shadow px-4">
               Encuentra el alojamiento perfecto para tu próxima aventura en el corazón de Querétaro
             </p>
           </div>
-          <div className="mt-10">
+          <div className="mt-8 sm:mt-10">
             <SearchBar />
           </div>
         </div>

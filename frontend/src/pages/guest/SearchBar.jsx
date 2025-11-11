@@ -25,8 +25,8 @@ const SearchBar = ({ initialValues = {} }) => {
   };
 
   return (
-    <form onSubmit={handleSearch} className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-4 border border-neutral-200 dark:border-neutral-700">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <form onSubmit={handleSearch} className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-3 md:p-4 border border-neutral-200 dark:border-neutral-700">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
         {/* Ubicación */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -75,33 +75,32 @@ const SearchBar = ({ initialValues = {} }) => {
           />
         </div>
 
-        {/* Huéspedes y Buscar */}
-        <div className="flex space-x-2">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-              <UsersIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
-            </div>
-            <select
-              value={searchData.guests}
-              onChange={(e) => setSearchData({ ...searchData, guests: e.target.value })}
-              className="input pl-10"
-            >
-              {[...Array(10)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1} {i === 0 ? 'huésped' : 'huéspedes'}
-                </option>
-              ))}
-            </select>
+        {/* Huéspedes */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+            <UsersIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
           </div>
-
-          <button
-            type="submit"
-            className="btn-secondary flex items-center justify-center"
+          <select
+            value={searchData.guests}
+            onChange={(e) => setSearchData({ ...searchData, guests: e.target.value })}
+            className="input pl-10"
           >
-            <MagnifyingGlassIcon className="h-5 w-5" />
-            <span className="hidden sm:ml-2 sm:inline">Buscar</span>
-          </button>
+            {[...Array(10)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i + 1} {i === 0 ? 'huésped' : 'huéspedes'}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {/* Botón Buscar */}
+        <button
+          type="submit"
+          className="btn-secondary w-full md:w-auto flex items-center justify-center py-3 md:py-2"
+        >
+          <MagnifyingGlassIcon className="h-5 w-5" />
+          <span className="ml-2">Buscar</span>
+        </button>
       </div>
     </form>
   );
