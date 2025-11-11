@@ -85,6 +85,7 @@ function App() {
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
           <Route path="privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="terms-and-conditions" element={<TermsOfService />} />
           <Route path="terms-of-service" element={<TermsOfService />} />
           <Route path="cancellation" element={<CancellationPolicy />} />
         </Route>

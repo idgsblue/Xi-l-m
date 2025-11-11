@@ -44,16 +44,16 @@ const Register = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-neutral-50 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-neutral-100 dark:bg-neutral-800 py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center heading-1">
+        <h2 className="mt-6 text-center heading-1 text-accent-900 dark:text-neutral-100">
           Crea tu cuenta
         </h2>
-        <p className="mt-2 text-center text-sm text-neutral-600">
+        <p className="mt-2 text-center text-sm text-neutral-600 dark:text-neutral-300">
           ¿Ya tienes cuenta?{' '}
           <Link
             to="/login"
-            className="font-medium text-secondary-600 hover:text-secondary-500"
+            className="font-medium text-secondary-600 hover:text-secondary-500 dark:text-secondary-400 dark:hover:text-secondary-300"
           >
             Inicia sesión aquí
           </Link>
@@ -64,7 +64,7 @@ const Register = () => {
         <div className="card">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="name" className="label">
                 Nombre completo
               </label>
               <div className="mt-1">
@@ -87,7 +87,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="email" className="label">
                 Correo electrónico
               </label>
               <div className="mt-1">
@@ -110,7 +110,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="phone" className="label">
                 Teléfono (opcional)
               </label>
               <div className="mt-1">
@@ -133,7 +133,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="age" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="age" className="label">
                 Edad *
               </label>
               <div className="mt-1">
@@ -160,7 +160,7 @@ const Register = () => {
                   <p className="mt-1 text-sm text-red-600">{errors.age.message}</p>
                 )}
                 {watch('age') >= 13 && watch('age') < 18 && (
-                  <p className="mt-2 text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                  <p className="mt-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 p-2 rounded">
                     ⚠️ Los usuarios menores de 18 años requieren supervisión de un padre o tutor para realizar reservas.
                   </p>
                 )}
@@ -168,7 +168,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="password" className="label">
                 Contraseña
               </label>
               <div className="mt-1 relative">
@@ -206,7 +206,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="confirmPassword" className="label">
                 Confirmar contraseña
               </label>
               <div className="mt-1">
@@ -226,7 +226,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="role" className="label">
                 Tipo de cuenta
               </label>
               <div className="mt-1">
@@ -250,13 +250,13 @@ const Register = () => {
               </button>
             </div>
 
-            <div className="text-xs text-neutral-600 text-center">
+            <div className="text-xs text-neutral-600 dark:text-neutral-400 text-center">
               Al registrarte, aceptas nuestros{' '}
-              <Link to="/terms" className="text-secondary-600 hover:text-secondary-500">
+              <Link to="/terms-and-conditions" className="text-secondary-600 hover:text-secondary-500 dark:text-secondary-400 dark:hover:text-secondary-300 underline">
                 Términos y Condiciones
               </Link>{' '}
               y{' '}
-              <Link to="/privacy" className="text-secondary-600 hover:text-secondary-500">
+              <Link to="/privacy-policy" className="text-secondary-600 hover:text-secondary-500 dark:text-secondary-400 dark:hover:text-secondary-300 underline">
                 Política de Privacidad
               </Link>
             </div>
