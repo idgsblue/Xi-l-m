@@ -25,12 +25,12 @@ const SearchBar = ({ initialValues = {} }) => {
   };
 
   return (
-    <form onSubmit={handleSearch} className="bg-white rounded-lg shadow-lg p-4">
+    <form onSubmit={handleSearch} className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-4 border border-neutral-200 dark:border-neutral-700">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Ubicación */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MapPinIcon className="h-5 w-5 text-neutral-400" />
+            <MapPinIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
           </div>
           <input
             type="text"
@@ -44,7 +44,7 @@ const SearchBar = ({ initialValues = {} }) => {
         {/* Check-in */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-            <CalendarIcon className="h-5 w-5 text-neutral-400" />
+            <CalendarIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
           </div>
           <DatePicker
             selected={searchData.checkIn}
@@ -61,7 +61,7 @@ const SearchBar = ({ initialValues = {} }) => {
         {/* Check-out */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-            <CalendarIcon className="h-5 w-5 text-neutral-400" />
+            <CalendarIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
           </div>
           <DatePicker
             selected={searchData.checkOut}
@@ -79,7 +79,7 @@ const SearchBar = ({ initialValues = {} }) => {
         <div className="flex space-x-2">
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-              <UsersIcon className="h-5 w-5 text-neutral-400" />
+              <UsersIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
             </div>
             <select
               value={searchData.guests}

@@ -34,8 +34,8 @@ const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', curr
 
 // Components
 const Stat = ({ title, value, from, to }) => (
-  <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
-    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</p>
+  <div className="bg-white dark:bg-neutral-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-neutral-700 hover:shadow-lg transition-all duration-300">
+    <p className="text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wide">{title}</p>
     <p className={`mt-3 text-4xl font-bold bg-gradient-to-br ${from} ${to} bg-clip-text text-transparent`}>{value}</p>
   </div>
 );
@@ -52,31 +52,31 @@ const Badge = ({ status, config }) => {
 };
 
 const Row = ({ b }) => (
-  <tr className="hover:bg-slate-50/50 transition-colors">
-    <td className="px-4 py-4 text-sm font-bold text-slate-900">#{b.id}</td>
+  <tr className="hover:bg-slate-50/50 dark:hover:bg-neutral-700/50 transition-colors">
+    <td className="px-4 py-4 text-sm font-bold text-slate-900 dark:text-neutral-100">#{b.id}</td>
     <td className="px-4 py-4">
       <div className="flex items-start gap-2">
-        <div className="p-2 bg-slate-100 rounded-lg">
-          <HomeIcon className="h-4 w-4 text-slate-600" />
+        <div className="p-2 bg-slate-100 dark:bg-neutral-700 rounded-lg">
+          <HomeIcon className="h-4 w-4 text-slate-600 dark:text-neutral-300" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-900 truncate">{b.property?.title}</p>
-          <p className="text-xs text-slate-500 truncate">{b.property?.location}</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-neutral-100 truncate">{b.property?.title}</p>
+          <p className="text-xs text-slate-500 dark:text-neutral-400 truncate">{b.property?.location}</p>
         </div>
       </div>
     </td>
     <td className="px-4 py-4">
       <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-sm font-medium text-slate-900">
-          <UserIcon className="h-3.5 w-3.5 text-slate-400" />
+        <div className="flex items-center gap-1.5 text-sm font-medium text-slate-900 dark:text-neutral-100">
+          <UserIcon className="h-3.5 w-3.5 text-slate-400 dark:text-neutral-400" />
           <span className="truncate">{b.guest?.full_name}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-neutral-400">
           <EnvelopeIcon className="h-3 w-3" />
           <span className="truncate">{b.guest?.email}</span>
         </div>
         {b.guest?.phone && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-neutral-400">
             <PhoneIcon className="h-3 w-3" />
             {b.guest.phone}
           </div>
@@ -84,24 +84,24 @@ const Row = ({ b }) => (
       </div>
     </td>
     <td className="px-4 py-4">
-      <div className="flex items-center gap-1.5 text-sm text-slate-900 font-medium">
-        <CalendarIcon className="h-4 w-4 text-slate-400" />
+      <div className="flex items-center gap-1.5 text-sm text-slate-900 dark:text-neutral-100 font-medium">
+        <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-400" />
         <span className="whitespace-nowrap">{fmtDate(b.checkIn, "dd MMM")} - {fmtDate(b.checkOut, "dd MMM yy")}</span>
       </div>
-      <p className="text-xs text-slate-500 mt-1 pl-5">{b.numberOfGuests} {b.numberOfGuests === 1 ? "huésped" : "huéspedes"}</p>
+      <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 pl-5">{b.numberOfGuests} {b.numberOfGuests === 1 ? "huésped" : "huéspedes"}</p>
     </td>
     <td className="px-4 py-4"><Badge status={b.booking_status} config={STATUS} /></td>
     <td className="px-4 py-4"><Badge status={b.payment_status} config={PAYMENT} /></td>
-    <td className="px-4 py-4 text-sm font-bold text-slate-900">{fmtMoney(b.total_price)}</td>
+    <td className="px-4 py-4 text-sm font-bold text-slate-900 dark:text-neutral-100">{fmtMoney(b.total_price)}</td>
   </tr>
 );
 
 const Filters = ({ f, stats, onChange, onClear, onRefresh }) => (
-  <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 shadow-sm border border-slate-200">
+  <div className="bg-gradient-to-br from-white to-slate-50 dark:from-neutral-800 dark:to-neutral-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-neutral-700">
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
       {stats?.propertyStats?.length > 0 && (
         <select value={f.property_id} onChange={(e) => onChange('property_id', e.target.value)}
-          className="px-3 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+          className="px-3 py-2.5 border border-slate-300 dark:border-neutral-600 rounded-xl text-sm bg-white dark:bg-neutral-700 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
           <option value="">📍 Todas</option>
           {stats.propertyStats.map(p => (
             <option key={p.property_id} value={p.property_id}>{p.title} ({p.total})</option>
@@ -191,11 +191,11 @@ const HostBookings = () => {
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Reservas Recibidas</h1>
-            <p className="mt-2 text-slate-600">Gestiona todas las reservas de tus propiedades</p>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-neutral-100 tracking-tight">Reservas Recibidas</h1>
+            <p className="mt-2 text-slate-600 dark:text-neutral-400">Gestiona todas las reservas de tus propiedades</p>
           </div>
           <button onClick={() => setShowFilters(!showFilters)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-md transition-all duration-200">
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-neutral-200 bg-white dark:bg-neutral-800 border-2 border-slate-200 dark:border-neutral-600 rounded-xl hover:border-slate-300 dark:hover:border-neutral-500 hover:shadow-md transition-all duration-200">
             <FunnelIcon className="h-5 w-5" />
             {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
           </button>
@@ -227,29 +227,29 @@ const HostBookings = () => {
 
         {/* Table / Cards */}
         {bookings.length === 0 ? (
-          <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl p-16 text-center shadow-sm border border-slate-200">
-            <div className="inline-flex p-4 bg-slate-100 rounded-2xl mb-4">
-              <CalendarIcon className="h-12 w-12 text-slate-400" />
+          <div className="bg-gradient-to-br from-white to-slate-50 dark:from-neutral-800 dark:to-neutral-900 rounded-2xl p-16 text-center shadow-sm border border-slate-200 dark:border-neutral-700">
+            <div className="inline-flex p-4 bg-slate-100 dark:bg-neutral-700 rounded-2xl mb-4">
+              <CalendarIcon className="h-12 w-12 text-slate-400 dark:text-neutral-400" />
             </div>
-            <p className="text-lg font-semibold text-slate-900">No hay reservas</p>
-            <p className="mt-2 text-slate-600">Aquí aparecerán las reservas cuando lleguen</p>
+            <p className="text-lg font-semibold text-slate-900 dark:text-neutral-100">No hay reservas</p>
+            <p className="mt-2 text-slate-600 dark:text-neutral-400">Aquí aparecerán las reservas cuando lleguen</p>
           </div>
         ) : (
           <>
             {/* Vista Desktop - Tabla */}
-            <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="hidden lg:block bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-slate-200 dark:border-neutral-700 overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
+                <table className="min-w-full divide-y divide-slate-200 dark:divide-neutral-700">
+                  <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-neutral-700 dark:to-neutral-800">
                     <tr>
                       {['Reserva', 'Propiedad', 'Huésped', 'Fechas', 'Estado', 'Pago', 'Total'].map(h => (
-                        <th key={h} className="px-4 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
+                        <th key={h} className="px-4 py-4 text-left text-xs font-bold text-slate-600 dark:text-neutral-300 uppercase tracking-wider">
                           {h}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-neutral-700">
                     {bookings.map(b => <Row key={b.id} b={b} />)}
                   </tbody>
                 </table>

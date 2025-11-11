@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PendingBookingsBadge from '../components/PendingBookingsBadge';
+import ThemeToggle from '../components/ThemeToggle';
 import {
   HomeIcon,
   BuildingOfficeIcon,
@@ -12,7 +13,8 @@ import {
   XMarkIcon,
   ArrowLeftOnRectangleIcon,
   UserCircleIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 
 const DashboardLayout = () => {
@@ -47,7 +49,7 @@ const adminNavigation = [
   const navigation = isAdmin ? adminNavigation : (isHost ? hostNavigation : guestNavigation);
 
   return (
-    <div className="h-screen flex overflow-hidden bg-neutral-50">
+    <div className="h-screen flex overflow-hidden bg-neutral-50 dark:bg-neutral-900">
       {/* Sidebar móvil */}
       <div className={`md:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 flex z-40">
@@ -55,7 +57,7 @@ const adminNavigation = [
             <div className="absolute inset-0 bg-neutral-900 opacity-75"></div>
           </div>
 
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-large">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-neutral-800 shadow-large">
             <div className="absolute top-0 right-0 -mr-12 pt-2">
               <button
                 className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-300"
@@ -66,18 +68,41 @@ const adminNavigation = [
             </div>
 
             <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-              <div className="flex-shrink-0 flex items-center px-4">
-                <h1 className="text-xl font-bold text-accent-800">Arroyo Seco</h1>
+              <div className="flex-shrink-0 flex items-center justify-between px-4 mb-4">
+                <h1 className="text-xl font-bold text-accent-800 dark:text-accent-200">Arroyo Seco</h1>
+                <button
+                  onClick={() => {
+                    setSidebarOpen(false);
+                    navigate(-1);
+                  }}
+                  className="p-2 rounded-md transition-colors hover:bg-primary-100 dark:hover:bg-neutral-700"
+                  title="Regresar"
+                >
+                  <ArrowLeftIcon className="h-5 w-5 icon-interactive" />
+                </button>
               </div>
-              <nav className="mt-5 px-2 space-y-1">
+
+              {/* Botón para ir a la página principal */}
+              <div className="px-2 mb-2">
+                <Link
+                  to="/"
+                  onClick={() => setSidebarOpen(false)}
+                  className="group flex items-center px-2 py-2 text-base font-medium rounded-button transition-colors text-neutral-700 dark:text-neutral-200 hover:bg-primary-100 dark:hover:bg-neutral-700 hover:text-accent-800 dark:hover:text-accent-300"
+                >
+                  <HomeIcon className="mr-4 h-6 w-6 icon-interactive" />
+                  Página Principal
+                </Link>
+              </div>
+
+              <nav className="mt-3 px-2 space-y-1">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
                     className={`group flex items-center justify-between px-2 py-2 text-base font-medium rounded-button transition-colors ${
                       location.pathname === item.href
-                        ? 'bg-secondary-500 text-white'
-                        : 'text-neutral-700 hover:bg-primary-100 hover:text-accent-800'
+                        ? 'bg-secondary-500 text-white dark:bg-secondary-600'
+                        : 'text-neutral-700 dark:text-neutral-200 hover:bg-primary-100 dark:hover:bg-neutral-700 hover:text-accent-800 dark:hover:text-accent-300'
                     }`}
                   >
                     <div className="flex items-center">
@@ -90,14 +115,15 @@ const adminNavigation = [
               </nav>
             </div>
 
-            <div className="flex-shrink-0 flex border-t border-primary-200 p-4">
+            <div className="flex-shrink-0 flex border-t border-primary-200 dark:border-neutral-700 p-4">
               <div className="flex items-center w-full">
                 <UserCircleIcon className="h-10 w-10 icon-neutral" />
                 <div className="ml-3 flex-1">
-                  <p className="text-base font-medium text-accent-800">{user?.name}</p>
-                  <p className="text-sm font-medium text-neutral-600">{user?.role}</p>
+                  <p className="text-base font-medium text-accent-800 dark:text-accent-200">{user?.name}</p>
+                  <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">{user?.role}</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <ThemeToggle />
                   <Link
                     to={`/${user?.role}/settings`}
                     className="group transition-colors"
@@ -123,20 +149,32 @@ const adminNavigation = [
       {/* Sidebar desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-primary-200 shadow-soft">
+          <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-neutral-800 border-r border-primary-200 dark:border-neutral-700 shadow-soft">
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-              <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-xl font-bold text-accent-800">Arroyo Seco</h1>
+              <div className="flex items-center flex-shrink-0 px-4 mb-4">
+                <h1 className="text-xl font-bold text-accent-800 dark:text-accent-200">Arroyo Seco</h1>
               </div>
-              <nav className="mt-5 flex-1 px-2 bg-white space-y-1">
+
+              {/* Botón para ir a la página principal */}
+              <div className="px-2 mb-2">
+                <Link
+                  to="/"
+                  className="group flex items-center px-2 py-2 text-sm font-medium rounded-button transition-colors text-neutral-700 dark:text-neutral-200 hover:bg-primary-100 dark:hover:bg-neutral-700 hover:text-accent-800 dark:hover:text-accent-300"
+                >
+                  <HomeIcon className="mr-3 h-6 w-6 icon-interactive" />
+                  Página Principal
+                </Link>
+              </div>
+
+              <nav className="mt-3 flex-1 px-2 bg-white dark:bg-neutral-800 space-y-1">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
                     className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-button transition-colors ${
                       location.pathname === item.href
-                        ? 'bg-secondary-500 text-white'
-                        : 'text-neutral-700 hover:bg-primary-100 hover:text-accent-800'
+                        ? 'bg-secondary-500 text-white dark:bg-secondary-600'
+                        : 'text-neutral-700 dark:text-neutral-200 hover:bg-primary-100 dark:hover:bg-neutral-700 hover:text-accent-800 dark:hover:text-accent-300'
                     }`}
                   >
                     <div className="flex items-center">
@@ -149,14 +187,15 @@ const adminNavigation = [
               </nav>
             </div>
 
-            <div className="flex-shrink-0 flex border-t border-primary-200 p-4">
+            <div className="flex-shrink-0 flex border-t border-primary-200 dark:border-neutral-700 p-4">
               <div className="flex items-center w-full">
                 <UserCircleIcon className="h-10 w-10 icon-neutral" />
                 <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-accent-800">{user?.name}</p>
-                  <p className="text-xs font-medium text-neutral-600">{user?.role}</p>
+                  <p className="text-sm font-medium text-accent-800 dark:text-accent-200">{user?.name}</p>
+                  <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">{user?.role}</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <ThemeToggle />
                   <Link
                     to={`/${user?.role}/settings`}
                     className="group transition-colors"
@@ -180,10 +219,18 @@ const adminNavigation = [
 
       {/* Contenido principal */}
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        <div className="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-white border-b border-primary-100">
+        <div className="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-white dark:bg-neutral-800 border-b border-primary-100 dark:border-neutral-700 flex items-center gap-2">
           <button
-            className="h-12 w-12 inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary-500"
+            className="h-12 w-12 inline-flex items-center justify-center rounded-md transition-colors hover:bg-primary-100 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary-500"
+            onClick={() => navigate(-1)}
+            title="Regresar"
+          >
+            <ArrowLeftIcon className="h-6 w-6 icon-interactive" />
+          </button>
+          <button
+            className="h-12 w-12 inline-flex items-center justify-center rounded-md transition-colors hover:bg-primary-100 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary-500"
             onClick={() => setSidebarOpen(true)}
+            title="Menú"
           >
             <Bars3Icon className="h-6 w-6 icon-interactive" />
           </button>

@@ -107,8 +107,8 @@ const PropertyDetail = () => {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Título y ubicación */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-accent-900">{property.title}</h1>
-        <div className="flex items-center mt-2 text-neutral-600">
+        <h1 className="text-3xl font-bold text-accent-900 dark:text-accent-200">{property.title}</h1>
+        <div className="flex items-center mt-2 text-neutral-600 dark:text-neutral-400">
           <MapPinIcon className="h-5 w-5 mr-1" />
           <span>{property.location}</span>
         </div>
@@ -130,15 +130,15 @@ const PropertyDetail = () => {
                 <>
                   <button
                     onClick={prevImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-neutral-800/80 hover:bg-white dark:hover:bg-neutral-800 p-2 rounded-full"
                   >
-                    <ChevronLeftIcon className="h-6 w-6" />
+                    <ChevronLeftIcon className="h-6 w-6 text-neutral-900 dark:text-neutral-100" />
                   </button>
                   <button
                     onClick={nextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-neutral-800/80 hover:bg-white dark:hover:bg-neutral-800 p-2 rounded-full"
                   >
-                    <ChevronRightIcon className="h-6 w-6" />
+                    <ChevronRightIcon className="h-6 w-6 text-neutral-900 dark:text-neutral-100" />
                   </button>
                   
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
@@ -158,31 +158,31 @@ const PropertyDetail = () => {
 
           {/* Información de la propiedad */}
           <div className="card mb-6">
-            <h2 className="text-xl font-semibold mb-4">Descripción</h2>
-            <p className="text-neutral-600 whitespace-pre-line">{property.description}</p>
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Descripción</h2>
+            <p className="text-neutral-600 dark:text-neutral-300 whitespace-pre-line">{property.description}</p>
           </div>
 
           <div className="card mb-6">
-            <h2 className="text-xl font-semibold mb-4">Servicios</h2>
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Servicios</h2>
             <div className="grid grid-cols-2 gap-4">
               {property.services?.map(service => (
-                <div key={service.id} className="flex items-center">
+                <div key={service.id} className="flex items-center text-neutral-700 dark:text-neutral-200">
                   <span className="mr-2">{service.icon}</span>
                   <span>{service.name}</span>
                 </div>
-              )) || <p className="text-neutral-600">No hay servicios listados</p>}
+              )) || <p className="text-neutral-600 dark:text-neutral-400">No hay servicios listados</p>}
             </div>
           </div>
 
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Información del anfitrión</h2>
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Información del anfitrión</h2>
             <div className="flex items-center">
-              <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold mr-4">
+              <div className="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-700 dark:text-primary-300 font-semibold mr-4">
                 {property.host?.full_name?.charAt(0) || 'A'}
               </div>
               <div>
-                <p className="font-medium">{property.host?.full_name || 'Anfitrión'}</p>
-                <p className="text-sm text-neutral-600">{property.host?.email}</p>
+                <p className="font-medium text-neutral-900 dark:text-neutral-100">{property.host?.full_name || 'Anfitrión'}</p>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">{property.host?.email}</p>
               </div>
             </div>
           </div>
@@ -192,16 +192,16 @@ const PropertyDetail = () => {
         <div className="lg:col-span-1">
           <div className="card sticky top-4">
             <div className="flex items-baseline mb-4">
-              <span className="text-2xl font-bold text-accent-900">
+              <span className="text-2xl font-bold text-accent-900 dark:text-accent-200">
                 ${property.price_per_night}
               </span>
-              <span className="text-neutral-600 ml-2">/ noche</span>
+              <span className="text-neutral-600 dark:text-neutral-400 ml-2">MXN / noche</span>
             </div>
 
             <div className="space-y-4">
               {/* Fechas */}
               <div>
-                <label className="block text-sm font-medium mb-2">Check-in</label>
+                <label className="label">Check-in</label>
                 <DatePicker
                   selected={checkIn}
                   onChange={(date) => setCheckIn(date)}
@@ -215,7 +215,7 @@ const PropertyDetail = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Check-out</label>
+                <label className="label">Check-out</label>
                 <DatePicker
                   selected={checkOut}
                   onChange={(date) => setCheckOut(date)}
@@ -230,7 +230,7 @@ const PropertyDetail = () => {
 
               {/* Huéspedes */}
               <div>
-                <label className="block text-sm font-medium mb-2">Huéspedes</label>
+                <label className="label">Huéspedes</label>
                 <select
                   value={guests}
                   onChange={(e) => setGuests(parseInt(e.target.value))}
@@ -246,16 +246,16 @@ const PropertyDetail = () => {
 
               {/* Cálculo */}
               {nights > 0 && (
-                <div className="border-t pt-4">
+                <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-neutral-600">
+                    <span className="text-neutral-600 dark:text-neutral-400">
                       ${property.price_per_night} x {nights} {nights === 1 ? 'noche' : 'noches'}
                     </span>
-                    <span className="font-medium">${totalPrice.toFixed(2)}</span>
+                    <span className="font-medium text-neutral-900 dark:text-neutral-100">${totalPrice.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                    <span>Total</span>
-                    <span className="text-secondary-600">${totalPrice.toFixed(2)} MXN</span>
+                  <div className="flex justify-between font-semibold text-lg border-t border-neutral-200 dark:border-neutral-700 pt-2">
+                    <span className="text-neutral-900 dark:text-neutral-100">Total</span>
+                    <span className="text-secondary-600 dark:text-secondary-400">${totalPrice.toFixed(2)} MXN</span>
                   </div>
                 </div>
               )}

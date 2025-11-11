@@ -33,16 +33,16 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-neutral-50 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-neutral-100 dark:bg-neutral-800 py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center heading-1">
+        <h2 className="mt-6 text-center heading-1 text-accent-900 dark:text-neutral-100">
           Inicia sesión en tu cuenta
         </h2>
-        <p className="mt-2 text-center text-sm text-neutral-600">
+        <p className="mt-2 text-center text-sm text-neutral-600 dark:text-neutral-300">
           ¿No tienes cuenta?{' '}
           <Link
             to="/register"
-            className="font-medium text-secondary-600 hover:text-secondary-500"
+            className="font-medium text-secondary-600 hover:text-secondary-500 dark:text-secondary-400 dark:hover:text-secondary-300"
           >
             Regístrate aquí
           </Link>
@@ -53,7 +53,7 @@ const Login = () => {
         <div className="card">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="email" className="label">
                 Correo electrónico
               </label>
               <div className="mt-1">
@@ -76,7 +76,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
+              <label htmlFor="password" className="label">
                 Contraseña
               </label>
               <div className="mt-1 relative">
@@ -109,7 +109,7 @@ const Login = () => {
               <div className="text-sm">
                 <Link
                   to="/forgot-password"
-                  className="font-medium text-secondary-600 hover:text-secondary-500"
+                  className="font-medium text-secondary-600 dark:text-secondary-400 hover:text-secondary-500 dark:hover:text-secondary-300"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>

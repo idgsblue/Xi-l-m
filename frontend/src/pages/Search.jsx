@@ -73,8 +73,8 @@ const Search = () => {
   };
 
   return (
-    <div className="bg-neutral-50 min-h-screen">
-      <div className="sticky top-0 z-10 bg-white shadow-sm">
+    <div className="bg-neutral-50 dark:bg-neutral-900 min-h-screen">
+      <div className="sticky top-0 z-10 bg-white dark:bg-neutral-800 shadow-sm border-b border-neutral-200 dark:border-neutral-700">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <SearchBar initialValues={filters} />
         </div>
@@ -82,12 +82,12 @@ const Search = () => {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="heading-1">
+          <h1 className="heading-1 dark:text-neutral-100">
             {pagination.total} propiedades encontradas
           </h1>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-accent-900 shadow-sm ring-1 ring-inset border-neutral-300 hover:bg-primary-50"
+            className="inline-flex items-center rounded-md bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-accent-900 dark:text-accent-200 shadow-sm ring-1 ring-inset border-neutral-300 dark:border-neutral-600 hover:bg-primary-50 dark:hover:bg-neutral-700"
           >
             <FunnelIcon className="h-5 w-5 mr-2 icon-interactive" />
             Filtros
@@ -98,17 +98,17 @@ const Search = () => {
         {showFilters && (
           <div className="card mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="heading-2">Filtros</h3>
+              <h3 className="heading-2 dark:text-neutral-100">Filtros</h3>
               <button
                 onClick={() => setShowFilters(false)}
-                className="text-neutral-400 hover:text-neutral-500"
+                className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-500 dark:hover:text-neutral-400"
               >
                 <XMarkIcon className="h-6 w-6 icon-neutral" />
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="label">
                   Precio mínimo (MXN)
                 </label>
                 <input
@@ -121,7 +121,7 @@ const Search = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="label">
                   Precio máximo (MXN)
                 </label>
                 <input
@@ -134,7 +134,7 @@ const Search = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="label">
                   Número de huéspedes
                 </label>
                 <input
@@ -151,7 +151,7 @@ const Search = () => {
             <div className="mt-4 flex justify-end space-x-3">
               <button
                 onClick={clearFilters}
-                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-accent-900"
+                className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:text-accent-900 dark:hover:text-accent-200"
               >
                 Limpiar filtros
               </button>
@@ -191,7 +191,7 @@ const Search = () => {
                   <button
                     onClick={() => searchProperties(pagination.currentPage - 1)}
                     disabled={pagination.currentPage === 1}
-                    className="px-3 py-2 text-sm font-medium text-neutral-700 bg-white border border-primary-200 rounded-md hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-primary-200 dark:border-neutral-600 rounded-md hover:bg-primary-50 dark:hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Anterior
                   </button>
@@ -201,8 +201,8 @@ const Search = () => {
                       onClick={() => searchProperties(i + 1)}
                       className={`px-3 py-2 text-sm font-medium rounded-md ${
                         pagination.currentPage === i + 1
-                          ? 'bg-secondary-600 text-white'
-                          : 'text-neutral-700 bg-white border border-primary-200 hover:bg-primary-50'
+                          ? 'bg-secondary-600 dark:bg-secondary-700 text-white'
+                          : 'text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-primary-200 dark:border-neutral-600 hover:bg-primary-50 dark:hover:bg-neutral-700'
                       }`}
                     >
                       {i + 1}
@@ -211,7 +211,7 @@ const Search = () => {
                   <button
                     onClick={() => searchProperties(pagination.currentPage + 1)}
                     disabled={pagination.currentPage === pagination.pages}
-                    className="px-3 py-2 text-sm font-medium text-neutral-700 bg-white border border-primary-200 rounded-md hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-primary-200 dark:border-neutral-600 rounded-md hover:bg-primary-50 dark:hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Siguiente
                   </button>
@@ -221,10 +221,10 @@ const Search = () => {
           </>
         ) : (
           <div className="text-center py-12">
-            <p className="text-lg text-neutral-600">No se encontraron propiedades con los filtros seleccionados</p>
+            <p className="text-lg text-neutral-600 dark:text-neutral-400">No se encontraron propiedades con los filtros seleccionados</p>
             <button
               onClick={clearFilters}
-              className="mt-4 text-secondary-600 hover:text-secondary-500 font-medium"
+              className="mt-4 text-secondary-600 dark:text-secondary-400 hover:text-secondary-500 dark:hover:text-secondary-300 font-medium"
             >
               Limpiar filtros y buscar de nuevo
             </button>

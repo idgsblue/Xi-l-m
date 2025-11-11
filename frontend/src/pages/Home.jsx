@@ -26,13 +26,13 @@ const Home = () => {
 
   return (
     <div>
-      <section id="main-content" className="relative bg-gradient-accent py-32" tabIndex="-1">
+      <section id="main-content" className="bg-gradient-accent dark:bg-gradient-to-br dark:from-neutral-800 dark:to-neutral-900 py-32" tabIndex="-1">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="heading-1 text-white drop-shadow-md">
+            <h1 className="heading-1 text-white dark:text-neutral-100 drop-shadow-md">
               Descubre Arroyo Seco
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-xl text-primary-50">
+            <p className="mx-auto mt-6 max-w-2xl text-xl text-white dark:text-neutral-300 drop-shadow">
               Encuentra el alojamiento perfecto para tu próxima aventura en el corazón de Querétaro
             </p>
           </div>
@@ -42,13 +42,13 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="section bg-primary-50">
+      <section className="section bg-primary-50 dark:bg-neutral-900">
         <div className="container-custom">
           <div className="text-center">
-            <h2 className="heading-2">
+            <h2 className="heading-2 dark:text-neutral-100">
               Propiedades Destacadas
             </h2>
-            <p className="mt-4 text-lg text-neutral-700">
+            <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
               Explora nuestras mejores opciones de hospedaje
             </p>
           </div>
@@ -82,14 +82,14 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="bg-white section">
+      <section className="bg-white dark:bg-neutral-800 section">
         <div className="container-custom">
-          <div className="bg-gradient-primary rounded-2xl px-6 py-16 sm:p-16 shadow-large">
+          <div className="bg-gradient-primary dark:bg-gradient-to-br dark:from-neutral-700 dark:to-neutral-800 rounded-2xl px-6 py-16 sm:p-16 shadow-large">
             <div className="mx-auto max-w-xl text-center">
-              <h2 className="heading-2 text-accent-900">
+              <h2 className="heading-2 text-accent-900 dark:text-accent-200">
                 ¿Tienes una propiedad en Arroyo Seco?
               </h2>
-              <p className="mt-6 text-lg text-accent-700">
+              <p className="mt-6 text-lg text-accent-700 dark:text-neutral-300">
                 Únete a nuestra plataforma y comienza a recibir huéspedes de todo México
               </p>
               <Link

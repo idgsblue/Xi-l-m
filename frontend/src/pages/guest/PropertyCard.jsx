@@ -29,30 +29,30 @@ const imageUrl = property.images && property.images.length > 0
       </div>
       
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-accent-900 group-hover:text-secondary-600 transition-colors">
+        <h3 className="text-lg font-semibold text-accent-900 dark:text-accent-200 group-hover:text-secondary-600 dark:group-hover:text-secondary-400 transition-colors">
           {property.title}
         </h3>
 
-        <div className="mt-1 flex items-center text-sm text-neutral-600">
+        <div className="mt-1 flex items-center text-sm text-neutral-600 dark:text-neutral-400">
           <MapPinIcon className="h-4 w-4 mr-1 icon-accent" />
           <span className="truncate">{property.location}</span>
         </div>
 
-        <p className="mt-2 text-sm text-neutral-600 line-clamp-2">
+        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
           {property.shortDescription || property.description}
         </p>
 
         <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center text-sm text-neutral-600">
+          <div className="flex items-center text-sm text-neutral-600 dark:text-neutral-400">
             <UsersIcon className="h-4 w-4 mr-1 icon-neutral" />
             <span>{property.capacity} huéspedes</span>
           </div>
 
           <div className="text-right">
-            <span className="text-lg font-bold text-accent-900">
+            <span className="text-lg font-bold text-accent-900 dark:text-accent-200">
             ${parseFloat(property.price_per_night).toFixed(2)}
             </span>
-            <span className="text-sm text-neutral-600"> /noche</span>
+            <span className="text-sm text-neutral-600 dark:text-neutral-400"> /noche</span>
           </div>
         </div>
       </div>

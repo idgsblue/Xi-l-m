@@ -123,12 +123,12 @@ const PropertyDetail = () => {
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-white dark:bg-neutral-900">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Título y ubicación */}
         <div className="mb-6">
-          <h1 className="heading-1">{property.title}</h1>
-          <div className="mt-2 flex items-center text-neutral-600">
+          <h1 className="heading-1 dark:text-neutral-100">{property.title}</h1>
+          <div className="mt-2 flex items-center text-neutral-600 dark:text-neutral-400">
             <MapPinIcon className="h-5 w-5 mr-1 icon-accent" />
             <span>{property.location}</span>
           </div>
@@ -164,17 +164,17 @@ const PropertyDetail = () => {
           </div>
 
           {/* Panel de reserva */}
-          <div className="bg-primary-50 rounded-lg p-6">
+          <div className="bg-primary-50 dark:bg-neutral-800 rounded-lg p-6 border border-neutral-200 dark:border-neutral-700">
             <div className="mb-4">
-              <span className="text-3xl font-bold text-accent-900">
+              <span className="text-3xl font-bold text-accent-900 dark:text-accent-200">
                 ${parseFloat(property.price_per_night).toFixed(2)}
               </span>
-              <span className="text-neutral-600"> MXN / noche</span>
+              <span className="text-neutral-600 dark:text-neutral-400"> MXN / noche</span>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="label">
                   Check-in
                 </label>
                 <DatePicker
@@ -193,7 +193,7 @@ const PropertyDetail = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="label">
                   Check-out
                 </label>
                 <DatePicker
@@ -212,7 +212,7 @@ const PropertyDetail = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                <label className="label">
                   Huéspedes
                 </label>
                 <select
@@ -229,14 +229,14 @@ const PropertyDetail = () => {
               </div>
 
               {availability && (
-                <div className="border-t pt-4">
-                  <div className="flex justify-between text-sm">
+                <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                  <div className="flex justify-between text-sm text-neutral-700 dark:text-neutral-300">
                     <span>
                       ${parseFloat(property.price_per_night).toFixed(2)} x {availability.nights} noches
                     </span>
                     <span>${availability.totalPrice}</span>
                   </div>
-                  <div className="mt-2 flex justify-between font-semibold">
+                  <div className="mt-2 flex justify-between font-semibold text-neutral-900 dark:text-neutral-100">
                     <span>Total</span>
                     <span>${availability.totalPrice} MXN</span>
                   </div>
@@ -267,36 +267,36 @@ const PropertyDetail = () => {
         {/* Información de la propiedad */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="border-b pb-6 mb-6">
-              <h2 className="heading-2 mb-4">
+            <div className="border-b border-neutral-200 dark:border-neutral-700 pb-6 mb-6">
+              <h2 className="heading-2 mb-4 dark:text-neutral-100">
                 Acerca de este lugar
               </h2>
-              <p className="text-neutral-600">{property.description}</p>
+              <p className="text-neutral-600 dark:text-neutral-300">{property.description}</p>
             </div>
 
-            <div className="border-b pb-6 mb-6">
-              <h2 className="heading-2 mb-4">
+            <div className="border-b border-neutral-200 dark:border-neutral-700 pb-6 mb-6">
+              <h2 className="heading-2 mb-4 dark:text-neutral-100">
                 Tipo de alojamiento
               </h2>
-              <div className="flex items-center">
+              <div className="flex items-center text-neutral-900 dark:text-neutral-100">
                 <HomeIcon className="h-5 w-5 mr-3 icon-neutral" />
                 <span>{property.accommodationType?.name}</span>
               </div>
             </div>
 
-            <div className="border-b pb-6 mb-6">
-              <h2 className="heading-2 mb-4">
+            <div className="border-b border-neutral-200 dark:border-neutral-700 pb-6 mb-6">
+              <h2 className="heading-2 mb-4 dark:text-neutral-100">
                 Capacidad
               </h2>
-              <div className="flex items-center">
+              <div className="flex items-center text-neutral-900 dark:text-neutral-100">
                 <UsersIcon className="h-5 w-5 mr-3 icon-neutral" />
                 <span>Hasta {property.capacity} huéspedes</span>
               </div>
             </div>
 
             {property.services && property.services.length > 0 && (
-              <div className="border-b pb-6 mb-6">
-                <h2 className="heading-2 mb-4">
+              <div className="border-b border-neutral-200 dark:border-neutral-700 pb-6 mb-6">
+                <h2 className="heading-2 mb-4 dark:text-neutral-100">
                   Servicios
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
@@ -304,9 +304,9 @@ const PropertyDetail = () => {
                     <div key={service.id} className="flex items-center">
                       <SparklesIcon className="h-5 w-5 mr-2 icon-accent" />
                       <div>
-                        <p className="font-medium text-neutral-900">{service.name}</p>
+                        <p className="font-medium text-neutral-900 dark:text-neutral-100">{service.name}</p>
                         {service.description && (
-                          <p className="text-sm text-neutral-600">{service.description}</p>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">{service.description}</p>
                         )}
                       </div>
                     </div>
@@ -318,27 +318,27 @@ const PropertyDetail = () => {
 
           <div>
             <div className="card mb-6">
-              <h3 className="heading-2 mb-4">
+              <h3 className="heading-2 mb-4 dark:text-neutral-100">
                 Anfitrión
               </h3>
               <div className="flex items-center">
-                <div className="h-12 w-12 rounded-full bg-primary-300 flex items-center justify-center">
-                  <span className="text-xl font-semibold text-neutral-600">
+                <div className="h-12 w-12 rounded-full bg-primary-300 dark:bg-primary-700 flex items-center justify-center">
+                  <span className="text-xl font-semibold text-neutral-600 dark:text-neutral-300">
                     {property.host?.full_name?.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="ml-4">
-                  <p className="font-medium text-accent-900">{property.host?.full_name}</p>
-                  <p className="text-sm text-neutral-600">Anfitrión verificado</p>
+                  <p className="font-medium text-accent-900 dark:text-accent-200">{property.host?.full_name}</p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Anfitrión verificado</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-secondary-50 rounded-lg p-6">
-              <h3 className="heading-2 mb-2">
+            <div className="bg-secondary-50 dark:bg-neutral-800 rounded-lg p-6 border border-neutral-200 dark:border-neutral-700">
+              <h3 className="heading-2 mb-2 dark:text-neutral-100">
                 Política de cancelación
               </h3>
-              <ul className="text-sm text-neutral-600 space-y-1">
+              <ul className="text-sm text-neutral-600 dark:text-neutral-300 space-y-1">
                 <li>• Cancelación gratuita hasta 7 días antes</li>
                 <li>• 50% de reembolso hasta 3 días antes</li>
                 <li>• Sin reembolso con menos de 3 días</li>

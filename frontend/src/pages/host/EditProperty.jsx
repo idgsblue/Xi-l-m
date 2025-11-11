@@ -107,12 +107,12 @@ const EditProperty = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-accent-900 mb-8">Editar Propiedad</h1>
+      <h1 className="text-3xl font-bold text-accent-900 dark:text-accent-200 mb-8">Editar Propiedad</h1>
 
       <form onSubmit={handleSubmit} className="max-w-3xl">
         <div className="card space-y-6">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label className="label">
               Título *
             </label>
             <input
@@ -126,7 +126,7 @@ const EditProperty = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label className="label">
               Descripción *
             </label>
             <textarea
@@ -140,7 +140,7 @@ const EditProperty = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label className="label">
               Ubicación *
             </label>
             <input
@@ -155,7 +155,7 @@ const EditProperty = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
+              <label className="label">
                 Precio por noche (MXN) *
               </label>
               <input
@@ -170,7 +170,7 @@ const EditProperty = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
+              <label className="label">
                 Huéspedes máximos *
               </label>
               <input
@@ -188,22 +188,22 @@ const EditProperty = () => {
           {/* Servicios */}
           {services.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-3">
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
                 Servicios
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {services.map((service) => (
                   <label
                     key={service.id}
-                    className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-neutral-50 transition-colors"
+                    className="flex items-center p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
                   >
                     <input
                       type="checkbox"
                       checked={selectedServices.includes(service.id)}
                       onChange={() => handleServiceToggle(service.id)}
-                      className="mr-3 h-4 w-4 text-secondary-600 focus:ring-secondary-500 border-neutral-300 rounded"
+                      className="mr-3 h-4 w-4 text-secondary-600 focus:ring-secondary-500 border-neutral-300 dark:border-neutral-600 rounded"
                     />
-                    <span className="text-sm text-neutral-700">{service.name}</span>
+                    <span className="text-sm text-neutral-700 dark:text-neutral-200">{service.name}</span>
                   </label>
                 ))}
               </div>

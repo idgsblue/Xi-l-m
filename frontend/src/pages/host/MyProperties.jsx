@@ -214,12 +214,12 @@ const MyProperties = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8 pb-6 border-b-2 border-gray-100">
+      <div className="flex justify-between items-center mb-8 pb-6 border-b-2 border-gray-100 dark:border-neutral-700">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-900 to-accent-700 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent-900 to-accent-700 dark:from-accent-200 dark:to-accent-300 bg-clip-text text-transparent">
             Mis Propiedades
           </h1>
-          <p className="mt-2 text-neutral-600 text-lg">Administra tus propiedades publicadas</p>
+          <p className="mt-2 text-neutral-600 dark:text-neutral-300 text-lg">Administra tus propiedades publicadas</p>
         </div>
         <Link
           to="/host/properties/add"
@@ -231,18 +231,18 @@ const MyProperties = () => {
       </div>
 
       {/* Información sobre el proceso de aprobación */}
-      <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-blue-400 dark:border-blue-500 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="flex">
           <div className="flex-shrink-0">
-            <ExclamationCircleIcon className="h-6 w-6 text-blue-500" />
+            <ExclamationCircleIcon className="h-6 w-6 text-blue-500 dark:text-blue-400" />
           </div>
           <div className="ml-4 flex-1">
-            <h3 className="text-base font-semibold text-blue-900 mb-3">
+            <h3 className="text-base font-semibold text-blue-900 dark:text-blue-200 mb-3">
               Proceso de Aprobación
             </h3>
-            <div className="space-y-2 text-sm text-blue-800">
+            <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
               <div className="flex items-start">
-                <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-200 text-blue-800 font-bold text-xs mr-3 flex-shrink-0">1</span>
+                <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-200 dark:bg-blue-700 text-blue-800 dark:text-blue-100 font-bold text-xs mr-3 flex-shrink-0">1</span>
                 <p>Las propiedades nuevas quedan en estado <strong>"Pendiente de Aprobación"</strong></p>
               </div>
               <div className="flex items-start">
@@ -263,12 +263,12 @@ const MyProperties = () => {
       </div>
 
       {properties.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-          <div className="bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-            <HomeIcon className="h-12 w-12 text-neutral-500" />
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-lg p-12 text-center border border-gray-100 dark:border-neutral-700 hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-700 dark:to-neutral-800 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+            <HomeIcon className="h-12 w-12 text-neutral-500 dark:text-neutral-300" />
           </div>
-          <h3 className="text-2xl font-bold text-accent-900 mb-2">No tienes propiedades</h3>
-          <p className="text-neutral-600 mb-8 text-lg">Comienza agregando tu primera propiedad</p>
+          <h3 className="text-2xl font-bold text-accent-900 dark:text-accent-200 mb-2">No tienes propiedades</h3>
+          <p className="text-neutral-600 dark:text-neutral-300 mb-8 text-lg">Comienza agregando tu primera propiedad</p>
           <div className="mt-6">
             <Link
               to="/host/properties/add"
@@ -280,57 +280,57 @@ const MyProperties = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+        <div className="bg-white dark:bg-neutral-800 shadow-xl rounded-2xl overflow-hidden border border-gray-100 dark:border-neutral-700">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-neutral-50 to-gray-100">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+              <thead className="bg-gradient-to-r from-neutral-50 to-gray-100 dark:from-neutral-700 dark:to-neutral-800">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">
                     Propiedad
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">
                     Precio/Noche
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">
                     Tipo
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
+              <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-100 dark:divide-neutral-700">
                 {properties.map((property, index) => {
                   const actions = getAvailableActions(property);
                   
                   return (
-                    <tr 
+                    <tr
                       key={property.id}
-                      className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 transition-all duration-200 group"
+                      className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 dark:hover:from-neutral-700/50 dark:hover:to-blue-900/20 transition-all duration-200 group"
                     >
                       <td className="px-6 py-5 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-14 w-14 relative group-hover:scale-105 transition-transform duration-200">
                             {property.images && property.images.length > 0 ? (
                               <img
-                                className="h-14 w-14 rounded-xl object-cover shadow-md ring-2 ring-gray-200 group-hover:ring-primary-400 transition-all duration-200"
+                                className="h-14 w-14 rounded-xl object-cover shadow-md ring-2 ring-gray-200 dark:ring-neutral-600 group-hover:ring-primary-400 transition-all duration-200"
                                 src={property.images[0]?.image_url || property.images[0]}
                                 alt={property.title}
                               />
                             ) : (
-                              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-neutral-200 to-neutral-300 flex items-center justify-center shadow-md ring-2 ring-gray-200">
-                                <HomeIcon className="h-7 w-7 text-neutral-500" />
+                              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800 flex items-center justify-center shadow-md ring-2 ring-gray-200 dark:ring-neutral-600">
+                                <HomeIcon className="h-7 w-7 text-neutral-500 dark:text-neutral-300" />
                               </div>
                             )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-semibold text-accent-900 group-hover:text-primary-700 transition-colors duration-200">
+                            <div className="text-sm font-semibold text-accent-900 dark:text-accent-200 group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors duration-200">
                               {property.title}
                             </div>
-                            <div className="text-sm text-neutral-500 mt-1">
+                            <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                               {property.location}
                             </div>
                           </div>
@@ -340,13 +340,13 @@ const MyProperties = () => {
                         {getStatusBadge(property)}
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap">
-                        <div className="text-base font-bold text-accent-900">
+                        <div className="text-base font-bold text-accent-900 dark:text-accent-200">
                           ${property.price_per_night}
                         </div>
-                        <div className="text-xs text-neutral-500">MXN / noche</div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">MXN / noche</div>
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap">
-                        <span className="text-sm text-neutral-700 bg-neutral-100 px-3 py-1 rounded-full font-medium">
+                        <span className="text-sm text-neutral-700 dark:text-neutral-200 bg-neutral-100 dark:bg-neutral-700 px-3 py-1 rounded-full font-medium">
                           {property.accommodationType?.name || 'Sin tipo'}
                         </span>
                       </td>
@@ -412,7 +412,7 @@ const MyProperties = () => {
                             {actions.canUnadvertise && (
                               <button
                                 onClick={() => handleUnadvertise(property.id)}
-                                className="inline-flex items-center px-3 py-1.5 border-2 border-neutral-300 text-xs font-medium rounded-lg text-neutral-700 bg-white hover:bg-neutral-50 hover:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                                className="inline-flex items-center px-3 py-1.5 border-2 border-neutral-300 dark:border-neutral-600 text-xs font-medium rounded-lg text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
                               >
                                 <EyeSlashIcon className="h-4 w-4 mr-1" />
                                 Despublicar
@@ -441,60 +441,60 @@ const MyProperties = () => {
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
-            <div className="inline-block align-bottom bg-white rounded-2xl px-6 pt-6 pb-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
+            <div className="inline-block align-bottom bg-white dark:bg-neutral-800 rounded-2xl px-6 pt-6 pb-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-neutral-700">
               <div>
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-green-100 to-green-200 shadow-lg">
-                  <MegaphoneIcon className="h-8 w-8 text-green-600" />
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 shadow-lg">
+                  <MegaphoneIcon className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="mt-4 text-center">
-                  <h3 className="text-2xl leading-6 font-bold text-accent-900 mb-2" id="modal-title">
+                  <h3 className="text-2xl leading-6 font-bold text-accent-900 dark:text-accent-200 mb-2" id="modal-title">
                     Anunciar Propiedad
                   </h3>
-                  <div className="mt-3 bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-neutral-600">
+                  <div className="mt-3 bg-gray-50 dark:bg-neutral-700 rounded-lg p-4">
+                    <p className="text-sm text-neutral-600 dark:text-neutral-300">
                       Estás por anunciar:
                     </p>
-                    <p className="text-base font-bold text-accent-900 mt-1">
+                    <p className="text-base font-bold text-accent-900 dark:text-accent-200 mt-1">
                       {selectedPropertyForAdvertise.title}
                     </p>
                   </div>
 
                   {/* Información de Comisión */}
                   {selectedPropertyForAdvertise.accommodationType && (
-                    <div className="mt-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-5 text-sm shadow-sm">
-                      <h4 className="font-bold text-blue-900 mb-4 text-base flex items-center justify-center">
+                    <div className="mt-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-xl p-5 text-sm shadow-sm">
+                      <h4 className="font-bold text-blue-900 dark:text-blue-200 mb-4 text-base flex items-center justify-center">
                         <span className="text-2xl mr-2">💰</span>
                         Desglose de Ingresos
                       </h4>
                       <div className="space-y-3">
-                        <div className="flex justify-between items-center bg-white rounded-lg p-3 shadow-sm">
-                          <span className="text-neutral-700 font-medium">Precio por noche:</span>
-                          <span className="font-bold text-accent-900 text-lg">
+                        <div className="flex justify-between items-center bg-white dark:bg-neutral-700 rounded-lg p-3 shadow-sm">
+                          <span className="text-neutral-700 dark:text-neutral-200 font-medium">Precio por noche:</span>
+                          <span className="font-bold text-accent-900 dark:text-accent-200 text-lg">
                             ${parseFloat(selectedPropertyForAdvertise.price_per_night).toFixed(2)} MXN
                           </span>
                         </div>
                         
                         {selectedPropertyForAdvertise.accommodationType.platform_commission_percentage && (
                           <>
-                            <div className="flex justify-between items-center bg-white rounded-lg p-3 shadow-sm">
-                              <span className="text-red-600 font-medium">
+                            <div className="flex justify-between items-center bg-white dark:bg-neutral-700 rounded-lg p-3 shadow-sm">
+                              <span className="text-red-600 dark:text-red-400 font-medium">
                                 Comisión ({selectedPropertyForAdvertise.accommodationType.platform_commission_percentage}%):
                               </span>
-                              <span className="font-bold text-red-600">
+                              <span className="font-bold text-red-600 dark:text-red-400">
                                 -${(
-                                  (parseFloat(selectedPropertyForAdvertise.price_per_night) * 
+                                  (parseFloat(selectedPropertyForAdvertise.price_per_night) *
                                   parseFloat(selectedPropertyForAdvertise.accommodationType.platform_commission_percentage)) / 100
                                 ).toFixed(2)} MXN
                               </span>
                             </div>
-                            
-                            <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg p-3 shadow-md border-2 border-green-300">
+
+                            <div className="bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 rounded-lg p-3 shadow-md border-2 border-green-300 dark:border-green-700">
                               <div className="flex justify-between items-center">
-                                <span className="text-green-800 font-bold">Tu ganancia neta:</span>
-                                <span className="text-green-700 font-bold text-lg">
+                                <span className="text-green-800 dark:text-green-200 font-bold">Tu ganancia neta:</span>
+                                <span className="text-green-700 dark:text-green-300 font-bold text-lg">
                                   ${(
-                                    parseFloat(selectedPropertyForAdvertise.price_per_night) - 
-                                    (parseFloat(selectedPropertyForAdvertise.price_per_night) * 
+                                    parseFloat(selectedPropertyForAdvertise.price_per_night) -
+                                    (parseFloat(selectedPropertyForAdvertise.price_per_night) *
                                     parseFloat(selectedPropertyForAdvertise.accommodationType.platform_commission_percentage)) / 100
                                   ).toFixed(2)} MXN
                                 </span>
@@ -504,8 +504,8 @@ const MyProperties = () => {
                         )}
                       </div>
                       
-                      <div className="mt-4 bg-blue-100 border border-blue-300 rounded-lg p-3">
-                        <p className="text-xs text-blue-800 font-medium flex items-center">
+                      <div className="mt-4 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg p-3">
+                        <p className="text-xs text-blue-800 dark:text-blue-200 font-medium flex items-center">
                           <span className="text-lg mr-2">ℹ️</span>
                           La comisión se aplica automáticamente en cada reserva
                         </p>
@@ -513,8 +513,8 @@ const MyProperties = () => {
                     </div>
                   )}
 
-                  <div className="mt-4 bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 rounded-lg p-4 shadow-sm">
-                    <p className="text-sm text-amber-900 font-medium flex items-start">
+                  <div className="mt-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-l-4 border-amber-400 dark:border-amber-600 rounded-lg p-4 shadow-sm">
+                    <p className="text-sm text-amber-900 dark:text-amber-200 font-medium flex items-start">
                       <span className="text-xl mr-2 flex-shrink-0">⚠️</span>
                       <span>
                         <strong>Nota:</strong> Una vez anunciada, la propiedad será visible para todos los huéspedes en la plataforma.
@@ -531,7 +531,7 @@ const MyProperties = () => {
                     setSelectedPropertyForAdvertise(null);
                   }}
                   disabled={advertisingId === selectedPropertyForAdvertise.id}
-                  className="w-full inline-flex justify-center items-center rounded-xl border-2 border-neutral-300 shadow-sm px-5 py-3 bg-white text-base font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500 transition-all duration-200 transform hover:scale-105 active:scale-95"
+                  className="w-full inline-flex justify-center items-center rounded-xl border-2 border-neutral-300 dark:border-neutral-600 shadow-sm px-5 py-3 bg-white dark:bg-neutral-700 text-base font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500 transition-all duration-200 transform hover:scale-105 active:scale-95"
                 >
                   Cancelar
                 </button>
