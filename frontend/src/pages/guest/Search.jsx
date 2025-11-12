@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import PropertyCard from './PropertyCard';
 import api from '../../services/api';
 import accommodationTypeService from '../../services/accommodationType.service';
 import serviceService from '../../services/service.service';
 import { toast } from 'react-toastify';
-import { 
-  FunnelIcon, 
-  XMarkIcon,
-  AdjustmentsHorizontalIcon 
-} from '@heroicons/react/24/outline';
+import { FunnelIcon, XMarkIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Catálogos
   const [accommodationTypes, setAccommodationTypes] = useState([]);
   const [services, setServices] = useState([]);
@@ -35,78 +33,118 @@ const Search = () => {
   const [resultsCount, setResultsCount] = useState(0);
 
   useEffect(() => {
-    loadCatalogs();
+    (async () => {
+      try {
+        const [typesRes, servicesRes] = await Promise.all([
+          accommodationTypeService.getAll(),
+          serviceService.getAll()
+        ]);
+        setAccommodationTypes(typesRes.accommodationTypes || []);
+        setServices(servicesRes.services || []);
+      } catch (e) {
+        console.error('Error cargando catálogos:', e);
+      }
+    })();
   }, []);
 
+  // ------- Construye SIEMPRE el querystring final que vas a mandar al backend -------
+  const finalQS = useMemo(() => {
+    const sp = new URLSearchParams(searchParams.toString());
+    const qs = new URLSearchParams();
+
+    // Básicos que vienen de la barra
+    const zone = sp.get('zone');
+    const checkIn = sp.get('checkIn');   // YYYY-MM-DD
+    const checkOut = sp.get('checkOut'); // YYYY-MM-DD
+    const guests = sp.get('guests');
+    const guestsExact = sp.get('guestsExact') || (guests ? '1' : '');
+
+    if (zone) qs.set('zone', zone);                // 👈 nombre que espera tu backend
+    if (checkIn) qs.set('checkIn', checkIn);
+    if (checkOut) qs.set('checkOut', checkOut);
+    if (guests) qs.set('guests', guests);
+    if (guestsExact) qs.set('guestsExact', guestsExact);
+
+    // Filtros avanzados (desde estado local)
+    if (filters.minPrice) qs.set('minPrice', filters.minPrice);
+    if (filters.maxPrice) qs.set('maxPrice', filters.maxPrice);
+    if (filters.accommodationType) qs.set('accommodation_type_id', filters.accommodationType);
+    if (filters.services.length > 0) qs.set('services', filters.services.join(','));
+    if (filters.minRating) qs.set('minRating', filters.minRating);
+    if (filters.sortBy) qs.set('sortBy', filters.sortBy);
+
+    // Paginación (si manejas page/limit, agrégala aquí)
+    const page = Number(sp.get('page') || 1);
+    const limit = Number(sp.get('limit') || 12);
+    qs.set('page', String(page));
+    qs.set('limit', String(limit));
+
+    return qs.toString();
+  }, [searchParams, filters]);
+
+  // ------- Dispara la búsqueda cada que cambie el querystring final -------
   useEffect(() => {
-    searchProperties();
-  }, [searchParams]);
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        const url = `/properties?${finalQS}`;
+        console.debug('👉 GET', url);
+        const response = await api.get(url); // 👈 pásalo en la URL, no en { params }
+        let results = response.data.properties || [];
 
-  const loadCatalogs = async () => {
-    try {
-      const [typesRes, servicesRes] = await Promise.all([
-        accommodationTypeService.getAll(),
-        serviceService.getAll()
-      ]);
+        // guestsExact client-side (por si el backend no lo hace)
+        const sp = new URLSearchParams(searchParams.toString());
+        const guestsParam = sp.get('guests');
+        const guestsExact = sp.get('guestsExact');
+        if (guestsParam) {
+          const g = Number(guestsParam);
+          if (!Number.isNaN(g)) {
+            if (guestsExact === '1') {
+              results = results.filter(p => Number(p.capacity) === g);
+            } else {
+              results = results.filter(p => Number(p.capacity) >= g);
+            }
+          }
+        }
 
-      setAccommodationTypes(typesRes.accommodationTypes || []);
-      setServices(servicesRes.services || []);
-    } catch (error) {
-      console.error('Error cargando catálogos:', error);
-    }
-  };
+        // services client-side (fallback)
+        if (filters.services.length > 0) {
+          results = results.filter(property =>
+            property.services?.some(s => filters.services.includes(String(s.id)))
+          );
+        }
 
-  const searchProperties = async () => {
-    try {
-      setLoading(true);
-      
-      const params = {
-        location: searchParams.get('zone') || '',
-        checkIn: searchParams.get('checkIn') || '',
-        checkOut: searchParams.get('checkOut') || '',
-        guests: searchParams.get('guests') || '',
-        minPrice: filters.minPrice,
-        maxPrice: filters.maxPrice,
-        accommodation_type_id: filters.accommodationType,
-        // services: filters.services.join(','), // Si tu backend lo soporta
-        // minRating: filters.minRating,
-        sortBy: filters.sortBy
-      };
+        // Ordenamiento
+        results = sortProperties(results, filters.sortBy);
 
-      // Limpiar parámetros vacíos
-      Object.keys(params).forEach(key => {
-        if (!params[key]) delete params[key];
-      });
-
-      const response = await api.get('/properties', { params });
-      
-      let results = response.data.properties || [];
-      setResultsCount(results.length);
-
-      // Aplicar filtros del lado del cliente (si el backend no los soporta)
-      if (filters.services.length > 0) {
-        results = results.filter(property => 
-          property.services?.some(s => 
-            filters.services.includes(s.id.toString())
-          )
-        );
+        if (!cancelled) {
+          setResultsCount(results.length);
+          setProperties(results);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('Error al buscar propiedades');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+    })();
+    return () => { cancelled = true; };
+  }, [finalQS]); // 👈 clave: cambia la URL => cambia la petición
 
-      // Ordenamiento
-      results = sortProperties(results, filters.sortBy);
-
-      setProperties(results);
-    } catch (error) {
-      toast.error('Error al buscar propiedades');
-      console.error(error);
-    } finally {
-      setLoading(false);
+  // Si cambia el query externo (desde SearchBar), resetea page a 1
+  useEffect(() => {
+    const sp = new URLSearchParams(searchParams.toString());
+    // si quieres resetear paginación cuando cambien filtros base
+    if (location.search.includes('zone=') || location.search.includes('checkIn=') || location.search.includes('checkOut=') || location.search.includes('guests=')) {
+      sp.set('page', '1');
+      setSearchParams(sp, { replace: true });
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const sortProperties = (props, sortBy) => {
     const sorted = [...props];
-    
     switch (sortBy) {
       case 'price-asc':
         return sorted.sort((a, b) => parseFloat(a.price_per_night) - parseFloat(b.price_per_night));
@@ -116,14 +154,9 @@ const Search = () => {
         return sorted.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
       case 'recommended':
       default:
-        // Algoritmo recomendado: rating 40%, disponibilidad 30%, precio 20%, fotos 10%
         return sorted.sort((a, b) => {
-          const scoreA = 
-            (a.average_rating || 3) * 0.4 +
-            (a.images?.length || 0) * 0.1;
-          const scoreB = 
-            (b.average_rating || 3) * 0.4 +
-            (b.images?.length || 0) * 0.1;
+          const scoreA = (a.average_rating || 3) * 0.4 + (a.images?.length || 0) * 0.1;
+          const scoreB = (b.average_rating || 3) * 0.4 + (b.images?.length || 0) * 0.1;
           return scoreB - scoreA;
         });
     }
@@ -143,52 +176,33 @@ const Search = () => {
   };
 
   const applyFilters = () => {
-    // Actualizar URL con filtros
     const newParams = new URLSearchParams(searchParams);
-    
-    if (filters.minPrice) newParams.set('minPrice', filters.minPrice);
-    else newParams.delete('minPrice');
-    
-    if (filters.maxPrice) newParams.set('maxPrice', filters.maxPrice);
-    else newParams.delete('maxPrice');
-    
-    if (filters.accommodationType) newParams.set('accommodationType', filters.accommodationType);
-    else newParams.delete('accommodationType');
-    
-    if (filters.services.length > 0) newParams.set('services', filters.services.join(','));
-    else newParams.delete('services');
-    
-    if (filters.minRating) newParams.set('minRating', filters.minRating);
-    else newParams.delete('minRating');
-    
-    if (filters.sortBy) newParams.set('sortBy', filters.sortBy);
-    else newParams.delete('sortBy');
+    if (filters.minPrice) newParams.set('minPrice', filters.minPrice); else newParams.delete('minPrice');
+    if (filters.maxPrice) newParams.set('maxPrice', filters.maxPrice); else newParams.delete('maxPrice');
+    if (filters.accommodationType) newParams.set('accommodationType', filters.accommodationType); else newParams.delete('accommodationType');
+    if (filters.services.length > 0) newParams.set('services', filters.services.join(',')); else newParams.delete('services');
+    if (filters.minRating) newParams.set('minRating', filters.minRating); else newParams.delete('minRating');
+    if (filters.sortBy) newParams.set('sortBy', filters.sortBy); else newParams.delete('sortBy');
 
+    // reset page
+    newParams.set('page', '1');
     setSearchParams(newParams);
     setShowFilters(false);
   };
 
   const clearFilters = () => {
-    setFilters({
-      minPrice: '',
-      maxPrice: '',
-      accommodationType: '',
-      services: [],
-      minRating: '',
-      sortBy: 'recommended'
-    });
-
-    // Limpiar URL pero mantener búsqueda base
-    const newParams = new URLSearchParams();
-    if (searchParams.get('zone')) newParams.set('zone', searchParams.get('zone'));
-    if (searchParams.get('checkIn')) newParams.set('checkIn', searchParams.get('checkIn'));
-    if (searchParams.get('checkOut')) newParams.set('checkOut', searchParams.get('checkOut'));
-    if (searchParams.get('guests')) newParams.set('guests', searchParams.get('guests'));
-    
-    setSearchParams(newParams);
+    setFilters({ minPrice: '', maxPrice: '', accommodationType: '', services: [], minRating: '', sortBy: 'recommended' });
+    const base = new URLSearchParams();
+    if (searchParams.get('zone')) base.set('zone', searchParams.get('zone'));
+    if (searchParams.get('checkIn')) base.set('checkIn', searchParams.get('checkIn'));
+    if (searchParams.get('checkOut')) base.set('checkOut', searchParams.get('checkOut'));
+    if (searchParams.get('guests')) base.set('guests', searchParams.get('guests'));
+    base.set('page', '1');
+    base.set('limit', searchParams.get('limit') || '12');
+    setSearchParams(base);
   };
 
-  const activeFiltersCount = 
+  const activeFiltersCount =
     (filters.minPrice ? 1 : 0) +
     (filters.maxPrice ? 1 : 0) +
     (filters.accommodationType ? 1 : 0) +
@@ -215,27 +229,24 @@ const Search = () => {
         }} />
       </div>
 
-      {/* Header con resultados y botones */}
+      {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-accent-900">
             {resultsCount} {resultsCount === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}
           </h1>
           {searchParams.get('zone') && (
-            <p className="text-neutral-600 mt-1">
-              en {searchParams.get('zone')}
-            </p>
+            <p className="text-neutral-600 mt-1">en {searchParams.get('zone')}</p>
           )}
+          <p className="text-xs text-neutral-500 mt-1">
+            URL: <code>/properties?{finalQS}</code>
+          </p>
         </div>
 
         <div className="flex gap-3">
-          {/* Ordenar */}
           <select
             value={filters.sortBy}
-            onChange={(e) => {
-              handleFilterChange('sortBy', e.target.value);
-              setTimeout(applyFilters, 100);
-            }}
+            onChange={(e) => { handleFilterChange('sortBy', e.target.value); setTimeout(applyFilters, 100); }}
             className="input py-2"
           >
             <option value="recommended">Recomendado</option>
@@ -244,11 +255,7 @@ const Search = () => {
             <option value="rating">Mejor valorados</option>
           </select>
 
-          {/* Botón filtros */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="btn-secondary flex items-center relative"
-          >
+          <button onClick={() => setShowFilters(!showFilters)} className="btn-secondary flex items-center relative">
             <FunnelIcon className="h-5 w-5 mr-2" />
             Filtros
             {activeFiltersCount > 0 && (
@@ -260,7 +267,7 @@ const Search = () => {
         </div>
       </div>
 
-      {/* Panel de filtros avanzados */}
+      {/* Panel filtros */}
       {showFilters && (
         <div className="card mb-6 animate-fadeIn">
           <div className="flex justify-between items-center mb-4">
@@ -268,10 +275,7 @@ const Search = () => {
               <AdjustmentsHorizontalIcon className="h-5 w-5 mr-2" />
               Filtros avanzados
             </h3>
-            <button
-              onClick={() => setShowFilters(false)}
-              className="text-neutral-400 hover:text-neutral-600"
-            >
+            <button onClick={() => setShowFilters(false)} className="text-neutral-400 hover:text-neutral-600">
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -279,48 +283,20 @@ const Search = () => {
           <div className="space-y-6">
             {/* Rango de precio */}
             <div>
-              <label className="block text-sm font-medium mb-3">
-                💰 Rango de precio (MXN por noche)
-              </label>
+              <label className="block text-sm font-medium mb-3">💰 Rango de precio (MXN por noche)</label>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <input
-                    type="number"
-                    value={filters.minPrice}
-                    onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                    className="input"
-                    placeholder="Mínimo"
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="number"
-                    value={filters.maxPrice}
-                    onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                    className="input"
-                    placeholder="Máximo"
-                    min="0"
-                  />
-                </div>
+                <input type="number" value={filters.minPrice} onChange={(e) => handleFilterChange('minPrice', e.target.value)} className="input" placeholder="Mínimo" min="0" />
+                <input type="number" value={filters.maxPrice} onChange={(e) => handleFilterChange('maxPrice', e.target.value)} className="input" placeholder="Máximo" min="0" />
               </div>
             </div>
 
             {/* Tipo de alojamiento */}
             <div>
-              <label className="block text-sm font-medium mb-3">
-                🏠 Tipo de alojamiento
-              </label>
-              <select
-                value={filters.accommodationType}
-                onChange={(e) => handleFilterChange('accommodationType', e.target.value)}
-                className="input w-full"
-              >
+              <label className="block text-sm font-medium mb-3">🏠 Tipo de alojamiento</label>
+              <select value={filters.accommodationType} onChange={(e) => handleFilterChange('accommodationType', e.target.value)} className="input w-full">
                 <option value="">Todos los tipos</option>
                 {accommodationTypes.map(type => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
-                  </option>
+                  <option key={type.id} value={type.id}>{type.name}</option>
                 ))}
               </select>
             </div>
@@ -328,15 +304,10 @@ const Search = () => {
             {/* Servicios */}
             {services.length > 0 && (
               <div>
-                <label className="block text-sm font-medium mb-3">
-                  ✨ Servicios
-                </label>
+                <label className="block text-sm font-medium mb-3">✨ Servicios</label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {services.map(service => (
-                    <label
-                      key={service.id}
-                      className="flex items-center space-x-2 cursor-pointer hover:bg-neutral-50 p-2 rounded"
-                    >
+                    <label key={service.id} className="flex items-center space-x-2 cursor-pointer hover:bg-neutral-50 p-2 rounded">
                       <input
                         type="checkbox"
                         checked={filters.services.includes(service.id.toString())}
@@ -355,9 +326,7 @@ const Search = () => {
 
             {/* Valoración mínima */}
             <div>
-              <label className="block text-sm font-medium mb-3">
-                ⭐ Valoración mínima
-              </label>
+              <label className="block text-sm font-medium mb-3">⭐ Valoración mínima</label>
               <div className="flex gap-2">
                 {[3, 4, 5].map(rating => (
                   <button
@@ -376,103 +345,52 @@ const Search = () => {
             </div>
           </div>
 
-          {/* Botones de acción */}
           <div className="mt-6 flex justify-end space-x-3 pt-4 border-t">
-            <button
-              onClick={clearFilters}
-              className="px-5 py-2 text-neutral-600 hover:text-neutral-900 font-medium"
-            >
-              Limpiar todo
-            </button>
-            <button
-              onClick={applyFilters}
-              className="btn-secondary"
-            >
-              Aplicar filtros
-            </button>
+            <button onClick={clearFilters} className="px-5 py-2 text-neutral-600 hover:text-neutral-900 font-medium">Limpiar todo</button>
+            <button onClick={applyFilters} className="btn-secondary">Aplicar filtros</button>
           </div>
 
-          {/* Contador de resultados */}
           <div className="mt-4 text-center text-sm text-neutral-600">
             {resultsCount} {resultsCount === 1 ? 'resultado' : 'resultados'} con estos filtros
           </div>
         </div>
       )}
 
-      {/* Filtros activos (chips) */}
-      {activeFiltersCount > 0 && !showFilters && (
+      {/* Chips filtros activos */}
+      {((filters.minPrice || filters.maxPrice || filters.accommodationType || filters.services.length > 0 || filters.minRating) && !showFilters) && (
         <div className="flex flex-wrap gap-2 mb-6">
           {filters.minPrice && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-secondary-100 text-secondary-800">
               Min: ${filters.minPrice}
-              <button
-                onClick={() => {
-                  handleFilterChange('minPrice', '');
-                  setTimeout(applyFilters, 100);
-                }}
-                className="ml-2 hover:text-secondary-900"
-              >
-                ×
-              </button>
+              <button onClick={() => { handleFilterChange('minPrice', ''); setTimeout(applyFilters, 100); }} className="ml-2 hover:text-secondary-900">×</button>
             </span>
           )}
           {filters.maxPrice && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-secondary-100 text-secondary-800">
               Max: ${filters.maxPrice}
-              <button
-                onClick={() => {
-                  handleFilterChange('maxPrice', '');
-                  setTimeout(applyFilters, 100);
-                }}
-                className="ml-2 hover:text-secondary-900"
-              >
-                ×
-              </button>
+              <button onClick={() => { handleFilterChange('maxPrice', ''); setTimeout(applyFilters, 100); }} className="ml-2 hover:text-secondary-900">×</button>
             </span>
           )}
           {filters.accommodationType && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-secondary-100 text-secondary-800">
               {accommodationTypes.find(t => t.id.toString() === filters.accommodationType)?.name}
-              <button
-                onClick={() => {
-                  handleFilterChange('accommodationType', '');
-                  setTimeout(applyFilters, 100);
-                }}
-                className="ml-2 hover:text-secondary-900"
-              >
-                ×
-              </button>
+              <button onClick={() => { handleFilterChange('accommodationType', ''); setTimeout(applyFilters, 100); }} className="ml-2 hover:text-secondary-900">×</button>
             </span>
           )}
           {filters.services.length > 0 && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-secondary-100 text-secondary-800">
               {filters.services.length} servicio(s)
-              <button
-                onClick={() => {
-                  handleFilterChange('services', []);
-                  setTimeout(applyFilters, 100);
-                }}
-                className="ml-2 hover:text-secondary-900"
-              >
-                ×
-              </button>
+              <button onClick={() => { handleFilterChange('services', []); setTimeout(applyFilters, 100); }} className="ml-2 hover:text-secondary-900">×</button>
             </span>
           )}
         </div>
       )}
 
-      {/* Grid de resultados */}
+      {/* Grid resultados */}
       {properties.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-neutral-600 text-lg mb-4">
-            No se encontraron propiedades con esos criterios
-          </p>
-          <button
-            onClick={clearFilters}
-            className="btn-secondary"
-          >
-            Limpiar filtros
-          </button>
+          <p className="text-neutral-600 text-lg mb-4">No se encontraron propiedades con esos criterios</p>
+          <button onClick={clearFilters} className="btn-secondary">Limpiar filtros</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -147,6 +147,9 @@ class PropertyController {
   // Obtener todas las propiedades publicadas (PÚBLICAS)
   async getAll(req, res, next) {
     try {
+      // DEBUG: log incoming query params to help troubleshoot filtering
+      console.debug('GET /properties query:', req.query);
+
       const {
         location,
         minPrice,
@@ -168,7 +171,18 @@ class PropertyController {
         if (minPrice) where.price_per_night[Op.gte] = minPrice;
         if (maxPrice) where.price_per_night[Op.lte] = maxPrice;
       }
-      if (guests) where.capacity = { [Op.gte]: guests };
+      if (guests) {
+        // Comportamiento: por compatibilidad con la UX solicitada, si el cliente
+        // pide un número de huéspedes lo interpretamos como búsqueda exacta
+        // a menos que explícitamente indique lo contrario con guestsExact=0.
+        // Esto evita confusión cuando se visita la URL directamente.
+        const guestsExactFlag = typeof req.query.guestsExact !== 'undefined' ? req.query.guestsExact : '1';
+        if (guestsExactFlag === '1') {
+          where.capacity = guests;
+        } else {
+          where.capacity = { [Op.gte]: guests };
+        }
+      }
       if (accommodation_type_id) where.accommodation_type_id = accommodation_type_id;
 
       // Paginación
