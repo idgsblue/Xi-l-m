@@ -515,6 +515,9 @@ const AddProperty = () => {
           <h2 className="text-lg font-semibold text-accent-900 mb-4">
             Servicios
           </h2>
+            <label className="block text-sm font-medium text-neutral-700">
+              1: WiFi. 2: Piscina. 3: Estacionamiento. 4: Cocina. 5: Aire Acondicionado. 6: TV. 7: Lavadora.
+            </label>
 
           <div className="flex gap-2 mb-4">
             <input
@@ -522,7 +525,7 @@ const AddProperty = () => {
               value={newService}
               onChange={(e) => setNewService(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
-              placeholder="ID del servicio (ejemplo: 1, 2, 3...)"
+              placeholder="Número del servicio (ejemplo: 1, 2, 3...)"
               className="input flex-1"
             />
             <button
