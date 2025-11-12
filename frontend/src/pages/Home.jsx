@@ -12,11 +12,11 @@ const Home = () => {
   const [ctaImageIndex, setCtaImageIndex] = useState(0);
 
   const carouselImages = [
-    '/images/pexels-chaitaastic-1796727.jpg',
-    '/images/pexels-damir-24973254.jpg',
-    '/images/pexels-kazim-guven-198262678-16532341.jpg',
-    '/images/pexels-landsmann-803094805-19279547.jpg',
-    '/images/pexels-pixabay-259637.jpg'
+    'https://firebasestorage.googleapis.com/v0/b/booking-app-12462.firebasestorage.app/o/carrusel%2Fpexels-chaitaastic-1796727.jpg?alt=media&token=724daf38-47e8-4557-98ce-6d5320bd198b',
+    'https://firebasestorage.googleapis.com/v0/b/booking-app-12462.firebasestorage.app/o/carrusel%2Fpexels-damir-24973254.jpg?alt=media&token=da875b33-4279-4e8c-bdd4-051ccb097b6d',
+    'https://firebasestorage.googleapis.com/v0/b/booking-app-12462.firebasestorage.app/o/carrusel%2Fpexels-kazim-guven-198262678-16532341.jpg?alt=media&token=fe9308b9-2007-4dcd-8f58-ae21df5700a7',
+    'https://firebasestorage.googleapis.com/v0/b/booking-app-12462.firebasestorage.app/o/carrusel%2Fpexels-landsmann-803094805-19279547.jpg?alt=media&token=ca4e9920-89a9-4af7-94cf-6f4c7d4c0267',
+    'https://firebasestorage.googleapis.com/v0/b/booking-app-12462.firebasestorage.app/o/carrusel%2Fpexels-pixabay-259637.jpg?alt=media&token=e5429097-14d8-45ed-bb7d-2e8dffb34fce'
   ];
 
   useEffect(() => {
