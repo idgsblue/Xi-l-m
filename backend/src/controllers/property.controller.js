@@ -250,8 +250,8 @@ class PropertyController {
       res.json({
         properties: availableProperties,
         pagination: {
-          total: count,
-          pages: Math.ceil(count / limit),
+          total: availableProperties.length, // Usar el conteo real después de filtrar por disponibilidad
+          pages: Math.ceil(availableProperties.length / limit),
           currentPage: parseInt(page),
           perPage: parseInt(limit)
         }

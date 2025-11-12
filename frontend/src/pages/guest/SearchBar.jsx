@@ -21,7 +21,7 @@ function parseParams(sp) {
   };
 }
 
-const SearchBar = ({ initialValues = {} }) => {
+const SearchBar = ({ initialValues = {}, showHostButton = false }) => {
   const navigate = useNavigate();
   const [parentSearchParams] = useSearchParams();
 
@@ -84,7 +84,7 @@ const SearchBar = ({ initialValues = {} }) => {
 
   return (
     <form onSubmit={handleSearch} className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-3 md:p-4 border border-neutral-200 dark:border-neutral-700">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4">
         {/* Ubicación */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
