@@ -179,9 +179,7 @@ const PrivacyPolicy = () => {
               <p className="text-gray-700 dark:text-neutral-300 mb-2"><strong>Cómo ejercer este derecho:</strong></p>
               <ol className="list-decimal ml-6 text-gray-700 dark:text-neutral-300 space-y-1">
                 <li>Inicie sesión en la aplicación</li>
-                <li>Vaya a Configuración → Mi Perfil</li>
-                <li>Complete el formulario de "Solicitar Eliminación de Cuenta"</li>
-                <li>Envíe su solicitud</li>
+                <li>Vaya a Configuración → Mi Perfil y ahí verá los pasos a seguir</li>
               </ol>
               <p className="text-gray-700 dark:text-neutral-300 mt-2">
                 <strong>Nota:</strong> No podemos eliminar información que debemos conservar por obligaciones

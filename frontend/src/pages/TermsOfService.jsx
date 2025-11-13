@@ -174,10 +174,8 @@ const TermsOfService = () => {
           </p>
           <ol className="list-decimal ml-6 text-gray-700 dark:text-neutral-300 space-y-2 mb-4">
             <li>Inicie sesión en la aplicación</li>
-            <li>Vaya a <strong>Configuración → Mi Perfil</strong></li>
-            <li>Complete el formulario de "Solicitar Eliminación de Cuenta"</li>
-            <li>Recibirá una confirmación por correo electrónico</li>
-            <li>Procesaremos su solicitud dentro de <strong>30 días</strong></li>
+            <li>Vaya a <strong>Configuración → Mi Perfil y ahí verá los pasos a seguir</strong></li>
+
           </ol>
 
           <h3 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-3">15.2 Restricciones</h3>

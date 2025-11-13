@@ -127,8 +127,6 @@ const CancellationPolicy = () => {
               <ul className="list-disc ml-6 text-gray-700 space-y-1">
                 <li><strong>Reembolso:</strong> 100% del monto pagado (incluyendo comisiones)</li>
                 <li><strong>Tiempo de procesamiento:</strong> 3-5 días hábiles</li>
-                <li><strong>Asistencia:</strong> Ayudaremos a encontrar un alojamiento alternativo</li>
-                <li><strong>Penalización al anfitrión:</strong> El anfitrión recibirá una penalización en su cuenta</li>
               </ul>
             </div>
 
@@ -228,7 +226,7 @@ const CancellationPolicy = () => {
             <div>
               <p className="font-semibold text-gray-800 mb-2">Pasos para modificar:</p>
               <ol className="list-decimal ml-6 text-gray-700 space-y-1">
-                <li>Contacta al anfitrión a través del sistema de mensajería de Xi'lúm</li>
+                <li>Contacta vía correo al anfitrión</li>
                 <li>Explica las nuevas fechas que necesitas</li>
                 <li>Espera la confirmación del anfitrión</li>
                 <li>Si acepta, podrás modificar la reserva sin costo adicional</li>
@@ -256,8 +254,6 @@ const CancellationPolicy = () => {
             </p>
             <ul className="list-disc ml-6 text-red-700 space-y-2">
               <li><strong>Sin reembolso:</strong> Se cobra el 100% del monto de la reserva</li>
-              <li><strong>Impacto en tu cuenta:</strong> Se registrará como "no show" en tu historial</li>
-              <li><strong>Restricciones futuras:</strong> Múltiples "no shows" pueden resultar en la suspensión de tu cuenta</li>
             </ul>
 
             <div className="bg-white rounded p-4 mt-4">
