@@ -13,7 +13,7 @@ const createValidation = [
     .isFloat({ min: 0 }).withMessage('El precio máximo debe ser un número positivo'),
   body('platform_commission_percentage')
     .optional()
-    .isFloat({ min: 0, max: 100 }).withMessage('El porcentaje de comisión debe estar entre 0 y 100')
+    .isFloat({ min: 0, max: 15 }).withMessage('El porcentaje de comisión debe estar entre 0 y 15')
 ];
 
 const updateValidation = [
@@ -30,7 +30,7 @@ const updateValidation = [
     .isFloat({ min: 0 }).withMessage('El precio máximo debe ser un número positivo'),
   body('platform_commission_percentage')
     .optional()
-    .isFloat({ min: 0, max: 100 }).withMessage('El porcentaje de comisión debe estar entre 0 y 100')
+    .isFloat({ min: 0, max: 15 }).withMessage('El porcentaje de comisión debe estar entre 0 y 15')
 ];
 
 const idValidation = [

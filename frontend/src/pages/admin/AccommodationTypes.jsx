@@ -97,20 +97,21 @@ const AccommodationTypes = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="heading-2">Tipos de Alojamiento</h1>
-          <p className="text-neutral-600 mt-2">
+          <h1 className="heading-2 text-2xl sm:text-3xl">Tipos de Alojamiento</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-2 text-sm sm:text-base">
             Gestiona los tipos de alojamiento, rangos de precios y comisiones
           </p>
         </div>
         <button
           onClick={handleCreate}
-          className="btn-primary flex items-center"
+          className="btn-primary flex items-center justify-center w-full sm:w-auto px-4 py-2.5 text-sm sm:text-base font-medium rounded-lg shadow-sm hover:shadow-md transition-all"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
-          Nuevo Tipo
+          <span className="hidden sm:inline">Nuevo Tipo</span>
+          <span className="sm:hidden">Nuevo</span>
         </button>
       </div>
 
@@ -126,30 +127,32 @@ const AccommodationTypes = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {types.map((type) => (
-            <div key={type.id} className="card">
+            <div key={type.id} className="card bg-white dark:bg-neutral-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-accent-800">{type.name}</h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-white truncate">{type.name}</h3>
                   {type.propertyCount !== undefined && (
-                    <p className="text-sm text-neutral-600 mt-1">
-                      {type.propertyCount} propiedades
+                    <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                      {type.propertyCount} {type.propertyCount === 1 ? 'propiedad' : 'propiedades'}
                     </p>
                   )}
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-1 sm:space-x-2 ml-2">
                   <button
                     onClick={() => handleEdit(type)}
-                    className="p-2 text-neutral-600 hover:text-secondary-600 transition-colors"
+                    className="p-2 text-neutral-700 dark:text-neutral-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
                     title="Editar"
+                    aria-label="Editar tipo de alojamiento"
                   >
                     <PencilIcon className="h-5 w-5" />
                   </button>
                   <button
                     onClick={() => handleDelete(type)}
-                    className="p-2 text-neutral-600 hover:text-red-600 transition-colors"
+                    className="p-2 text-neutral-700 dark:text-neutral-300 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
                     title="Eliminar"
+                    aria-label="Eliminar tipo de alojamiento"
                   >
                     <TrashIcon className="h-5 w-5" />
                   </button>
@@ -157,32 +160,32 @@ const AccommodationTypes = () => {
               </div>
 
               <div className="space-y-3">
-                <div className="border-t pt-3">
-                  <p className="text-sm text-neutral-600 mb-2">Rango de Precios</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-neutral-800">
+                <div className="border-t border-neutral-200 dark:border-neutral-700 pt-3">
+                  <p className="text-xs sm:text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Rango de Precios</p>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       Mínimo:
                     </span>
-                    <span className="text-sm font-semibold text-accent-800">
+                    <span className="text-sm font-bold text-green-700 dark:text-green-400">
                       {type.min_price ? `$${parseFloat(type.min_price).toFixed(2)}` : 'No definido'}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-sm font-medium text-neutral-800">
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       Máximo:
                     </span>
-                    <span className="text-sm font-semibold text-accent-800">
+                    <span className="text-sm font-bold text-green-700 dark:text-green-400">
                       {type.max_price ? `$${parseFloat(type.max_price).toFixed(2)}` : 'No definido'}
                     </span>
                   </div>
                 </div>
 
-                <div className="border-t pt-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-neutral-800">
+                <div className="border-t border-neutral-200 dark:border-neutral-700 pt-3">
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       Comisión:
                     </span>
-                    <span className="text-sm font-semibold text-secondary-600">
+                    <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
                       {type.platform_commission_percentage ? `${parseFloat(type.platform_commission_percentage).toFixed(2)}%` : 'No definida'}
                     </span>
                   </div>
