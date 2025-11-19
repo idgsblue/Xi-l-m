@@ -150,6 +150,84 @@ const PrivacyPolicy = () => {
         </section>
 
         <section className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-neutral-200 mb-4">4. Transferencia Internacional de Datos</h2>
+
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 mb-4">
+            <p className="text-gray-800 dark:text-neutral-200 font-semibold mb-2">
+              ⚠️ Aviso Importante sobre Almacenamiento de Datos
+            </p>
+            <p className="text-gray-700 dark:text-neutral-300">
+              Sus datos personales podrán ser almacenados en servidores ubicados en <strong>Estados Unidos</strong> a través
+              de proveedores externos que cumplen con las medidas de seguridad aplicables. La transferencia se realiza
+              conforme a la <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares</strong>.
+            </p>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-3">4.1 Ubicación de Almacenamiento</h3>
+          <p className="text-gray-700 dark:text-neutral-300 mb-4">
+            Sus datos se almacenan en los siguientes servicios de nube ubicados en Estados Unidos:
+          </p>
+
+          <div className="space-y-4 ml-4 mb-4">
+            <div className="border-l-2 border-blue-500 pl-4">
+              <h4 className="font-semibold text-gray-800 dark:text-neutral-200">DigitalOcean (Nueva York, Estados Unidos)</h4>
+              <ul className="list-disc ml-6 text-gray-700 dark:text-neutral-300 space-y-1 mt-2">
+                <li>Datos personales y transaccionales (nombre, email, reservas)</li>
+                <li>Certificaciones: ISO 27001, SOC 2 Type II, PCI-DSS</li>
+                <li>Encriptación en tránsito (HTTPS/TLS 1.3) y en reposo</li>
+              </ul>
+            </div>
+
+            <div className="border-l-2 border-blue-500 pl-4">
+              <h4 className="font-semibold text-gray-800 dark:text-neutral-200">Google Cloud Platform / Firebase (Iowa, Estados Unidos)</h4>
+              <ul className="list-disc ml-6 text-gray-700 dark:text-neutral-300 space-y-1 mt-2">
+                <li>Imágenes de propiedades y archivos estáticos</li>
+                <li>Certificaciones: ISO 27001, SOC 2, SOC 3</li>
+                <li>CDN global con servidores en México para mejor rendimiento</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-3">4.2 Fundamento Legal</h3>
+          <p className="text-gray-700 dark:text-neutral-300 mb-2">
+            La transferencia internacional se realiza bajo los siguientes fundamentos:
+          </p>
+          <ul className="list-disc ml-6 text-gray-700 dark:text-neutral-300 space-y-2 mb-4">
+            <li>
+              <strong>Su consentimiento expreso:</strong> Al aceptar esta Política de Privacidad y crear una cuenta,
+              usted autoriza la transferencia internacional de sus datos
+            </li>
+            <li>
+              <strong>Necesidad para el servicio:</strong> La transferencia es necesaria para procesar reservas,
+              pagos y proporcionar acceso a la plataforma
+            </li>
+            <li>
+              <strong>Medidas de seguridad equivalentes:</strong> Nuestros proveedores cumplen con estándares
+              internacionales de seguridad y protección de datos
+            </li>
+          </ul>
+
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-3">4.3 Medidas de Seguridad</h3>
+          <p className="text-gray-700 dark:text-neutral-300 mb-2">
+            Para proteger sus datos durante la transferencia y almacenamiento internacional:
+          </p>
+          <ul className="list-disc ml-6 text-gray-700 dark:text-neutral-300 space-y-2 mb-4">
+            <li>Todas las comunicaciones usan encriptación HTTPS con TLS 1.3</li>
+            <li>Contraseñas almacenadas con hash bcrypt (nunca en texto plano)</li>
+            <li>Control de acceso basado en roles (RBAC)</li>
+            <li>Monitoreo continuo de seguridad y auditorías periódicas</li>
+            <li>Backups automáticos y planes de recuperación ante desastres</li>
+          </ul>
+
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 p-4 rounded">
+            <p className="text-gray-700 dark:text-neutral-300">
+              <strong>Sus derechos no se ven afectados:</strong> Independientemente de dónde se almacenen sus datos,
+              usted conserva todos sus derechos de privacidad y puede ejercerlos en cualquier momento.
+            </p>
+          </div>
+        </section>
+
+        <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-neutral-200 mb-4">7. Sus Derechos de Privacidad</h2>
           <p className="text-gray-700 dark:text-neutral-300 mb-4">
             Usted tiene los siguientes derechos respecto a su información personal:
