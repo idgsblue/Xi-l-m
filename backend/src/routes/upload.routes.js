@@ -2,37 +2,37 @@ const router = require('express').Router();
 const uploadController = require('../controllers/upload.controller');
 const { authenticate } = require('../middleware/auth.middleware');
 const { isHost } = require('../middleware/roleCheck.middleware');
-const multer = require('multer');
+const { uploadLimiter } = require('../middleware/rateLimiter.middleware');
+const { createSecureUpload, validateUploadedFiles, limitFilesPerRequest } = require('../middleware/fileUpload.middleware');
 
-// Configurar Multer para usar memoria (no guardar en disco)
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // Límite 5MB por imagen
-  },
-  fileFilter: (req, file, cb) => {
-    // Solo permitir imágenes
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(file.originalname.toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, gif, webp)'));
-    }
-  }
+// Usar el middleware de upload seguro
+const secureUpload = createSecureUpload({
+  maxSize: 5 * 1024 * 1024, // 5MB
+  maxFiles: 10
 });
 
 // Todas las rutas requieren autenticación y rol de host
 router.use(authenticate);
 router.use(isHost);
 
-// Subir una imagen
-router.post('/single', upload.single('image'), uploadController.uploadSingle);
+// Aplicar rate limiting específico para uploads
+router.use(uploadLimiter);
 
-// Subir múltiples imágenes (máximo 10)
-router.post('/multiple', upload.array('images', 10), uploadController.uploadMultiple);
+// Subir una imagen con validaciones de seguridad
+router.post('/single',
+  secureUpload.single('image'),
+  validateUploadedFiles,
+  limitFilesPerRequest(1),
+  uploadController.uploadSingle
+);
+
+// Subir múltiples imágenes (máximo 5) con validaciones de seguridad
+router.post('/multiple',
+  secureUpload.array('images', 5),
+  validateUploadedFiles,
+  limitFilesPerRequest(5),
+  uploadController.uploadMultiple
+);
 
 // Eliminar imagen
 router.delete('/delete', uploadController.deleteImage);

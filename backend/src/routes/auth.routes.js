@@ -3,6 +3,7 @@ const authController = require('../controllers/auth.controller');
 const { authenticate, refreshToken } = require('../middleware/auth.middleware');
 const { body } = require('express-validator');
 const handleValidationErrors = require('../middleware/validation.middleware');
+const { authLimiter, registerLimiter, passwordResetLimiter } = require('../middleware/rateLimiter.middleware');
 
 // Validaciones
 const registerValidation = [
@@ -39,11 +40,12 @@ const changePasswordValidation = [
     .matches(/^(?=.*[A-Za-z])(?=.*\d)/).withMessage('La contraseña debe contener letras y números')
 ];
 
-// Rutas públicas
-router.post('/register', registerValidation, handleValidationErrors, authController.register);
-router.post('/login', loginValidation, handleValidationErrors, authController.login);
-router.post('/refresh-token', refreshToken);
-router.post('/forgot-password', 
+// Rutas públicas con rate limiting específico
+router.post('/register', registerLimiter, registerValidation, handleValidationErrors, authController.register);
+router.post('/login', authLimiter, loginValidation, handleValidationErrors, authController.login);
+router.post('/refresh-token', authLimiter, refreshToken);
+router.post('/forgot-password',
+  passwordResetLimiter,
   body('email').isEmail().withMessage('Email inválido'),
   handleValidationErrors,
   authController.forgotPassword

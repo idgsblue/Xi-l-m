@@ -1,6 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const helmet = require('helmet');
+const hpp = require('hpp');
+
+// Importar configuración de seguridad
+const { helmetConfig, corsOptions, securityHeaders, validateSecurityEnv } = require('./config/security.config');
+
+// Importar middleware de seguridad
+const { sanitizeRequest, validateNoSQLInjection } = require('./middleware/sanitization.middleware');
+const { generalLimiter } = require('./middleware/rateLimiter.middleware');
 
 // Importar rutas
 const authRoutes = require('./routes/auth.routes');
@@ -10,44 +19,45 @@ const paymentRoutes = require('./routes/payment.routes');
 const adminRoutes = require('./routes/admin.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const accommodationTypeRoutes = require('./routes/accommodationType.routes');
-const availabilityRoutes = require('./routes/availability.routes'); // ← NUEVA LÍNEA
-const serviceRoutes = require('./routes/service.routes'); // ← NUEVA LÍNEA
-
-
+const availabilityRoutes = require('./routes/availability.routes');
+const serviceRoutes = require('./routes/service.routes');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler.middleware');
 
 const app = express();
 
-// Configuración CORS
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://localhost',           // Para Capacitor (apps móviles Android)
-  'capacitor://localhost',       // Para Capacitor iOS
-  'http://10.0.2.2:5000',
-      // Para emulador Android -> localhost
-  'https://xilmq.com',
-  process.env.FRONTEND_URL
-].filter(Boolean);
+// ============================================
+// VALIDACIÓN DE SEGURIDAD AL INICIO
+// ============================================
+validateSecurityEnv();
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir requests sin origin (como mobile apps o curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('No permitido por CORS'));
-    }
-  },
-  credentials: true
-}));
+// ============================================
+// MIDDLEWARE DE SEGURIDAD (ORDEN IMPORTANTE)
+// ============================================
 
-// Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 1. Helmet - Headers de seguridad HTTP
+app.use(helmet(helmetConfig));
+
+// 2. Headers de seguridad adicionales
+app.use(securityHeaders);
+
+// 3. CORS con configuración segura
+app.use(cors(corsOptions));
+
+// 4. Parseo de JSON con límite de tamaño (prevenir DoS)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 5. Protección contra HTTP Parameter Pollution
+app.use(hpp());
+
+// 6. Rate limiting general (aplicar a todas las rutas)
+app.use(generalLimiter);
+
+// 7. Sanitización de inputs (XSS, NoSQL injection)
+app.use(sanitizeRequest);
+app.use(validateNoSQLInjection);
 
 // Servir archivos estáticos (imágenes locales antiguas)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
