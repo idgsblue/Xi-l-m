@@ -1,10 +1,198 @@
-import React from 'react';
-import { useQuery } from 'react-query';
-import { Link } from 'react-router-dom';
-import adminService from '../../services/admin.service';
+import React, { useState, useEffect } from "react";
+import { useQuery } from "react-query";
+import { Link } from "react-router-dom";
+import adminService from "../../services/admin.service";
+import api from "../../services/api";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
 const AdminDashboard = () => {
-  const { data, isLoading, error } = useQuery('adminDashboard', adminService.getDashboard);
+  const { data, isLoading, error } = useQuery(
+    "adminDashboard",
+    adminService.getDashboard
+  );
+  const [revenueData, setRevenueData] = useState(null);
+  const [loadingRevenue, setLoadingRevenue] = useState(true);
+
+  // Fetch datos de revenue desde el endpoint de bookings
+  useEffect(() => {
+    const fetchRevenueData = async () => {
+      try {
+        setLoadingRevenue(true);
+        const { data } = await api.get("/bookings/admin/all");
+        setRevenueData(data.stats);
+      } catch (error) {
+        console.error("Error cargando datos de revenue:", error);
+      } finally {
+        setLoadingRevenue(false);
+      }
+    };
+
+    fetchRevenueData();
+  }, []);
+
+  // Construir datos para el gráfico de ingresos
+  const buildRevenueChart = () => {
+    if (!revenueData) return [];
+
+    const payload = revenueData || {};
+    const candidates =
+      payload.monthlyTrends ||
+      payload.revenue?.monthly ||
+      payload.revenue_monthly ||
+      payload.bookings?.byMonth ||
+      payload.bookings?.monthly ||
+      payload.monthlyRevenue ||
+      payload.revenue_by_month ||
+      [];
+
+    if (!Array.isArray(candidates) || candidates.length === 0) return [];
+
+    return candidates.map((item) => {
+      const monthRaw =
+        item.month || item.date || item.label || item.month_id || "";
+      const total =
+        item.total ||
+        item.revenue ||
+        item.amount ||
+        item.total_revenue ||
+        item.value ||
+        0;
+
+      let name = monthRaw;
+      if (typeof monthRaw === "string" && /^\d{4}-\d{2}/.test(monthRaw)) {
+        const [year, month] = monthRaw.split("-");
+        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+        name = date.toLocaleString("es-MX", { month: "short" });
+      }
+
+      return { name, revenue: Number(total) || 0 };
+    });
+  };
+
+  const revenueChartData = buildRevenueChart();
+
+  // Construir datos para la gráfica de pastel de estados de reservas
+  const buildBookingsStatusChart = () => {
+    if (!revenueData?.bookings) return [];
+
+    const bookingsStats = revenueData.bookings;
+    const COLORS = {
+      pending: "#eab308",
+      confirmed: "#10b981",
+      in_progress: "#3b82f6",
+      completed: "#6b7280",
+      cancelled: "#ef4444",
+    };
+
+    const statusLabels = {
+      pending: "Pendientes",
+      confirmed: "Confirmadas",
+      in_progress: "En Progreso",
+      completed: "Completadas",
+      cancelled: "Canceladas",
+    };
+
+    return Object.entries(bookingsStats)
+      .filter(([key, value]) => key !== "total" && value > 0)
+      .map(([status, count]) => ({
+        name: statusLabels[status] || status,
+        value: count,
+        color: COLORS[status] || "#888888",
+      }));
+  };
+
+  const bookingsStatusData = buildBookingsStatusChart();
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("es-MX", {
+      style: "currency",
+      currency: "MXN",
+    }).format(amount);
+  };
+
+  // Tooltip personalizado para la gráfica
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-sm font-medium text-gray-900">
+            {payload[0].payload.name}
+          </p>
+          <p className="text-sm text-gray-600">
+            Ingresos:{" "}
+            <span className="font-bold text-green-600">
+              {formatCurrency(payload[0].value)}
+            </span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Tooltip para gráfica de pastel
+  const PieTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const total = bookingsStatusData.reduce(
+        (sum, item) => sum + item.value,
+        0
+      );
+      const percentage = ((payload[0].value / total) * 100).toFixed(1);
+
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-sm font-medium text-gray-900">{payload[0].name}</p>
+          <p className="text-sm text-gray-600">
+            Cantidad: <span className="font-bold">{payload[0].value}</span>
+          </p>
+          <p className="text-sm text-gray-600">
+            Porcentaje: <span className="font-bold">{percentage}%</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Label personalizado para el pie chart
+  const renderCustomLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        className="font-bold text-sm"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -29,8 +217,12 @@ const AdminDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-900">Panel de Administración</h1>
-        <p className="text-neutral-600 mt-2">Vista general del sistema Arroyo Seco</p>
+        <h1 className="text-3xl font-bold text-neutral-900">
+          Panel de Administración
+        </h1>
+        <p className="text-neutral-600 mt-2">
+          Vista general del sistema Arroyo Seco
+        </p>
       </div>
 
       {/* Métricas principales */}
@@ -39,12 +231,26 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-neutral-600">Total Propiedades</p>
-              <p className="text-3xl font-bold text-neutral-900 mt-2">{properties?.total || 0}</p>
+              <p className="text-sm font-medium text-neutral-600">
+                Total Propiedades
+              </p>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">
+                {properties?.total || 0}
+              </p>
             </div>
             <div className="bg-secondary-100 p-3 rounded-full">
-              <svg className="w-8 h-8 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              <svg
+                className="w-8 h-8 text-secondary-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
               </svg>
             </div>
           </div>
@@ -62,12 +268,26 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-neutral-600">Total Usuarios</p>
-              <p className="text-3xl font-bold text-neutral-900 mt-2">{users?.total || 0}</p>
+              <p className="text-sm font-medium text-neutral-600">
+                Total Usuarios
+              </p>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">
+                {users?.total || 0}
+              </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              <svg
+                className="w-8 h-8 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
               </svg>
             </div>
           </div>
@@ -85,17 +305,35 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-neutral-600">Reservas del Mes</p>
-              <p className="text-3xl font-bold text-neutral-900 mt-2">{bookings?.thisMonth || 0}</p>
+              <p className="text-sm font-medium text-neutral-600">
+                Reservas del Mes
+              </p>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">
+                {bookings?.thisMonth || 0}
+              </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
-              <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-8 h-8 text-purple-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </div>
           </div>
           <div className="mt-4 text-sm text-neutral-600">
-            Mes actual: {new Date().toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}
+            Mes actual:{" "}
+            {new Date().toLocaleDateString("es-MX", {
+              month: "long",
+              year: "numeric",
+            })}
           </div>
         </div>
 
@@ -103,21 +341,111 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-neutral-600">Tasa Cancelación</p>
-              <p className="text-3xl font-bold text-neutral-900 mt-2">{bookings?.cancellationRate || 0}%</p>
+              <p className="text-sm font-medium text-neutral-600">
+                Tasa Cancelación
+              </p>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">
+                {bookings?.cancellationRate || 0}%
+              </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
-              <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <svg
+                className="w-8 h-8 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
               </svg>
             </div>
           </div>
           <div className="mt-4 text-sm text-neutral-600">
-            {parseFloat(bookings?.cancellationRate || 0) < 10 ? 
-              '✓ Dentro del rango aceptable' : 
-              '⚠ Revisar causas'}
+            {parseFloat(bookings?.cancellationRate || 0) < 10
+              ? "✓ Dentro del rango aceptable"
+              : "⚠ Revisar causas"}
           </div>
         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+        {/* Gráfica de Ingresos */}
+        {!loadingRevenue && revenueChartData.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-4">
+            <h2 className="text-lg font-semibold text-neutral-900 mb-1">
+              Ingresos Mensuales
+            </h2>
+            <p className="text-xs text-neutral-500 mb-4">
+              Evolución de ingresos de los últimos meses
+            </p>
+
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={revenueChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: "#6b7280", fontSize: 11 }}
+                    axisLine={{ stroke: "#d1d5db" }}
+                  />
+                  <YAxis
+                    tick={{ fill: "#6b7280", fontSize: 11 }}
+                    axisLine={{ stroke: "#d1d5db" }}
+                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar
+                    dataKey="revenue"
+                    fill="#34d399"
+                    radius={[6, 6, 6, 6]}
+                    maxBarSize={40}
+                    animationDuration={600}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Gráfica de Pastel */}
+        {!loadingRevenue && bookingsStatusData.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-4">
+            <h2 className="text-lg font-semibold text-neutral-900 mb-1">
+              Estado de Reservas
+            </h2>
+            <p className="text-xs text-neutral-500 mb-4">
+              Distribución porcentual
+            </p>
+
+            <div className="h-64 flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={bookingsStatusData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    labelLine={false}
+                    label={renderCustomLabel}
+                    dataKey="value"
+                    animationDuration={600}
+                  >
+                    {bookingsStatusData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+
+                  <Tooltip content={<PieTooltip />} />
+                  <Legend verticalAlign="bottom" height={32} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Accesos rápidos */}
@@ -127,7 +455,9 @@ const AdminDashboard = () => {
           className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-6 hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-neutral-900">Propiedades Pendientes</h3>
+            <h3 className="text-lg font-semibold text-neutral-900">
+              Propiedades Pendientes
+            </h3>
             <div className="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
               {properties?.pending || 0}
             </div>
@@ -137,8 +467,18 @@ const AdminDashboard = () => {
           </p>
           <div className="flex items-center text-yellow-700 font-medium group-hover:text-yellow-800">
             <span>Ver pendientes</span>
-            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </Link>
@@ -148,7 +488,9 @@ const AdminDashboard = () => {
           className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6 hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-neutral-900">Gestión de Usuarios</h3>
+            <h3 className="text-lg font-semibold text-neutral-900">
+              Gestión de Usuarios
+            </h3>
             <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
               {users?.total || 0}
             </div>
@@ -158,8 +500,18 @@ const AdminDashboard = () => {
           </p>
           <div className="flex items-center text-blue-700 font-medium group-hover:text-blue-800">
             <span>Gestionar usuarios</span>
-            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </Link>
@@ -169,9 +521,21 @@ const AdminDashboard = () => {
           className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-6 hover:shadow-md transition-all group"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-neutral-900">Tipos de Alojamiento</h3>
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <h3 className="text-lg font-semibold text-neutral-900">
+              Tipos de Alojamiento
+            </h3>
+            <svg
+              className="w-8 h-8 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
             </svg>
           </div>
           <p className="text-neutral-600 text-sm mb-4">
@@ -179,8 +543,18 @@ const AdminDashboard = () => {
           </p>
           <div className="flex items-center text-green-700 font-medium group-hover:text-green-800">
             <span>Configurar tipos</span>
-            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </Link>
@@ -191,8 +565,18 @@ const AdminDashboard = () => {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-neutral-900">Reportes</h3>
-            <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="w-8 h-8 text-purple-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
           </div>
           <p className="text-neutral-600 text-sm mb-4">
@@ -200,8 +584,18 @@ const AdminDashboard = () => {
           </p>
           <div className="flex items-center text-purple-700 font-medium group-hover:text-purple-800">
             <span>Ver reportes</span>
-            <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </Link>
@@ -209,29 +603,42 @@ const AdminDashboard = () => {
 
       {/* Desglose de propiedades */}
       <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-        <h2 className="text-xl font-bold text-neutral-900 mb-4">Estado de Propiedades</h2>
+        <h2 className="text-xl font-bold text-neutral-900 mb-4">
+          Estado de Propiedades
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="text-center p-4 bg-neutral-50 rounded-lg">
-            <p className="text-2xl font-bold text-neutral-900">{properties?.total || 0}</p>
+            <p className="text-2xl font-bold text-neutral-900">
+              {properties?.total || 0}
+            </p>
             <p className="text-sm text-neutral-600 mt-1">Total</p>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
-            <p className="text-2xl font-bold text-green-700">{properties?.published || 0}</p>
+            <p className="text-2xl font-bold text-green-700">
+              {properties?.published || 0}
+            </p>
             <p className="text-sm text-neutral-600 mt-1">Publicadas</p>
           </div>
           <div className="text-center p-4 bg-yellow-50 rounded-lg">
-            <p className="text-2xl font-bold text-yellow-700">{properties?.pending || 0}</p>
+            <p className="text-2xl font-bold text-yellow-700">
+              {properties?.pending || 0}
+            </p>
             <p className="text-sm text-neutral-600 mt-1">Pendientes</p>
           </div>
           <div className="text-center p-4 bg-blue-50 rounded-lg">
             <p className="text-2xl font-bold text-blue-700">
-              {(properties?.total || 0) - (properties?.published || 0) - (properties?.pending || 0)}
+              {(properties?.total || 0) -
+                (properties?.published || 0) -
+                (properties?.pending || 0)}
             </p>
             <p className="text-sm text-neutral-600 mt-1">Otras</p>
           </div>
           <div className="text-center p-4 bg-neutral-50 rounded-lg">
             <p className="text-2xl font-bold text-neutral-900">
-              {properties?.total ? ((properties.published / properties.total) * 100).toFixed(0) : 0}%
+              {properties?.total
+                ? ((properties.published / properties.total) * 100).toFixed(0)
+                : 0}
+              %
             </p>
             <p className="text-sm text-neutral-600 mt-1">Tasa publicación</p>
           </div>
