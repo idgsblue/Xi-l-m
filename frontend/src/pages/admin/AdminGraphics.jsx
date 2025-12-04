@@ -109,35 +109,32 @@ const AdminGraphics = () => {
 
   const bookingsStatusData = buildBookingsStatusChart();
 
-
-  
-
   // Construir datos para la gráfica de ocupación por tipo de propiedad
-const buildOccupancyByTypeChart = () => {
-  if (!revenueData?.occupancyByType) return [];
+  const buildOccupancyByTypeChart = () => {
+    if (!revenueData?.occupancyByType) return [];
 
-  const totalActiveBookings = revenueData.occupancyByType.reduce(
-    (sum, item) => sum + Number(item.active_bookings || 0),
-    0
-  );
+    const totalActiveBookings = revenueData.occupancyByType.reduce(
+      (sum, item) => sum + Number(item.active_bookings || 0),
+      0
+    );
 
-  return revenueData.occupancyByType.map((item) => {
-    const active = Number(item.active_bookings || 0);
-    const percentage =
-      totalActiveBookings > 0
-        ? ((active / totalActiveBookings) * 100).toFixed(1)
-        : 0;
+    return revenueData.occupancyByType.map((item) => {
+      const active = Number(item.active_bookings || 0);
+      const percentage =
+        totalActiveBookings > 0
+          ? ((active / totalActiveBookings) * 100).toFixed(1)
+          : 0;
 
-    return {
-      name: item.type,
-      activeBookings: active,
-      propertiesCount: Number(item.properties_count || 0),
-      percentage: Number(percentage),
-    };
-  });
-};
+      return {
+        name: item.type,
+        activeBookings: active,
+        propertiesCount: Number(item.properties_count || 0),
+        percentage: Number(percentage),
+      };
+    });
+  };
 
-const occupancyByTypeData = buildOccupancyByTypeChart();
+  const occupancyByTypeData = buildOccupancyByTypeChart();
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("es-MX", {
@@ -146,7 +143,7 @@ const occupancyByTypeData = buildOccupancyByTypeChart();
     }).format(amount);
   };
 
-  // Tooltip personalizado para la gráfica
+  // Tooltip personalizado para la gráfica de ingresos
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
@@ -229,7 +226,9 @@ const occupancyByTypeData = buildOccupancyByTypeChart();
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-900">Gráficas y Análisis</h1>
+        <h1 className="text-3xl font-bold text-neutral-900">
+          Gráficas y Análisis
+        </h1>
         <p className="text-neutral-600 mt-2">
           Visualización de datos y estadísticas del sistema
         </p>
@@ -273,20 +272,35 @@ const occupancyByTypeData = buildOccupancyByTypeChart();
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              
+
               <div className="mt-6 pt-6 border-t border-neutral-100">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-neutral-600">Total último mes:</p>
+                    <p className="text-sm text-neutral-600">
+                      Total último mes:
+                    </p>
                     <p className="text-2xl font-bold text-green-600">
-                      {formatCurrency(revenueChartData[revenueChartData.length - 1]?.revenue || 0)}
+                      {formatCurrency(
+                        revenueChartData[revenueChartData.length - 1]?.revenue ||
+                          0
+                      )}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-neutral-600">Crecimiento mensual:</p>
+                    <p className="text-sm text-neutral-600">
+                      Crecimiento mensual:
+                    </p>
                     <p className="text-2xl font-bold text-blue-600">
-                      {revenueChartData.length > 1 
-                        ? `${(((revenueChartData[revenueChartData.length - 1]?.revenue - revenueChartData[revenueChartData.length - 2]?.revenue) / revenueChartData[revenueChartData.length - 2]?.revenue) * 100).toFixed(1)}%`
+                      {revenueChartData.length > 1
+                        ? `${(
+                            ((revenueChartData[revenueChartData.length - 1]
+                              ?.revenue -
+                              revenueChartData[revenueChartData.length - 2]
+                                ?.revenue) /
+                              revenueChartData[revenueChartData.length - 2]
+                                ?.revenue) *
+                            100
+                          ).toFixed(1)}%`
                         : "0%"}
                     </p>
                   </div>
@@ -324,34 +338,49 @@ const occupancyByTypeData = buildOccupancyByTypeChart();
                     </Pie>
 
                     <Tooltip content={<PieTooltip />} />
-                    <Legend 
-                      layout="vertical" 
-                      verticalAlign="middle" 
+                    <Legend
+                      layout="vertical"
+                      verticalAlign="middle"
                       align="right"
-                      wrapperStyle={{ paddingLeft: '30px' }}
+                      wrapperStyle={{ paddingLeft: "30px" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              
+
               <div className="mt-6 pt-6 border-t border-neutral-100">
                 <div className="grid grid-cols-2 gap-4">
                   {bookingsStatusData.map((item, index) => {
-                    const total = bookingsStatusData.reduce((sum, i) => sum + i.value, 0);
-                    const percentage = ((item.value / total) * 100).toFixed(1);
-                    
+                    const total = bookingsStatusData.reduce(
+                      (sum, i) => sum + i.value,
+                      0
+                    );
+                    const percentage = (
+                      (item.value / total) *
+                      100
+                    ).toFixed(1);
+
                     return (
-                      <div key={index} className="flex items-center justify-between p-2 bg-neutral-50 rounded">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-neutral-50 rounded"
+                      >
                         <div className="flex items-center">
-                          <div 
-                            className="w-4 h-4 rounded mr-2" 
+                          <div
+                            className="w-4 h-4 rounded mr-2"
                             style={{ backgroundColor: item.color }}
                           ></div>
-                          <span className="text-sm font-medium text-neutral-700">{item.name}</span>
+                          <span className="text-sm font-medium text-neutral-700">
+                            {item.name}
+                          </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-sm font-bold text-neutral-900">{item.value}</span>
-                          <span className="text-xs text-neutral-500 ml-2">({percentage}%)</span>
+                          <span className="text-sm font-bold text-neutral-900">
+                            {item.value}
+                          </span>
+                          <span className="text-xs text-neutral-500 ml-2">
+                            ({percentage}%)
+                          </span>
                         </div>
                       </div>
                     );
@@ -360,63 +389,118 @@ const occupancyByTypeData = buildOccupancyByTypeChart();
               </div>
             </div>
           )}
+        </div>
 
-          {/* Gráfica de ocupación */}
+        {/* Fila 2 - Ocupación por tipo de propiedad (ancho completo, diseño mejorado) */}
         {occupancyByTypeData.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg border border-neutral-200 p-6">
-          <h2 className="text-xl font-bold text-neutral-900 mb-2">
-            Ocupación por tipo de propiedad
-          </h2>
-          <p className="text-sm text-neutral-500 mb-6">
-            Reservas activas por tipo de alojamiento y cantidad de propiedades
-            registradas.
-          </p>
-
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={occupancyByTypeData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 40 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  angle={-20}
-                  textAnchor="end"
-                  interval={0}
-                  height={60}
-                />
-                <YAxis />
-                <Tooltip
-                  formatter={(value, name) => {
-                    if (name === "activeBookings") return [`${value}`, "Reservas activas"];
-                    if (name === "propertiesCount") return [`${value}`, "Propiedades"];
-                    if (name === "percentage") return [`${value}%`, "Porcentaje de ocupación"];
-                    return value;
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="activeBookings" name="Reservas activas" />
-                <Bar dataKey="propertiesCount" name="Propiedades" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="mt-4 space-y-2 text-sm text-neutral-700">
-            {occupancyByTypeData.map((item) => (
-              <div key={item.name} className="flex justify-between">
-                <span>{item.name}</span>
-                <span className="font-medium">
-                  {item.activeBookings} reservas ({item.percentage}%)
-                </span>
+          <div className="bg-white rounded-2xl shadow-lg border border-neutral-200 p-6">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-xl font-semibold text-neutral-900">
+                  Ocupación por tipo de propiedad
+                </h2>
+                <p className="text-sm text-neutral-500 mt-1">
+                  Reservas activas por tipo de alojamiento y cantidad de
+                  propiedades registradas.
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-        </div>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-100">
+                Vista general
+              </span>
+            </div>
 
-        {/* Segunda fila - Análisis de Reservas (ancho completo) */}
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Gráfica grande */}
+              <div className="h-80 lg:flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={occupancyByTypeData}
+                    layout="vertical"
+                    margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      type="number"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={130}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 12,
+                        borderColor: "#e5e7eb",
+                        boxShadow:
+                          "0 10px 15px -3px rgba(15, 23, 42, 0.12)",
+                      }}
+                      formatter={(value, name) => {
+                        if (name === "activeBookings")
+                          return [`${value}`, "Reservas activas"];
+                        if (name === "propertiesCount")
+                          return [`${value}`, "Propiedades"];
+                        if (name === "percentage")
+                          return [`${value}%`, "Porcentaje de ocupación"];
+                        return value;
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ paddingTop: 12 }}
+                      iconType="circle"
+                    />
+                    <Bar
+                      dataKey="activeBookings"
+                      name="Reservas activas"
+                      fill="#0ea5e9"
+                      radius={[6, 6, 6, 6]}
+                      barSize={18}
+                    />
+                    <Bar
+                      dataKey="propertiesCount"
+                      name="Propiedades"
+                      fill="#22c55e"
+                      radius={[6, 6, 6, 6]}
+                      barSize={18}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Resumen a la derecha */}
+              <div className="lg:w-72 space-y-3">
+                {occupancyByTypeData.map((item) => (
+                  <div
+                    key={item.name}
+                    className="border border-neutral-200 rounded-xl px-3 py-2.5 bg-neutral-50/60"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium text-neutral-900">
+                        {item.name}
+                      </span>
+                      <span className="text-xs text-neutral-500">
+                        {item.percentage}% del total
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700">
+                        {item.activeBookings} reservas
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                        {item.propertiesCount} propiedades
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Fila 3 - Análisis de Reservas (ancho completo) */}
         <div className="w-full">
           <BookingsAnalysisChart />
         </div>
