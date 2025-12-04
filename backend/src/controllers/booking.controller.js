@@ -6,108 +6,143 @@ const availabilityService = require('../services/availability.service'); // ← 
 const sequelize = require('../config/database');
 
 class BookingController {
+  // =======================================
   // Crear reserva
+  // =======================================
   async create(req, res, next) {
-  const t = await sequelize.transaction();
-  
-  try {
-    const {
-      propertyId,
-      checkIn,
-      checkOut,
-      numberOfGuests,
-      specialRequests,
-      paymentMethodId,
-      simulatePayment = false // ← NUEVO parámetro
-    } = req.body;
+    const t = await sequelize.transaction();
+    
+    try {
+      const {
+        propertyId,
+        checkIn,
+        checkOut,
+        numberOfGuests,
+        specialRequests,
+        paymentMethodId,
+        simulatePayment = false // ← NUEVO parámetro
+      } = req.body;
 
-    // Validar fechas
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+      // Validar fechas
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    if (checkInDate < today) {
-      await t.rollback();
-      return res.status(400).json({ error: 'La fecha de check-in debe ser futura' });
-    }
+      if (checkInDate < today) {
+        await t.rollback();
+        return res.status(400).json({ error: 'La fecha de check-in debe ser futura' });
+      }
 
-    if (checkOutDate <= checkInDate) {
-      await t.rollback();
-      return res.status(400).json({ error: 'La fecha de check-out debe ser posterior al check-in' });
-    }
+      if (checkOutDate <= checkInDate) {
+        await t.rollback();
+        return res.status(400).json({ error: 'La fecha de check-out debe ser posterior al check-in' });
+      }
 
-    // Buscar propiedad
-    const property = await Property.findByPk(propertyId, {
-      include: [{
-        model: User,
-        as: 'host'
-      }],
-      transaction: t
-    });
-
-    if (!property) {
-      await t.rollback();
-      return res.status(404).json({ error: 'Propiedad no encontrada' });
-    }
-
-    if (property.status !== 'published') {
-      await t.rollback();
-      return res.status(400).json({ error: 'Propiedad no disponible para reservas' });
-    }
-
-    if (numberOfGuests > property.capacity) {
-      await t.rollback();
-      return res.status(400).json({ 
-        error: `La propiedad admite máximo ${property.capacity} huéspedes` 
+      // Buscar propiedad
+      const property = await Property.findByPk(propertyId, {
+        include: [{
+          model: User,
+          as: 'host'
+        }],
+        transaction: t
       });
-    }
 
-    // Validar disponibilidad
-    const availabilityCheck = await availabilityService.isAvailable(
-      propertyId,
-      checkIn,
-      checkOut
-    );
+      if (!property) {
+        await t.rollback();
+        return res.status(404).json({ error: 'Propiedad no encontrada' });
+      }
 
-    if (!availabilityCheck.available) {
-      await t.rollback();
-      return res.status(409).json({
-        error: 'La propiedad no está disponible en esas fechas',
-        reason: availabilityCheck.reason,
-        blockedDates: availabilityCheck.blockedDates
-      });
-    }
+      if (property.status !== 'published') {
+        await t.rollback();
+        return res.status(400).json({ error: 'Propiedad no disponible para reservas' });
+      }
 
-    // Calcular precio total
-    const nights = availabilityCheck.nights;
-    const totalPrice = nights * property.price_per_night;
+      if (numberOfGuests > property.capacity) {
+        await t.rollback();
+        return res.status(400).json({ 
+          error: `La propiedad admite máximo ${property.capacity} huéspedes` 
+        });
+      }
 
-    // Crear reserva
-    const booking = await Booking.create({
-      check_in_date: checkIn,
-      check_out_date: checkOut,
-      total_guests: numberOfGuests,
-      special_requests: specialRequests,
-      total_price: totalPrice,
-      booking_status: 'pending',
-      payment_status: 'pending',
-      guest_id: req.userId,
-      property_id: property.id,
-      host_id: property.host_id
-    }, { transaction: t });
+      // Validar disponibilidad
+      const availabilityCheck = await availabilityService.isAvailable(
+        propertyId,
+        checkIn,
+        checkOut
+      );
 
-    // ============ MODO SIMULADO (SIN STRIPE) ============
-    if (simulatePayment || !process.env.STRIPE_SECRET_KEY) {
-      console.log('💳 MODO SIMULADO: Creando pago simulado para booking:', booking.id);
+      if (!availabilityCheck.available) {
+        await t.rollback();
+        return res.status(409).json({
+          error: 'La propiedad no está disponible en esas fechas',
+          reason: availabilityCheck.reason,
+          blockedDates: availabilityCheck.blockedDates
+        });
+      }
 
-      const paymentIntentId = `pi_simulated_${Date.now()}_${booking.id}`;
-      const clientSecret = `${paymentIntentId}_secret`;
+      // Calcular precio total
+      const nights = availabilityCheck.nights;
+      const totalPrice = nights * property.price_per_night;
 
-      booking.stripe_payment_intent_id = paymentIntentId;
-      await booking.save({ transaction: t });
+      // Crear reserva
+      const booking = await Booking.create({
+        check_in_date: checkIn,
+        check_out_date: checkOut,
+        total_guests: numberOfGuests,
+        special_requests: specialRequests,
+        total_price: totalPrice,
+        booking_status: 'pending',
+        payment_status: 'pending',
+        guest_id: req.userId,
+        property_id: property.id,
+        host_id: property.host_id
+      }, { transaction: t });
 
-      // Crear registro de pago simulado
+      // ============ MODO SIMULADO (SIN STRIPE) ============
+      if (simulatePayment || !process.env.STRIPE_SECRET_KEY) {
+        console.log('💳 MODO SIMULADO: Creando pago simulado para booking:', booking.id);
+
+        const paymentIntentId = `pi_simulated_${Date.now()}_${booking.id}`;
+        const clientSecret = `${paymentIntentId}_secret`;
+
+        booking.stripe_payment_intent_id = paymentIntentId;
+        await booking.save({ transaction: t });
+
+        // Crear registro de pago simulado
+        const platformCommissionRate = property.accommodationType?.platform_commission_percentage 
+          ? parseFloat(property.accommodationType.platform_commission_percentage) / 100
+          : 0.10;
+        const platformCommission = totalPrice * platformCommissionRate;
+
+        await PaymentTransaction.create({
+          amount: totalPrice,
+          platform_commission: platformCommission,
+          stripe_payment_intent_id: paymentIntentId,
+          payment_status: 'pending',
+          booking_id: booking.id,
+          user_id: req.userId
+        }, { transaction: t });
+
+        await t.commit();
+
+        return res.status(201).json({
+          message: 'Reserva creada en modo simulado',
+          booking,
+          paymentClientSecret: clientSecret,
+          paymentIntentId,
+          simulatedMode: true,
+          note: 'Usa /bookings/confirm con este paymentIntentId para simular pago exitoso'
+        });
+      }
+
+      // ============ MODO REAL CON STRIPE ============
+      const paymentIntent = await stripeService.createPaymentIntent(
+        totalPrice,
+        booking.id,
+        req.user.email
+      );
+
       const platformCommissionRate = property.accommodationType?.platform_commission_percentage 
         ? parseFloat(property.accommodationType.platform_commission_percentage) / 100
         : 0.10;
@@ -116,7 +151,7 @@ class BookingController {
       await PaymentTransaction.create({
         amount: totalPrice,
         platform_commission: platformCommission,
-        stripe_payment_intent_id: paymentIntentId,
+        stripe_payment_intent_id: paymentIntent.id,
         payment_status: 'pending',
         booking_id: booking.id,
         user_id: req.userId
@@ -124,53 +159,22 @@ class BookingController {
 
       await t.commit();
 
-      return res.status(201).json({
-        message: 'Reserva creada en modo simulado',
+      res.status(201).json({
+        message: 'Reserva creada, procede con el pago',
         booking,
-        paymentClientSecret: clientSecret,
-        paymentIntentId,
-        simulatedMode: true,
-        note: 'Usa /bookings/confirm con este paymentIntentId para simular pago exitoso'
+        paymentClientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        simulatedMode: false
       });
+    } catch (error) {
+      await t.rollback();
+      next(error);
     }
-
-    // ============ MODO REAL CON STRIPE ============
-    const paymentIntent = await stripeService.createPaymentIntent(
-      totalPrice,
-      booking.id,
-      req.user.email
-    );
-
-    const platformCommissionRate = property.accommodationType?.platform_commission_percentage 
-      ? parseFloat(property.accommodationType.platform_commission_percentage) / 100
-      : 0.10;
-    const platformCommission = totalPrice * platformCommissionRate;
-
-    await PaymentTransaction.create({
-      amount: totalPrice,
-      platform_commission: platformCommission,
-      stripe_payment_intent_id: paymentIntent.id,
-      payment_status: 'pending',
-      booking_id: booking.id,
-      user_id: req.userId
-    }, { transaction: t });
-
-    await t.commit();
-
-    res.status(201).json({
-      message: 'Reserva creada, procede con el pago',
-      booking,
-      paymentClientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
-      simulatedMode: false
-    });
-  } catch (error) {
-    await t.rollback();
-    next(error);
   }
-}
 
+  // =======================================
   // Confirmar reserva después del pago
+  // =======================================
   async confirmBooking(req, res, next) {
     const t = await sequelize.transaction();
     
@@ -179,20 +183,20 @@ class BookingController {
 
       // Buscar reserva
       const booking = await Booking.findByPk(bookingId, {
-  include: [
-    { 
-      model: Property, 
-      as: 'property',
-      include: [{
-        model: User,
-        as: 'host'  // ← El host está asociado a Property, no a Booking
-      }]
-    },
-    { model: User, as: 'guest' },
-    { model: PaymentTransaction, as: 'transactions' }
-  ],
-  transaction: t
-});
+        include: [
+          { 
+            model: Property, 
+            as: 'property',
+            include: [{
+              model: User,
+              as: 'host'  // ← El host está asociado a Property
+            }]
+          },
+          { model: User, as: 'guest' },
+          { model: PaymentTransaction, as: 'transactions' }
+        ],
+        transaction: t
+      });
 
       if (!booking) {
         await t.rollback();
@@ -224,10 +228,10 @@ class BookingController {
       await booking.save({ transaction: t });
 
       // Actualizar estado del pago
-if (booking.transactions && booking.transactions.length > 0) {
-  booking.transactions[0].payment_status = 'succeeded';
-  await booking.transactions[0].save({ transaction: t });
-}
+      if (booking.transactions && booking.transactions.length > 0) {
+        booking.transactions[0].payment_status = 'succeeded';
+        await booking.transactions[0].save({ transaction: t });
+      }
 
       // ============ BLOQUEAR FECHAS AUTOMÁTICAMENTE ============
       try {
@@ -242,8 +246,17 @@ if (booking.transactions && booking.transactions.length > 0) {
 
       // Enviar emails de confirmación
       try {
-        await emailService.sendBookingConfirmation(booking, booking.guest, booking.property);
-        await emailService.sendBookingNotificationToHost(booking, booking.host, booking.property, booking.guest);
+        await emailService.sendBookingConfirmation(
+          booking,
+          booking.guest,
+          booking.property
+        );
+        await emailService.sendBookingNotificationToHost(
+          booking,
+          booking.property.host,
+          booking.property,
+          booking.guest
+        );
       } catch (emailError) {
         console.error('Error enviando emails:', emailError);
       }
@@ -258,7 +271,9 @@ if (booking.transactions && booking.transactions.length > 0) {
     }
   }
 
+  // =======================================
   // Obtener reservas del huésped autenticado
+  // =======================================
   async getMyBookings(req, res, next) {
     try {
       const { status, upcoming } = req.query;
@@ -300,48 +315,53 @@ if (booking.transactions && booking.transactions.length > 0) {
     }
   }
 
+  // =======================================
   // Obtener reservas como anfitrión
- async getHostBookings(req, res, next) {
-  try {
-    const { propertyId, status } = req.query;
+  // =======================================
+  async getHostBookings(req, res, next) {
+    try {
+      const { propertyId, status } = req.query;
 
-    // Filtros opcionales para Booking
-    const where = {};
-    if (propertyId) {
-      where.property_id = propertyId;
+      // Filtros opcionales para Booking
+      const where = {};
+      if (propertyId) {
+        where.property_id = propertyId;
+      }
+      if (status) {
+        where.booking_status = status;
+      }
+
+      const bookings = await Booking.findAll({
+        where,
+        include: [
+          {
+            model: Property,
+            as: 'property',
+            where: { host_id: req.userId },
+            attributes: ['id', 'title', 'host_id', 'price_per_night']
+          },
+          {
+            model: User,
+            as: 'guest',
+            attributes: ['id', 'full_name', 'email', 'phone']
+          },
+          {
+            model: PaymentTransaction,
+            as: 'transactions'
+          }
+        ],
+        order: [['check_in_date', 'DESC']]
+      });
+
+      res.json({ bookings });
+    } catch (error) {
+      next(error);
     }
-    if (status) {
-      where.booking_status = status;
-    }
-
-    const bookings = await Booking.findAll({
-      where, // ✅ ahora solo filtra por propertyId o status
-      include: [
-        {
-          model: Property,
-          as: 'property',
-          where: { host_id: req.userId }, // ✅ filtro correcto
-          attributes: ['id', 'title', 'host_id', 'price_per_night']
-        },
-        {
-          model: User,
-          as: 'guest',
-          attributes: ['id', 'full_name', 'email', 'phone']
-        },
-        {
-          model: PaymentTransaction,
-          as: 'transactions'
-        }
-      ],
-      order: [['check_in_date', 'DESC']]
-    });
-
-    res.json({ bookings });
-  } catch (error) {
-    next(error);
   }
-}
+
+  // =======================================
   // Obtener una reserva específica
+  // =======================================
   async getById(req, res, next) {
     try {
       const { id } = req.params;
@@ -388,7 +408,9 @@ if (booking.transactions && booking.transactions.length > 0) {
     }
   }
 
+  // =======================================
   // Cancelar reserva
+  // =======================================
   async cancel(req, res, next) {
     const t = await sequelize.transaction();
     
@@ -449,7 +471,10 @@ if (booking.transactions && booking.transactions.length > 0) {
       // Procesar reembolso si corresponde
       if (booking.payment_status === 'confirmed' && refundAmount > 0 && booking.stripe_payment_intent_id) {
         try {
-          const refund = await stripeService.createRefund(booking.stripe_payment_intent_id, refundAmount);
+          const refund = await stripeService.createRefund(
+            booking.stripe_payment_intent_id,
+            refundAmount
+          );
 
           if (booking.transactions && booking.transactions.length > 0) {
             booking.transactions[0].payment_status = 'refunded';
@@ -497,7 +522,9 @@ if (booking.transactions && booking.transactions.length > 0) {
     }
   }
 
+  // =======================================
   // Verificar disponibilidad (DEPRECADO - usar availability.service)
+  // =======================================
   async checkAvailability(req, res, next) {
     try {
       const { propertyId, checkIn, checkOut } = req.query;
@@ -649,12 +676,11 @@ if (booking.transactions && booking.transactions.length > 0) {
       });
 
       // Calcular estadísticas globales
-      const [statsResult] = await sequelize.query(`
+      const [statsRows] = await sequelize.query(`
         SELECT
           COUNT(*) as total,
           COUNT(*) FILTER (WHERE booking_status = 'pending') as pending,
           COUNT(*) FILTER (WHERE booking_status = 'confirmed') as confirmed,
-          COUNT(*) FILTER (WHERE booking_status = 'in_progress') as in_progress,
           COUNT(*) FILTER (WHERE booking_status = 'completed') as completed,
           COUNT(*) FILTER (WHERE booking_status = 'cancelled') as cancelled,
           COUNT(*) FILTER (WHERE payment_status = 'pending') as payment_pending,
@@ -665,27 +691,36 @@ if (booking.transactions && booking.transactions.length > 0) {
         FROM bookings
       `);
 
+      const base = statsRows[0];
+
       const stats = {
         bookings: {
-          total: parseInt(statsResult[0].total),
-          pending: parseInt(statsResult[0].pending),
-          confirmed: parseInt(statsResult[0].confirmed),
-          in_progress: parseInt(statsResult[0].in_progress),
-          completed: parseInt(statsResult[0].completed),
-          cancelled: parseInt(statsResult[0].cancelled)
+          total: parseInt(base.total),
+          pending: parseInt(base.pending),
+          confirmed: parseInt(base.confirmed),
+          completed: parseInt(base.completed),
+          cancelled: parseInt(base.cancelled)
+        },
+        bookingsStatus: {
+          pending: parseInt(base.pending),
+          confirmed: parseInt(base.confirmed),
+          completed: parseInt(base.completed),
+          cancelled: parseInt(base.cancelled)
         },
         payments: {
-          pending: parseInt(statsResult[0].payment_pending),
-          confirmed: parseInt(statsResult[0].payment_confirmed),
-          rejected: parseInt(statsResult[0].payment_rejected)
+          pending: parseInt(base.payment_pending),
+          confirmed: parseInt(base.payment_confirmed),
+          rejected: parseInt(base.payment_rejected)
         },
         revenue: {
-          total: parseFloat(statsResult[0].total_revenue || 0),
-          completed: parseFloat(statsResult[0].completed_revenue || 0)
+          total: parseFloat(base.total_revenue || 0),
+          completed: parseFloat(base.completed_revenue || 0)
         }
       };
 
+      // =========================
       // Estadísticas por mes (últimos 6 meses)
+      // =========================
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -704,6 +739,27 @@ if (booking.transactions && booking.transactions.length > 0) {
 
       stats.monthlyTrends = monthlyStats;
 
+      // =========================
+      // Ocupación por tipo de propiedad
+      // =========================
+      const [occupancyByType] = await sequelize.query(`
+        SELECT
+          at.name AS type,
+          COUNT(DISTINCT p.id) AS properties_count,
+          COUNT(b.id) FILTER (
+            -- Ocupación activa: pending + confirmed + completed
+            WHERE b.booking_status IN ('pending','confirmed','completed')
+          ) AS active_bookings
+        FROM accommodation_types at
+        JOIN properties p ON p.accommodation_type_id = at.id
+        LEFT JOIN bookings b ON b.property_id = p.id
+        GROUP BY at.id, at.name
+        ORDER BY active_bookings DESC, properties_count DESC
+      `);
+
+      stats.occupancyByType = occupancyByType;
+
+      // Respuesta final
       res.json({
         bookings,
         pagination: {
@@ -714,6 +770,7 @@ if (booking.transactions && booking.transactions.length > 0) {
         },
         stats
       });
+
     } catch (error) {
       console.error('Error en getAllBookingsAdmin:', error);
       next(error);

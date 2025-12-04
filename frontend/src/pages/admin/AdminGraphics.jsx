@@ -109,6 +109,36 @@ const AdminGraphics = () => {
 
   const bookingsStatusData = buildBookingsStatusChart();
 
+
+  
+
+  // Construir datos para la gráfica de ocupación por tipo de propiedad
+const buildOccupancyByTypeChart = () => {
+  if (!revenueData?.occupancyByType) return [];
+
+  const totalActiveBookings = revenueData.occupancyByType.reduce(
+    (sum, item) => sum + Number(item.active_bookings || 0),
+    0
+  );
+
+  return revenueData.occupancyByType.map((item) => {
+    const active = Number(item.active_bookings || 0);
+    const percentage =
+      totalActiveBookings > 0
+        ? ((active / totalActiveBookings) * 100).toFixed(1)
+        : 0;
+
+    return {
+      name: item.type,
+      activeBookings: active,
+      propertiesCount: Number(item.properties_count || 0),
+      percentage: Number(percentage),
+    };
+  });
+};
+
+const occupancyByTypeData = buildOccupancyByTypeChart();
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("es-MX", {
       style: "currency",
@@ -330,6 +360,60 @@ const AdminGraphics = () => {
               </div>
             </div>
           )}
+
+          {/* Gráfica de ocupación */}
+        {occupancyByTypeData.length > 0 && (
+        <div className="bg-white rounded-xl shadow-lg border border-neutral-200 p-6">
+          <h2 className="text-xl font-bold text-neutral-900 mb-2">
+            Ocupación por tipo de propiedad
+          </h2>
+          <p className="text-sm text-neutral-500 mb-6">
+            Reservas activas por tipo de alojamiento y cantidad de propiedades
+            registradas.
+          </p>
+
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={occupancyByTypeData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 40 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="name"
+                  angle={-20}
+                  textAnchor="end"
+                  interval={0}
+                  height={60}
+                />
+                <YAxis />
+                <Tooltip
+                  formatter={(value, name) => {
+                    if (name === "activeBookings") return [`${value}`, "Reservas activas"];
+                    if (name === "propertiesCount") return [`${value}`, "Propiedades"];
+                    if (name === "percentage") return [`${value}%`, "Porcentaje de ocupación"];
+                    return value;
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="activeBookings" name="Reservas activas" />
+                <Bar dataKey="propertiesCount" name="Propiedades" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mt-4 space-y-2 text-sm text-neutral-700">
+            {occupancyByTypeData.map((item) => (
+              <div key={item.name} className="flex justify-between">
+                <span>{item.name}</span>
+                <span className="font-medium">
+                  {item.activeBookings} reservas ({item.percentage}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
         </div>
 
         {/* Segunda fila - Análisis de Reservas (ancho completo) */}
