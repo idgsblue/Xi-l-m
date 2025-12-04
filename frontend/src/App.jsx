@@ -46,6 +46,9 @@ import AccommodationTypes from './pages/admin/AccommodationTypes';
 
 import AvailabilityCalendar from './pages/host/AvailabilityCalendar';
 
+import AdminGraphics from "./pages/admin/AdminGraphics";
+
+
 
 
 // Componente para rutas protegidas
@@ -132,6 +135,9 @@ function App() {
   <Route path="reports" element={<Reports />} />
   <Route path="accommodation-types" element={<AccommodationTypes />} />
   <Route path="settings" element={<Settings />} />
+  <Route path="graphics" element={<AdminGraphics />} />
+
+  
 </Route>
 
         {/* 404 */}

@@ -3,196 +3,13 @@ import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
 import adminService from "../../services/admin.service";
 import api from "../../services/api";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+
 
 const AdminDashboard = () => {
   const { data, isLoading, error } = useQuery(
     "adminDashboard",
     adminService.getDashboard
   );
-  const [revenueData, setRevenueData] = useState(null);
-  const [loadingRevenue, setLoadingRevenue] = useState(true);
-
-  // Fetch datos de revenue desde el endpoint de bookings
-  useEffect(() => {
-    const fetchRevenueData = async () => {
-      try {
-        setLoadingRevenue(true);
-        const { data } = await api.get("/bookings/admin/all");
-        setRevenueData(data.stats);
-      } catch (error) {
-        console.error("Error cargando datos de revenue:", error);
-      } finally {
-        setLoadingRevenue(false);
-      }
-    };
-
-    fetchRevenueData();
-  }, []);
-
-  // Construir datos para el gráfico de ingresos
-  const buildRevenueChart = () => {
-    if (!revenueData) return [];
-
-    const payload = revenueData || {};
-    const candidates =
-      payload.monthlyTrends ||
-      payload.revenue?.monthly ||
-      payload.revenue_monthly ||
-      payload.bookings?.byMonth ||
-      payload.bookings?.monthly ||
-      payload.monthlyRevenue ||
-      payload.revenue_by_month ||
-      [];
-
-    if (!Array.isArray(candidates) || candidates.length === 0) return [];
-
-    return candidates.map((item) => {
-      const monthRaw =
-        item.month || item.date || item.label || item.month_id || "";
-      const total =
-        item.total ||
-        item.revenue ||
-        item.amount ||
-        item.total_revenue ||
-        item.value ||
-        0;
-
-      let name = monthRaw;
-      if (typeof monthRaw === "string" && /^\d{4}-\d{2}/.test(monthRaw)) {
-        const [year, month] = monthRaw.split("-");
-        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-        name = date.toLocaleString("es-MX", { month: "short" });
-      }
-
-      return { name, revenue: Number(total) || 0 };
-    });
-  };
-
-  const revenueChartData = buildRevenueChart();
-
-  // Construir datos para la gráfica de pastel de estados de reservas
-  const buildBookingsStatusChart = () => {
-    if (!revenueData?.bookings) return [];
-
-    const bookingsStats = revenueData.bookings;
-    const COLORS = {
-      pending: "#eab308",
-      confirmed: "#10b981",
-      in_progress: "#3b82f6",
-      completed: "#6b7280",
-      cancelled: "#ef4444",
-    };
-
-    const statusLabels = {
-      pending: "Pendientes",
-      confirmed: "Confirmadas",
-      in_progress: "En Progreso",
-      completed: "Completadas",
-      cancelled: "Canceladas",
-    };
-
-    return Object.entries(bookingsStats)
-      .filter(([key, value]) => key !== "total" && value > 0)
-      .map(([status, count]) => ({
-        name: statusLabels[status] || status,
-        value: count,
-        color: COLORS[status] || "#888888",
-      }));
-  };
-
-  const bookingsStatusData = buildBookingsStatusChart();
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("es-MX", {
-      style: "currency",
-      currency: "MXN",
-    }).format(amount);
-  };
-
-  // Tooltip personalizado para la gráfica
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-medium text-gray-900">
-            {payload[0].payload.name}
-          </p>
-          <p className="text-sm text-gray-600">
-            Ingresos:{" "}
-            <span className="font-bold text-green-600">
-              {formatCurrency(payload[0].value)}
-            </span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Tooltip para gráfica de pastel
-  const PieTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const total = bookingsStatusData.reduce(
-        (sum, item) => sum + item.value,
-        0
-      );
-      const percentage = ((payload[0].value / total) * 100).toFixed(1);
-
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-medium text-gray-900">{payload[0].name}</p>
-          <p className="text-sm text-gray-600">
-            Cantidad: <span className="font-bold">{payload[0].value}</span>
-          </p>
-          <p className="text-sm text-gray-600">
-            Porcentaje: <span className="font-bold">{percentage}%</span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Label personalizado para el pie chart
-  const renderCustomLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-        className="font-bold text-sm"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
 
   if (isLoading) {
     return (
@@ -372,82 +189,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-        {/* Gráfica de Ingresos */}
-        {!loadingRevenue && revenueChartData.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-4">
-            <h2 className="text-lg font-semibold text-neutral-900 mb-1">
-              Ingresos Mensuales
-            </h2>
-            <p className="text-xs text-neutral-500 mb-4">
-              Evolución de ingresos de los últimos meses
-            </p>
-
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "#6b7280", fontSize: 11 }}
-                    axisLine={{ stroke: "#d1d5db" }}
-                  />
-                  <YAxis
-                    tick={{ fill: "#6b7280", fontSize: 11 }}
-                    axisLine={{ stroke: "#d1d5db" }}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar
-                    dataKey="revenue"
-                    fill="#34d399"
-                    radius={[6, 6, 6, 6]}
-                    maxBarSize={40}
-                    animationDuration={600}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Gráfica de Pastel */}
-        {!loadingRevenue && bookingsStatusData.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-4">
-            <h2 className="text-lg font-semibold text-neutral-900 mb-1">
-              Estado de Reservas
-            </h2>
-            <p className="text-xs text-neutral-500 mb-4">
-              Distribución porcentual
-            </p>
-
-            <div className="h-64 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={bookingsStatusData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    labelLine={false}
-                    label={renderCustomLabel}
-                    dataKey="value"
-                    animationDuration={600}
-                  >
-                    {bookingsStatusData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-
-                  <Tooltip content={<PieTooltip />} />
-                  <Legend verticalAlign="bottom" height={32} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Accesos rápidos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Link
@@ -599,6 +340,46 @@ const AdminDashboard = () => {
             </svg>
           </div>
         </Link>
+        <Link
+            to="/admin/graphics"
+            className="bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-200 rounded-lg p-6 hover:shadow-md transition-all group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-neutral-900">Gráficas</h3>
+              <svg
+                className="w-8 h-8 text-pink-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                />
+              </svg>
+            </div>
+            <p className="text-neutral-600 text-sm mb-4">
+              Revisa las gráficas estadísticas y análisis de datos
+            </p>
+            <div className="flex items-center text-pink-700 font-medium group-hover:text-pink-800">
+              <span>Ver gráficas</span>
+              <svg
+                className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </Link>
       </div>
 
       {/* Desglose de propiedades */}
