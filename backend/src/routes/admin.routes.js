@@ -84,33 +84,5 @@ router.get('/reports',
   adminController.generateReport
 );
 
-// Estadísticas para gráficas
-router.get('/stats/graphics', adminController.getGraphicsStats);
-
-// Datos detallados para gráficas
-router.get('/stats/graphics/detailed',
-  query('type').isIn(['revenue', 'bookings', 'properties']).withMessage('Tipo de estadística inválido'),
-  query('period').optional().isIn(['daily', 'weekly', 'monthly', 'yearly']).withMessage('Período inválido'),
-  query('startDate').optional().isISO8601().toDate(),
-  query('endDate').optional().isISO8601().toDate(),
-  handleValidationErrors,
-  adminController.getDetailedGraphicsData
-);
-
-// Top propiedades (para gráficas de ranking)
-router.get('/stats/top-properties',
-  query('limit').optional().isInt({ min: 1, max: 20 }).withMessage('El límite debe estar entre 1 y 20'),
-  query('orderBy').optional().isIn(['revenue', 'bookings', 'rating']).withMessage('Criterio de orden inválido'),
-  handleValidationErrors,
-  adminController.getTopProperties
-);
-
-// Datos de ocupación
-router.get('/stats/occupancy',
-  query('period').optional().isIn(['daily', 'weekly', 'monthly']).withMessage('Período inválido'),
-  query('months').optional().isInt({ min: 1, max: 12 }).withMessage('Meses debe estar entre 1 y 12'),
-  handleValidationErrors,
-  adminController.getOccupancyStats
-);
 
 module.exports = router;
