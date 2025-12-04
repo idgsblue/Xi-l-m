@@ -103,6 +103,15 @@ const adminService = {
     } catch (error) {
       throw error.response?.data || { message: 'Error al obtener reservas' };
     }
+  },
+
+   getBookingsAnalysis: async () => {
+    try {
+      const response = await api.get('/admin/bookings/analysis');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error al obtener análisis de reservas' };
+    }
   }
 };
 

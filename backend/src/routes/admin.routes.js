@@ -30,7 +30,7 @@ router.post('/properties/:id/reject',
   adminController.rejectProperty
 );
 
-// Gestión de usuarios - CORREGIDO
+// Gestión de usuarios
 router.get('/users', 
   query('role').optional().custom(value => !value || ['guest', 'host', 'admin'].includes(value)),
   query('isActive').optional().custom(value => !value || ['true', 'false'].includes(value)),
@@ -64,7 +64,19 @@ router.post('/price-range',
   adminController.setPriceRange
 );
 
-// Gestión de reservas
+router.get('/bookings/analysis', 
+  query('months').optional().isInt({ min: 1, max: 24 }).withMessage('Meses debe estar entre 1 y 24'),
+  handleValidationErrors,
+  adminController.getBookingsAnalysis
+);
+
+router.get('/bookings/analysis-processed', 
+  query('months').optional().isInt({ min: 1, max: 24 }).withMessage('Meses debe estar entre 1 y 24'),
+  handleValidationErrors,
+  adminController.getBookingsAnalysisProcessed
+);
+
+// Gestión de reservas (ruta genérica después de las específicas)
 router.get('/bookings', 
   query('status').optional().custom(value => !value || ['pending', 'confirmed', 'cancelled', 'completed'].includes(value)),
   query('startDate').optional().isISO8601().toDate(),
@@ -75,7 +87,7 @@ router.get('/bookings',
   adminController.getAllBookings
 );
 
-// Reportes - CORREGIDO
+// Reportes
 router.get('/reports', 
   query('type').custom(value => !value || ['bookings', 'revenue', 'properties'].includes(value)),
   query('startDate').optional().isISO8601().toDate(),
@@ -83,6 +95,5 @@ router.get('/reports',
   handleValidationErrors,
   adminController.generateReport
 );
-
 
 module.exports = router;
