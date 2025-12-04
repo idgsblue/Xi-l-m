@@ -205,47 +205,6 @@ const AdminDashboard = () => {
             </svg>
           </div>
         </Link>
-
-        <Link
-          to="/admin/graphics"
-          className="bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-200 rounded-lg p-6 hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-neutral-900">Gráficas</h3>
-            <svg
-              className="w-8 h-8 text-pink-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-              />
-            </svg>
-          </div>
-          <p className="text-neutral-600 text-sm mb-4">
-            Revisa las gráficas estadísticas y análisis de datos
-          </p>
-          <div className="flex items-center text-pink-700 font-medium group-hover:text-pink-800">
-            <span>Ver gráficas</span>
-            <svg
-              className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </div>
-        </Link>
       </div>
 
       {/* Desglose de propiedades */}
