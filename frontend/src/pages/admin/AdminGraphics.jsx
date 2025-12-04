@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "react-query";
 import api from "../../services/api";
 import {
   BarChart,
@@ -14,6 +13,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import BookingsAnalysisChart from "../../components/admin/BookingsAnalysisChart";
 
 const AdminGraphics = () => {
   const [revenueData, setRevenueData] = useState(null);
@@ -205,129 +205,137 @@ const AdminGraphics = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Gráfica de Ingresos */}
-        {revenueChartData.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg border border-neutral-200 p-6">
-            <h2 className="text-xl font-bold text-neutral-900 mb-2">
-              Ingresos Mensuales
-            </h2>
-            <p className="text-sm text-neutral-500 mb-6">
-              Evolución de ingresos de los últimos meses
-            </p>
+      <div className="space-y-8">
+        {/* Primera fila - Ingresos y Estado de Reservas */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Gráfica de Ingresos */}
+          {revenueChartData.length > 0 && (
+            <div className="bg-white rounded-xl shadow-lg border border-neutral-200 p-6">
+              <h2 className="text-xl font-bold text-neutral-900 mb-2">
+                Ingresos Mensuales
+              </h2>
+              <p className="text-sm text-neutral-500 mb-6">
+                Evolución de ingresos de los últimos meses
+              </p>
 
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "#6b7280", fontSize: 12 }}
-                    axisLine={{ stroke: "#d1d5db" }}
-                  />
-                  <YAxis
-                    tick={{ fill: "#6b7280", fontSize: 12 }}
-                    axisLine={{ stroke: "#d1d5db" }}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar
-                    dataKey="revenue"
-                    fill="#34d399"
-                    radius={[6, 6, 6, 6]}
-                    maxBarSize={50}
-                    animationDuration={600}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="mt-6 pt-6 border-t border-neutral-100">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-neutral-600">Total último mes:</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(revenueChartData[revenueChartData.length - 1]?.revenue || 0)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-neutral-600">Crecimiento mensual:</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {revenueChartData.length > 1 
-                      ? `${(((revenueChartData[revenueChartData.length - 1]?.revenue - revenueChartData[revenueChartData.length - 2]?.revenue) / revenueChartData[revenueChartData.length - 2]?.revenue) * 100).toFixed(1)}%`
-                      : "0%"}
-                  </p>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: "#6b7280", fontSize: 12 }}
+                      axisLine={{ stroke: "#d1d5db" }}
+                    />
+                    <YAxis
+                      tick={{ fill: "#6b7280", fontSize: 12 }}
+                      axisLine={{ stroke: "#d1d5db" }}
+                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar
+                      dataKey="revenue"
+                      fill="#34d399"
+                      radius={[6, 6, 6, 6]}
+                      maxBarSize={50}
+                      animationDuration={600}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="mt-6 pt-6 border-t border-neutral-100">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-neutral-600">Total último mes:</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatCurrency(revenueChartData[revenueChartData.length - 1]?.revenue || 0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-neutral-600">Crecimiento mensual:</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {revenueChartData.length > 1 
+                        ? `${(((revenueChartData[revenueChartData.length - 1]?.revenue - revenueChartData[revenueChartData.length - 2]?.revenue) / revenueChartData[revenueChartData.length - 2]?.revenue) * 100).toFixed(1)}%`
+                        : "0%"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Gráfica de Pastel */}
-        {bookingsStatusData.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg border border-neutral-200 p-6">
-            <h2 className="text-xl font-bold text-neutral-900 mb-2">
-              Estado de Reservas
-            </h2>
-            <p className="text-sm text-neutral-500 mb-6">
-              Distribución porcentual actual
-            </p>
+          {/* Gráfica de Pastel */}
+          {bookingsStatusData.length > 0 && (
+            <div className="bg-white rounded-xl shadow-lg border border-neutral-200 p-6">
+              <h2 className="text-xl font-bold text-neutral-900 mb-2">
+                Estado de Reservas
+              </h2>
+              <p className="text-sm text-neutral-500 mb-6">
+                Distribución porcentual actual
+              </p>
 
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={bookingsStatusData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    labelLine={false}
-                    label={renderCustomLabel}
-                    dataKey="value"
-                    animationDuration={600}
-                  >
-                    {bookingsStatusData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={bookingsStatusData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={120}
+                      labelLine={false}
+                      label={renderCustomLabel}
+                      dataKey="value"
+                      animationDuration={600}
+                    >
+                      {bookingsStatusData.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
 
-                  <Tooltip content={<PieTooltip />} />
-                  <Legend 
-                    layout="vertical" 
-                    verticalAlign="middle" 
-                    align="right"
-                    wrapperStyle={{ paddingLeft: '30px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="mt-6 pt-6 border-t border-neutral-100">
-              <div className="grid grid-cols-2 gap-4">
-                {bookingsStatusData.map((item, index) => {
-                  const total = bookingsStatusData.reduce((sum, i) => sum + i.value, 0);
-                  const percentage = ((item.value / total) * 100).toFixed(1);
-                  
-                  return (
-                    <div key={index} className="flex items-center justify-between p-2 bg-neutral-50 rounded">
-                      <div className="flex items-center">
-                        <div 
-                          className="w-4 h-4 rounded mr-2" 
-                          style={{ backgroundColor: item.color }}
-                        ></div>
-                        <span className="text-sm font-medium text-neutral-700">{item.name}</span>
+                    <Tooltip content={<PieTooltip />} />
+                    <Legend 
+                      layout="vertical" 
+                      verticalAlign="middle" 
+                      align="right"
+                      wrapperStyle={{ paddingLeft: '30px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="mt-6 pt-6 border-t border-neutral-100">
+                <div className="grid grid-cols-2 gap-4">
+                  {bookingsStatusData.map((item, index) => {
+                    const total = bookingsStatusData.reduce((sum, i) => sum + i.value, 0);
+                    const percentage = ((item.value / total) * 100).toFixed(1);
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between p-2 bg-neutral-50 rounded">
+                        <div className="flex items-center">
+                          <div 
+                            className="w-4 h-4 rounded mr-2" 
+                            style={{ backgroundColor: item.color }}
+                          ></div>
+                          <span className="text-sm font-medium text-neutral-700">{item.name}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-bold text-neutral-900">{item.value}</span>
+                          <span className="text-xs text-neutral-500 ml-2">({percentage}%)</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-sm font-bold text-neutral-900">{item.value}</span>
-                        <span className="text-xs text-neutral-500 ml-2">({percentage}%)</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Segunda fila - Análisis de Reservas (ancho completo) */}
+        <div className="w-full">
+          <BookingsAnalysisChart />
+        </div>
       </div>
     </div>
   );

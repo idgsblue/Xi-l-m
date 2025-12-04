@@ -1,6 +1,7 @@
 const { Property, User, Booking, AccommodationType, PropertyImage } = require('../models');
 const { Op } = require('sequelize');
 const emailService = require('../services/email.service');
+const sequelize = require('../config/database');
 
 class AdminController {
   // Dashboard con métricas
@@ -479,6 +480,90 @@ const cancellationRate = totalBookings > 0 ?
     const blocked = await Property.count({ where: { status: 'blocked' } });
 
     return { total, published, pending, approved, rejected, blocked };
+  }
+
+  
+// Análisis de reservas (confirmadas vs canceladas por mes)
+  async getBookingsAnalysis(req, res, next) {
+    try {
+      const { months = 12 } = req.query;
+
+      // Obtener reservas de los últimos N meses
+      const bookings = await Booking.findAll({
+        where: {
+          created_at: {
+            [Op.gte]: sequelize.literal(`NOW() - INTERVAL '${parseInt(months)} months'`)
+          }
+        },
+        attributes: [
+          'id',
+          'booking_status',
+          'created_at',
+          'check_in_date',
+          'total_price'
+        ],
+        order: [['created_at', 'ASC']]
+      });
+
+      res.json(bookings);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ALTERNATIVA: Versión con datos pre-procesados
+  async getBookingsAnalysisProcessed(req, res, next) {
+    try {
+      const { months = 12 } = req.query;
+
+      // Query para obtener datos agrupados por mes
+      const monthlyData = await Booking.findAll({
+        attributes: [
+          [sequelize.fn('TO_CHAR', sequelize.col('created_at'), 'YYYY-MM'), 'month'],
+          [sequelize.fn('COUNT', 
+            sequelize.literal("CASE WHEN booking_status IN ('confirmed', 'completed') THEN 1 END")
+          ), 'confirmed'],
+          [sequelize.fn('COUNT', 
+            sequelize.literal("CASE WHEN booking_status = 'cancelled' THEN 1 END")
+          ), 'cancelled'],
+          [sequelize.fn('COUNT', sequelize.col('id')), 'total']
+        ],
+        where: {
+          created_at: {
+            [Op.gte]: sequelize.literal(`NOW() - INTERVAL '${parseInt(months)} months'`)
+          }
+        },
+        group: [sequelize.fn('TO_CHAR', sequelize.col('created_at'), 'YYYY-MM')],
+        order: [[sequelize.fn('TO_CHAR', sequelize.col('created_at'), 'YYYY-MM'), 'ASC']],
+        raw: true
+      });
+
+      // Calcular totales y estadísticas
+      const totals = monthlyData.reduce((acc, row) => ({
+        totalConfirmed: acc.totalConfirmed + parseInt(row.confirmed || 0),
+        totalCancelled: acc.totalCancelled + parseInt(row.cancelled || 0),
+        totalBookings: acc.totalBookings + parseInt(row.total || 0)
+      }), { totalConfirmed: 0, totalCancelled: 0, totalBookings: 0 });
+
+      const cancellationRate = totals.totalBookings > 0 
+        ? parseFloat(((totals.totalCancelled / totals.totalBookings) * 100).toFixed(2))
+        : 0;
+
+      res.json({
+        monthlyData: monthlyData.map(row => ({
+          month: row.month,
+          confirmed: parseInt(row.confirmed || 0),
+          cancelled: parseInt(row.cancelled || 0),
+          total: parseInt(row.total || 0)
+        })),
+        summary: {
+          ...totals,
+          cancellationRate
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 }
 
